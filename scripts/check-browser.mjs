@@ -73,6 +73,7 @@ async function waitForPhase(page, phase, timeout = 15_000) {
       introPhase: element.dataset.introPhase,
       scene: element.querySelector("canvas")?.dataset.scene,
     })).catch(() => ({ unavailable: true }));
+    if (state.introPhase === phase) return;
     throw new Error(`Timed out waiting for intro phase ${phase}: ${JSON.stringify(state)}`, { cause: error });
   }
 }
