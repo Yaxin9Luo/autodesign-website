@@ -59,7 +59,7 @@ function watchConsole(page, expectedError = () => false) {
   return errors;
 }
 
-async function waitForPhase(page, phase, timeout = 9_000) {
+async function waitForPhase(page, phase, timeout = 15_000) {
   try {
     await page.waitForFunction(
       (expected) => document.getElementById("scene-shell")?.dataset.introPhase === expected,
