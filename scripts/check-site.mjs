@@ -220,6 +220,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     expect(html.includes(token), "interactive slide showcase missing " + token);
   }
   expect(html.includes("longcat-next-poster.webp?v=413b9868"), "Poster source must bypass stale deployment fallbacks");
+  expect(html.includes("longcat-next-slide-{index}.webp?v=675b8b1"), "Slide sources must bypass stale deployment fallbacks");
   expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
   expect(html.includes("<span>12 slides</span>"), "Slides stage must report the source's 12 slides");
   expect(html.includes("twelve editable frames"), "Slides narrative must describe twelve editable frames");
