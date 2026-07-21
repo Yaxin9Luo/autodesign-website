@@ -1,4 +1,5 @@
 /*
+  Cache-Control: public, max-age=0, must-revalidate
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), geolocation=(), gyroscope=(), microphone=()
@@ -15,12 +16,6 @@
 
 /artifacts/web/longcat-next/*
   Content-Security-Policy: default-src 'none'; script-src 'sha256-4IMN4Wt7SZpITBmDw9iR+aZNFdgTXAVWcQk/PuWIk/8=' 'sha256-yPyJV5v2JnYxgDy8GjN9sRRu0T3cncpvbi6c1CmC1RM=' https://static.cloudflareinsights.com; style-src 'sha256-TGoDTkU0Uq9wah+R6vJNj69MU4jq58iir957IdMx+TI='; img-src data:; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'
-
-/*.js
-  Cache-Control: public, max-age=0, must-revalidate
-
-/*.css
-  Cache-Control: public, max-age=0, must-revalidate
 
 /assets/*
   Cache-Control: public, max-age=86400

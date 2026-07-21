@@ -97,7 +97,7 @@ for (const match of html.matchAll(/(?:src|href)="\.\/([^"#?]+)"/g)) {
 for (const file of files.filter((path) => extname(path) === ".js")) {
   const source = readFileSync(file, "utf8");
   for (const match of source.matchAll(/(?:from\s+|import\s*)["'](\.{1,2}\/[^"']+)["']/g)) {
-    const imported = resolve(file, "..", match[1]);
+    const imported = resolve(file, "..", match[1].split(/[?#]/, 1)[0]);
     assert.equal(existsSync(imported), true, `broken JavaScript import in ${file}: ${match[1]}`);
   }
 }

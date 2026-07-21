@@ -269,21 +269,24 @@ export function bindArtifactShowcase({
     if (kind === "slides") {
       return createSlideViewer(options.sourceTemplate, options.count, artifactTitle);
     }
-    const video = documentObject.createElement("video");
-    video.src = source;
-    video.controls = true;
-    video.playsInline = true;
-    video.preload = "metadata";
-    video.poster = "./assets/studies/ddpm-conference-poster.webp";
-    const captions = documentObject.createElement("track");
-    captions.kind = "captions";
-    captions.label = "English";
-    captions.srclang = "en";
-    captions.src = VIDEO_CAPTIONS_SRC;
-    captions.default = true;
-    video.append(captions);
-    stage.classList.add("artifact-viewer__stage--video");
-    return video;
+    if (kind === "video") {
+      const video = documentObject.createElement("video");
+      video.src = source;
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+      video.poster = "./assets/studies/ddpm-conference-poster.webp";
+      const captions = documentObject.createElement("track");
+      captions.kind = "captions";
+      captions.label = "English";
+      captions.srclang = "en";
+      captions.src = VIDEO_CAPTIONS_SRC;
+      captions.default = true;
+      video.append(captions);
+      stage.classList.add("artifact-viewer__stage--video");
+      return video;
+    }
+    return null;
   };
 
   const openViewer = (trigger) => {
@@ -301,10 +304,12 @@ export function bindArtifactShowcase({
     title.textContent = artifactTitle;
     type.textContent = viewerTypes[artifactKind] ?? "Artifact";
     external.href = artifactNewTab;
-    stage.append(createViewerArtifact(artifactKind, artifactSrc, artifactTitle, {
+    const artifact = createViewerArtifact(artifactKind, artifactSrc, artifactTitle, {
       count: Number(artifactCount),
       sourceTemplate: artifactSrcTemplate,
-    }));
+    });
+    if (!artifact) return;
+    stage.append(artifact);
     viewer.showModal();
     documentElement?.classList.add("dialog-open");
     closeButton.focus();

@@ -2079,17 +2079,17 @@ html.dialog-open body {
 
 .browser-specimen__viewport {
   height: calc(100% - 34px);
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
-  scrollbar-color: #789189 #e7e8e3;
-  scrollbar-width: thin;
+  background: #f4f1e9;
 }
 
-.browser-specimen__viewport img {
+.browser-specimen__viewport iframe {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  border: 0;
+  background: #f4f1e9;
 }
 
 .video-specimen {

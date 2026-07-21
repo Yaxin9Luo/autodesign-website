@@ -24,6 +24,34 @@ try {
   await page.keyboard.press("ArrowDown");
   await page.waitForFunction(() => document.getElementById("scene-shell")?.dataset.introPhase === "complete");
 
+  await page.locator("#artifact-tab-slides").click();
+  await page.locator("#artifact-panel-slides [data-open-artifact]").click();
+  await page.locator("#artifact-viewer-stage .artifact-slide-viewer").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#artifact-viewer-stage video").count(), 0,
+    "hosted Slide viewer fell through to Video");
+  assert.equal(await page.locator("#artifact-viewer-type").textContent(), "Slide deck");
+  await page.keyboard.press("Escape");
+
+  await page.locator("#artifact-tab-web").click();
+  const previewFrame = page.locator("#artifact-panel-web .browser-specimen__viewport iframe").contentFrame();
+  await previewFrame.locator("footer").waitFor({ state: "attached" });
+  const previewBottom = await previewFrame.locator("body").evaluate(() => new Promise((resolveScroll) => {
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    requestAnimationFrame(() => {
+      const footer = document.querySelector("footer");
+      resolveScroll({
+        gap: document.documentElement.scrollHeight - (footer.getBoundingClientRect().bottom + window.scrollY),
+        maximum: document.documentElement.scrollHeight - window.innerHeight,
+        top: window.scrollY,
+      });
+    });
+  }));
+  assert.ok(previewBottom.top > 0 && Math.abs(previewBottom.top - previewBottom.maximum) <= 1,
+    `hosted Web preview cannot reach its footer: ${JSON.stringify(previewBottom)}`);
+  assert.ok(Math.abs(previewBottom.gap) <= 2,
+    `hosted Web preview leaves a blank tail: ${JSON.stringify(previewBottom)}`);
+
   for (const name of ["web"]) {
     await page.locator(`#artifact-tab-${name}`).click();
     const trigger = page.locator(`#artifact-panel-${name} [data-open-artifact]`);
