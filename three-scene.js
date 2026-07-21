@@ -631,7 +631,7 @@ function createArtifactSceneRuntime({
     return registerTexture(texture);
   };
   const introTextures = {
-    poster: loadIntroTexture("./assets/posters/attention-640.webp"),
+    poster: loadIntroTexture("./assets/posters/attention-1600.webp"),
     slides: loadIntroTexture("./assets/studies/slide-03.webp"),
     web: loadIntroTexture("./assets/studies/webpage.webp"),
     video: loadIntroTexture("./assets/studies/video-poster.webp"),
@@ -1294,6 +1294,7 @@ function createArtifactSceneRuntime({
     camera.aspect = width / height;
     camera.fov = compact.matches ? 45 : 37;
     camera.updateProjectionMatrix();
+    composer?.setPixelRatio(renderer.getPixelRatio());
     composer?.setSize(width, height);
     postProcessingEnabled = composer !== null && !compact.matches && !performanceDowngraded;
     if (reducedMotion.matches) renderStatic();

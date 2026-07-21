@@ -235,7 +235,8 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   expect(html.includes("longcat-next-slide-{index}.webp?v=675b8b1"), "Slide sources must bypass stale deployment fallbacks");
   expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
   expect(html.includes("styles.css?v=20260721e"), "Stylesheet must bypass stale browser caches");
-  expect(html.includes("app.js?v=20260721c"), "Application entrypoint must bypass stale browser caches");
+  expect(html.includes("app.js?v=20260721d"), "Application entrypoint must bypass stale browser caches");
+  expect(read("app.js").includes("three-scene.js?v=20260721a"), "Three.js scene module must bypass stale browser caches");
   expect(read("app.js").includes("artifact-showcase.js?v=20260721c"), "Artifact showcase module must bypass stale browser caches");
   expect(html.includes('class="browser-specimen__viewport">\n                <iframe'), "Web specimen must embed the real research webpage");
   expect(!html.includes('src="./assets/studies/longcat-next-web.webp"'), "Web specimen must not use the blank-ended screenshot");
@@ -414,6 +415,15 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
       if (!scene.includes(`./assets/studies/${texture}`)) {
         failures.push("three-scene.js missing retained texture " + texture);
       }
+    }
+    if (!scene.includes('./assets/posters/attention-1600.webp')) {
+      failures.push("intro poster must use the high-resolution texture");
+    }
+    if (scene.includes('./assets/posters/attention-640.webp')) {
+      failures.push("intro poster must not retain the low-resolution texture");
+    }
+    if (!/renderer\.setPixelRatio\([\s\S]{0,320}composer\?\.setPixelRatio\(renderer\.getPixelRatio\(\)\)[\s\S]{0,120}composer\?\.setSize\(width, height\)/.test(scene)) {
+      failures.push("postprocessing pixel ratio must stay synchronized with the HiDPI renderer");
     }
     if (scene.includes('canvas.addEventListener("click"')) {
       failures.push("canvas activation must raycast pointer/touch instead of handling generic clicks");
