@@ -210,19 +210,42 @@ async function runDesktop(browser, url) {
   assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-01\.webp\?v=675b8b1$/);
 
   await page.locator("#artifact-tab-web").click();
-  const webViewport = page.locator("#artifact-panel-web .browser-specimen__viewport");
-  const webGeometry = await webViewport.evaluate((viewport) => ({
-    clientHeight: viewport.clientHeight,
-    scrollHeight: viewport.scrollHeight,
+  const webPreview = page.locator("#artifact-panel-web .browser-specimen__viewport iframe");
+  await webPreview.waitFor({ state: "visible" });
+  const webPreviewFrame = webPreview.contentFrame();
+  await webPreviewFrame.locator("body").waitFor();
+  const webGeometry = await webPreviewFrame.locator("html").evaluate((html) => ({
+    clientHeight: window.innerHeight,
+    scrollHeight: html.scrollHeight,
   }));
   assert.ok(webGeometry.clientHeight > 0 && webGeometry.scrollHeight > webGeometry.clientHeight,
     `Web preview must scroll inside a fixed viewport: ${JSON.stringify(webGeometry)}`);
-  const webScroll = await webViewport.evaluate((viewport) => {
-    viewport.scrollTop = viewport.scrollHeight;
-    return { top: viewport.scrollTop, maximum: viewport.scrollHeight - viewport.clientHeight };
-  });
+  const webScroll = await webPreviewFrame.locator("body").evaluate(() => new Promise((resolveScroll) => {
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    requestAnimationFrame(() => {
+      const footer = document.querySelector("footer");
+      resolveScroll({
+        bottomGap: document.documentElement.scrollHeight - (footer.getBoundingClientRect().bottom + window.scrollY),
+        maximum: document.documentElement.scrollHeight - window.innerHeight,
+        top: window.scrollY,
+      });
+    });
+  }));
   assert.ok(webScroll.top > 0 && Math.abs(webScroll.top - webScroll.maximum) <= 1,
     `Web preview cannot reach its final content: ${JSON.stringify(webScroll)}`);
+  assert.ok(Math.abs(webScroll.bottomGap) <= 2,
+    `Web preview leaves blank space after its footer: ${JSON.stringify(webScroll)}`);
+
+  await page.locator("#artifact-tab-slides").click();
+  const slidesTrigger = page.locator("#artifact-panel-slides [data-open-artifact]");
+  await slidesTrigger.evaluate((trigger) => { trigger.dataset.artifactKind = "unsupported"; });
+  await slidesTrigger.click();
+  assert.equal(await page.locator("#artifact-viewer").getAttribute("open"), null,
+    "Unknown artifact types must not open a mismatched viewer");
+  assert.equal(await page.locator("#artifact-viewer-stage video").count(), 0,
+    "Unknown artifact types must never fall through to Video");
+  await slidesTrigger.evaluate((trigger) => { trigger.dataset.artifactKind = "slides"; });
 
   for (const name of ["poster", "slides", "web", "video"]) {
     await page.locator(`#artifact-tab-${name}`).click();
@@ -246,6 +269,9 @@ async function runDesktop(browser, url) {
         "Poster viewer image did not decode");
     }
     if (kind === "slides") {
+      assert.equal(await page.locator("#artifact-viewer-type").textContent(), "Slide deck");
+      assert.equal(await page.locator("#artifact-viewer-stage video").count(), 0,
+        "Slide viewer rendered an unexpected video element");
       const slideImage = artifact.locator("[data-viewer-slide-image]");
       await slideImage.waitFor({ state: "visible" });
       assert.ok(await slideImage.evaluate((image) => image.complete && image.naturalWidth > 0),
