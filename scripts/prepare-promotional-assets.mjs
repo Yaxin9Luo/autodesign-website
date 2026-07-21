@@ -28,6 +28,7 @@ const approvedSources = [
   ["PosterHarness poster", posterSource, "6290d4be1bc4a7b0432941f875415102c78099d8e2c837431c375480115a3cf9"],
   ["Slides HTML", slideSource, "90d3ec2e27b470b2c9c5e208e26bd8b31e9e97effa896da9fb475c8ac750423c"],
   ["Web HTML", webSource, "e7a37c2df61b6ab333b1f8b2b66437b094be5fd086ea92b8ac4f8aebbfb7cd59"],
+  ["Web preview PNG", webPreviewSource, "63b80b2bd025aab9e44ffd23e467c2fc985d81eb303ad3cdd1b4c3f2c68c8b50"],
   ["DDPM MP4", videoSource, "98e94d39767e563d105d69342c03daf36efcb615134032a986f1236b7bd777c8"],
   ["DDPM VTT", captionsSource, "c48c263dda465d2a6100c51c3dfb104e35dd59e1a631143c84c4435fddd4e6d8"],
 ];
@@ -81,10 +82,12 @@ await mkdir(resolve(webOutput, ".."), { recursive: true });
 
 const temporaryDirectory = await mkdtemp(join(tmpdir(), "autodesign-promo-"));
 const approvedPosterInput = resolve(temporaryDirectory, "approved-poster.png");
+const approvedWebPreviewInput = resolve(temporaryDirectory, "approved-web-preview.png");
 const approvedVideoInput = resolve(temporaryDirectory, "approved-ddpm.mp4");
 let browser;
 try {
   await writeFile(approvedPosterInput, approvedSourceContents.get(posterSource));
+  await writeFile(approvedWebPreviewInput, approvedSourceContents.get(webPreviewSource));
   await writeFile(approvedVideoInput, approvedSourceContents.get(videoSource));
   await writeFile(slidesOutput, normalizeGeneratedHtml(approvedSourceContents.get(slideSource).toString("utf8")));
   record(slidesOutput);
@@ -94,7 +97,7 @@ try {
   record(resolve(studiesOutput, "ddpm-conference.en.vtt"));
 
   await transcodeWebp(approvedPosterInput, resolve(studiesOutput, "longcat-next-poster.webp"));
-  await transcodeWebp(webPreviewSource, resolve(studiesOutput, "longcat-next-web.webp"));
+  await transcodeWebp(approvedWebPreviewInput, resolve(studiesOutput, "longcat-next-web.webp"));
 
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });

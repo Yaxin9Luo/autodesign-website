@@ -119,16 +119,26 @@ if (existsSync(resolve(root, "scripts/prepare-promotional-assets.mjs"))) {
     "6290d4be1bc4a7b0432941f875415102c78099d8e2c837431c375480115a3cf9",
     "90d3ec2e27b470b2c9c5e208e26bd8b31e9e97effa896da9fb475c8ac750423c",
     "e7a37c2df61b6ab333b1f8b2b66437b094be5fd086ea92b8ac4f8aebbfb7cd59",
+    "63b80b2bd025aab9e44ffd23e467c2fc985d81eb303ad3cdd1b4c3f2c68c8b50",
     "98e94d39767e563d105d69342c03daf36efcb615134032a986f1236b7bd777c8",
     "c48c263dda465d2a6100c51c3dfb104e35dd59e1a631143c84c4435fddd4e6d8",
   ];
   for (const hash of approvedSourceSha256) {
     if (!preparationScript.includes(hash)) failures.push("promotional asset preparation missing approved SHA-256 " + hash);
   }
-  for (const source of ["slideSource", "webSource", "videoSource", "captionsSource"]) {
+  for (const source of ["slideSource", "webSource", "webPreviewSource", "videoSource", "captionsSource"]) {
     if (!preparationScript.includes(`approvedSourceContents.get(${source})`)) {
       failures.push("promotional asset generation must consume validated bytes for " + source);
     }
+  }
+  if (!/writeFile\(approvedWebPreviewInput,\s*approvedSourceContents\.get\(webPreviewSource\)\)/s.test(preparationScript)) {
+    failures.push("promotional Web preview must stage validated bytes in its temporary input");
+  }
+  if (!/transcodeWebp\(approvedWebPreviewInput,\s*resolve\(studiesOutput, "longcat-next-web\.webp"\)\)/s.test(preparationScript)) {
+    failures.push("promotional Web preview cwebp must consume its validated temporary input");
+  }
+  if (preparationScript.includes("transcodeWebp(webPreviewSource")) {
+    failures.push("promotional Web preview cwebp must not reopen the source path after validation");
   }
   for (const symbol of [
     'createHash("sha256")',
