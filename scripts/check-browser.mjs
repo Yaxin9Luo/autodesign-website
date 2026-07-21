@@ -115,10 +115,53 @@ async function runDesktop(browser, url) {
   await waitForPhase(page, "complete");
   assert.equal(await page.locator("#intro-replay").isVisible(), true);
 
+  assert.equal(await page.locator("[data-artifact-tab]").count(), 4);
+  assert.equal(await page.locator("#artifact-panel-poster").isVisible(), true);
+  assert.equal(await page.locator("#artifact-panel-video source").getAttribute("src"), null);
+  await page.locator("#artifact-tab-poster").focus();
+  await page.keyboard.press("End");
+  assert.equal(await page.locator("#artifact-tab-video").getAttribute("aria-selected"), "true");
+  await page.keyboard.press("Home");
+  assert.equal(await page.locator("#artifact-tab-poster").getAttribute("aria-selected"), "true");
+  await page.keyboard.press("ArrowLeft");
+  assert.equal(await page.locator("#artifact-tab-video").getAttribute("aria-selected"), "true");
+  await page.keyboard.press("ArrowRight");
+  assert.equal(await page.locator("#artifact-tab-poster").getAttribute("aria-selected"), "true");
+  await page.locator("#artifact-tab-video").click();
+  await page.waitForFunction(() => document.querySelector("#artifact-panel-video source")?.src.endsWith("ddpm-conference-teaser.mp4"));
+
+  for (const name of ["poster", "slides", "web", "video"]) {
+    await page.locator(`#artifact-tab-${name}`).click();
+    const trigger = page.locator(`#artifact-panel-${name} [data-open-artifact]`);
+    const kind = await trigger.getAttribute("data-artifact-kind");
+    const source = await trigger.getAttribute("data-artifact-src");
+    await trigger.click();
+    const artifact = page.locator(`#artifact-viewer-stage ${kind === "image" ? "img" : kind}`);
+    await artifact.waitFor({ state: "visible" });
+    assert.equal(await artifact.getAttribute("src"), source);
+    assert.equal(await page.locator("#artifact-viewer-stage").locator(kind === "image" ? "img" : kind).count(), 1);
+    if (kind === "iframe") {
+      assert.notEqual(await artifact.getAttribute("sandbox"), null);
+    }
+    if (kind === "video") {
+      const captions = artifact.locator('track[kind="captions"][srclang="en"]');
+      assert.equal(await captions.getAttribute("src"), "./assets/studies/ddpm-conference.en.vtt");
+      assert.equal(await captions.getAttribute("default"), "");
+    }
+    await page.keyboard.press("Shift+Tab");
+    assert.equal(await page.locator("#artifact-viewer-external").evaluate((element) => document.activeElement === element), true);
+    await page.keyboard.press("Tab");
+    assert.equal(await page.locator("#artifact-viewer .artifact-viewer__close").evaluate((element) => document.activeElement === element), true);
+    await page.keyboard.press("Escape");
+    assert.equal(await page.locator("#artifact-viewer-stage").evaluate((stage) => stage.childElementCount), 0);
+    assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
+  }
+
   await page.locator("#intro-replay").click();
   await waitForPhase(page, "armed");
   assert.equal(await page.locator("#artifact-canvas").count(), 1);
   assert.equal(await page.locator("#scene-shell").getAttribute("data-intro-phase"), "armed");
+
   assert.deepEqual(errors, [], `desktop console errors: ${errors.join(" | ")}`);
   await page.close();
 }

@@ -96,7 +96,7 @@ for (const file of vendoredJavaScriptFiles) {
   }
 }
 
-for (const file of ["index.html", "styles.css", "site-data.js", "app.js", "page-lifecycle.js", "scene-state.js", "three-scene.js", "intro-state.js", "intro-audio.js", "intro-scene.js", "scripts/prepare-promotional-assets.mjs"]) {
+for (const file of ["index.html", "styles.css", "site-data.js", "app.js", "artifact-showcase.js", "page-lifecycle.js", "scene-state.js", "three-scene.js", "intro-state.js", "intro-audio.js", "intro-scene.js", "scripts/prepare-promotional-assets.mjs"]) {
   if (!existsSync(resolve(root, file))) failures.push("missing " + file);
 }
 
@@ -259,7 +259,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     "renderEvolution",
     "renderHarness",
     "renderTransferResults",
-    "bindArtifactStudies",
+    "bindArtifactShowcase",
     'controller?.goToState("system")',
     'controller?.goToState("artifacts")',
     'controller?.goToState("poster", activePosterIndex)',
@@ -488,7 +488,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     if (!sceneFocus.includes(symbol)) failures.push("scene-focus.js missing " + symbol);
   }
 
-  for (const file of ["app.js", "page-lifecycle.js", "scene-focus.js", "scene-state.js", "three-scene.js"]) {
+  for (const file of ["app.js", "artifact-showcase.js", "page-lifecycle.js", "scene-focus.js", "scene-state.js", "three-scene.js"]) {
     try {
       execFileSync(process.execPath, ["--check", resolve(root, file)], { stdio: "pipe" });
     } catch (error) {

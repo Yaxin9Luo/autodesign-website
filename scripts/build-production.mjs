@@ -7,6 +7,7 @@ const output = resolve(root, "dist");
 const runtimeFiles = [
   "_headers",
   "app.js",
+  "artifact-showcase.js",
   "index.html",
   "intro-audio.js",
   "intro-scene.js",
