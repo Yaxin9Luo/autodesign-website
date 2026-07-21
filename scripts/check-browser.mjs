@@ -129,6 +129,12 @@ async function runDesktop(browser, url) {
   assert.equal(await page.locator("#artifact-tab-poster").getAttribute("aria-selected"), "true");
   await page.locator("#artifact-tab-video").click();
   await page.waitForFunction(() => document.querySelector("#artifact-panel-video source")?.src.endsWith("ddpm-conference-teaser.mp4"));
+  await page.locator("#artifact-tab-poster").click();
+  await page.waitForFunction(() => {
+    const video = document.querySelector("#artifact-panel-video video");
+    const source = video?.querySelector("source");
+    return video?.paused && !source?.hasAttribute("src") && video.networkState === video.NETWORK_NO_SOURCE;
+  });
 
   for (const name of ["poster", "slides", "web", "video"]) {
     await page.locator(`#artifact-tab-${name}`).click();
@@ -138,6 +144,7 @@ async function runDesktop(browser, url) {
     await trigger.click();
     const artifact = page.locator(`#artifact-viewer-stage ${kind === "image" ? "img" : kind}`);
     await artifact.waitFor({ state: "visible" });
+    const detachedVideo = kind === "video" ? await artifact.elementHandle() : null;
     assert.equal(await artifact.getAttribute("src"), source);
     assert.equal(await page.locator("#artifact-viewer-stage").locator(kind === "image" ? "img" : kind).count(), 1);
     if (kind === "iframe") {
@@ -154,6 +161,15 @@ async function runDesktop(browser, url) {
     assert.equal(await page.locator("#artifact-viewer .artifact-viewer__close").evaluate((element) => document.activeElement === element), true);
     await page.keyboard.press("Escape");
     assert.equal(await page.locator("#artifact-viewer-stage").evaluate((stage) => stage.childElementCount), 0);
+    if (detachedVideo) {
+      assert.deepEqual(await detachedVideo.evaluate((video) => ({
+        paused: video.paused,
+        references: [...video.querySelectorAll("source, track")].map((element) => element.getAttribute("src")),
+        source: video.getAttribute("src"),
+        unloaded: [video.NETWORK_EMPTY, video.NETWORK_NO_SOURCE].includes(video.networkState),
+      })), { paused: true, references: [null], source: null, unloaded: true });
+      await detachedVideo.dispose();
+    }
     assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
   }
 
@@ -192,8 +208,35 @@ async function runReducedMotion(browser, url) {
   await page.keyboard.press("ArrowDown");
   await waitForPhase(page, "complete", 1_500);
   await page.locator("#artifact-tab-video").click();
-  assert.equal(await page.locator("#artifact-panel-video video").evaluate((video) => video.paused), true);
+  const teaserState = await page.locator("#artifact-panel-video video").evaluate((video) => ({
+    networkState: video.networkState,
+    paused: video.paused,
+    source: video.querySelector("source")?.getAttribute("src") ?? null,
+  }));
+  assert.deepEqual(teaserState, { networkState: 3, paused: true, source: null });
   assert.deepEqual(errors, [], `reduced-motion console errors: ${errors.join(" | ")}`);
+  await page.close();
+}
+
+async function runSaveData(browser, url) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await page.addInitScript(() => {
+    const connection = new EventTarget();
+    Object.defineProperty(connection, "saveData", { value: true });
+    Object.defineProperty(navigator, "connection", { configurable: true, value: connection });
+  });
+  const errors = watchConsole(page);
+  await openArmed(page, url);
+  await page.keyboard.press("ArrowDown");
+  await waitForPhase(page, "complete");
+  await page.locator("#artifact-tab-video").click();
+  const teaserState = await page.locator("#artifact-panel-video video").evaluate((video) => ({
+    networkState: video.networkState,
+    paused: video.paused,
+    source: video.querySelector("source")?.getAttribute("src") ?? null,
+  }));
+  assert.deepEqual(teaserState, { networkState: 3, paused: true, source: null });
+  assert.deepEqual(errors, [], `save-data console errors: ${errors.join(" | ")}`);
   await page.close();
 }
 
@@ -245,6 +288,7 @@ try {
   await runDesktop(browser, url);
   await runMobile(browser, url);
   await runReducedMotion(browser, url);
+  await runSaveData(browser, url);
   await runFallback(browser, url, false);
   await runFallback(browser, url, true);
   console.log("research-site browser smoke: OK");

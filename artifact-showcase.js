@@ -39,11 +39,19 @@ export function bindArtifactShowcase({
 
   const teaserAllowed = () => !reducedMotion.matches && dataConnection?.saveData !== true;
 
+  const unloadVideo = (video) => {
+    if (!video) return;
+    video.pause();
+    video.removeAttribute("src");
+    video.querySelectorAll("source[src], track[src]").forEach((element) => element.removeAttribute("src"));
+    video.load();
+  };
+
   const syncTeaser = () => {
     if (!teaser || !teaserSource) return;
     const videoSelected = !videoPanel.hidden;
     if (!videoSelected || !sectionVisible || !teaserAllowed()) {
-      teaser.pause();
+      unloadVideo(teaser);
       return;
     }
     if (!teaserSource.hasAttribute("src")) {
@@ -92,7 +100,7 @@ export function bindArtifactShowcase({
   listen(dataConnection, "change", syncTeaser);
 
   const clearStage = () => {
-    stage.querySelector("video")?.pause();
+    unloadVideo(stage.querySelector("video"));
     const iframe = stage.querySelector("iframe");
     if (iframe) iframe.src = "about:blank";
     stage.replaceChildren();
@@ -196,8 +204,6 @@ export function bindArtifactShowcase({
     finishClose();
     cleanupListeners.forEach((cleanup) => cleanup());
     visibilityObserver?.disconnect();
-    teaser?.pause();
-    teaserSource?.removeAttribute("src");
-    teaser?.load();
+    unloadVideo(teaser);
   };
 }
