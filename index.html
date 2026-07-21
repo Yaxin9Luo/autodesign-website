@@ -129,29 +129,45 @@
       <section class="artifact-studies" id="artifact-studies" aria-labelledby="artifact-studies-title">
         <div class="artifact-studies__heading">
           <p class="eyebrow">Artifact studies / emerging formats</p>
-          <h2 id="artifact-studies-title">One source system.<br>More ways to communicate.</h2>
-          <p>Academic posters are AutoDesign's validated domain. These research specimens explore the same source-to-artifact workflow across slides, the web, and motion.</p>
+          <h2 id="artifact-studies-title">One validated poster.<br>Three emerging formats.</h2>
+          <p>PosterHarness is AutoDesign's validated academic-poster instantiation. These companion research specimens explore the same source-to-artifact workflow across slides, the web, and motion.</p>
         </div>
 
         <div class="artifact-tabs" role="tablist" aria-label="Select an artifact study">
-          <button type="button" role="tab" id="artifact-tab-slides" aria-selected="true" aria-controls="artifact-panel-slides" data-artifact-tab="slides"><span>01</span> Slides</button>
-          <button type="button" role="tab" id="artifact-tab-web" aria-selected="false" aria-controls="artifact-panel-web" data-artifact-tab="web" tabindex="-1"><span>02</span> Web</button>
-          <button type="button" role="tab" id="artifact-tab-video" aria-selected="false" aria-controls="artifact-panel-video" data-artifact-tab="video" tabindex="-1"><span>03</span> Video</button>
+          <button type="button" role="tab" id="artifact-tab-poster" aria-selected="true" aria-controls="artifact-panel-poster" data-artifact-tab="poster"><span>01</span> Poster</button>
+          <button type="button" role="tab" id="artifact-tab-slides" aria-selected="false" aria-controls="artifact-panel-slides" data-artifact-tab="slides" tabindex="-1"><span>02</span> Slides</button>
+          <button type="button" role="tab" id="artifact-tab-web" aria-selected="false" aria-controls="artifact-panel-web" data-artifact-tab="web" tabindex="-1"><span>03</span> Web</button>
+          <button type="button" role="tab" id="artifact-tab-video" aria-selected="false" aria-controls="artifact-panel-video" data-artifact-tab="video" tabindex="-1"><span>04</span> Video</button>
         </div>
 
-        <div class="artifact-study" id="artifact-panel-slides" role="tabpanel" aria-labelledby="artifact-tab-slides" data-artifact-panel="slides">
-          <div class="artifact-study__stage artifact-study__stage--slides">
-            <div class="slide-filmstrip" aria-label="Selected slides from a generated LongCat-Next research deck">
-              <img src="./assets/studies/slide-01.webp" width="1400" height="788" alt="Title slide from a generated LongCat-Next research presentation">
-              <img src="./assets/studies/slide-03.webp" width="1400" height="788" alt="Architecture slide from a generated LongCat-Next research presentation" loading="lazy">
-              <img src="./assets/studies/slide-05.webp" width="1400" height="788" alt="Modality processing slide from a generated LongCat-Next research presentation" loading="lazy">
-            </div>
-            <p class="artifact-stage-label"><span>10 slides</span><span>Editable deck</span></p>
+        <div class="artifact-study" id="artifact-panel-poster" role="tabpanel" aria-labelledby="artifact-tab-poster" data-artifact-panel="poster">
+          <div class="artifact-study__stage artifact-study__stage--poster">
+            <img src="./assets/studies/longcat-next-poster.webp" width="2048" height="1024" alt="Generated LongCat-Next academic research poster">
+            <p class="artifact-stage-label"><span>LongCat-Next</span><span>Editable HTML poster</span></p>
           </div>
           <div class="artifact-study__copy">
-            <p class="artifact-study__index">01 / Paper to slides</p>
-            <h3>A research narrative, paced across ten editable frames.</h3>
+            <p class="artifact-study__index">01 / Paper to poster</p>
+            <h3>A source-grounded poster that remains editable.</h3>
+            <p>LongCat-Next is rendered as a dense academic poster with paper figures, benchmark evidence, and native HTML text for continued revision.</p>
+            <button type="button" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/studies/longcat-next-poster.webp" data-artifact-title="LongCat-Next research poster" data-artifact-new-tab="./assets/studies/longcat-next-poster.webp">Inspect poster</button>
+            <dl><div><dt>Source</dt><dd>Paper, figures, tables</dd></div><div><dt>Artifact</dt><dd>Editable HTML poster</dd></div><div><dt>Status</dt><dd>Validated PosterHarness output</dd></div></dl>
+          </div>
+        </div>
+
+        <div class="artifact-study" id="artifact-panel-slides" role="tabpanel" aria-labelledby="artifact-tab-slides" data-artifact-panel="slides" hidden>
+          <div class="artifact-study__stage artifact-study__stage--slides">
+            <div class="slide-filmstrip" aria-label="Selected slides from a generated LongCat-Next research deck">
+              <img src="./assets/studies/longcat-next-slide-cover.webp" width="1920" height="1080" alt="Title slide from a generated LongCat-Next research presentation">
+              <img src="./assets/studies/longcat-next-slide-method.webp" width="1920" height="1080" alt="Method slide from a generated LongCat-Next research presentation" loading="lazy">
+              <img src="./assets/studies/longcat-next-slide-results.webp" width="1920" height="1080" alt="Results slide from a generated LongCat-Next research presentation" loading="lazy">
+            </div>
+            <p class="artifact-stage-label"><span>12 slides</span><span>Editable deck</span></p>
+          </div>
+          <div class="artifact-study__copy">
+            <p class="artifact-study__index">02 / Paper to slides</p>
+            <h3>A research narrative, paced across twelve editable frames.</h3>
             <p>LongCat-Next is reorganized into a presentation sequence with paper figures, benchmark evidence, and a consistent visual grammar.</p>
+            <button type="button" data-open-artifact data-artifact-kind="iframe" data-artifact-src="./artifacts/slides/longcat-next/index.html" data-artifact-title="LongCat-Next research slides" data-artifact-new-tab="./artifacts/slides/longcat-next/index.html">Open slide deck</button>
             <dl><div><dt>Source</dt><dd>Paper, figures, tables</dd></div><div><dt>Artifact</dt><dd>HTML, PDF, and PPTX</dd></div><div><dt>Status</dt><dd>Exploratory generalization study</dd></div></dl>
           </div>
         </div>
@@ -159,15 +175,16 @@
         <div class="artifact-study" id="artifact-panel-web" role="tabpanel" aria-labelledby="artifact-tab-web" data-artifact-panel="web" hidden>
           <div class="artifact-study__stage artifact-study__stage--web">
             <div class="browser-specimen">
-              <div class="browser-specimen__bar"><i></i><i></i><i></i><span>research artifact / SAM 2</span></div>
-              <div class="browser-specimen__viewport"><img src="./assets/studies/webpage.webp" width="900" height="4146" alt="Generated long-form SAM 2 research webpage" loading="lazy"></div>
+              <div class="browser-specimen__bar"><i></i><i></i><i></i><span>research artifact / LongCat-Next</span></div>
+              <div class="browser-specimen__viewport"><img src="./assets/studies/longcat-next-web.webp" width="777" height="4096" alt="Generated long-form LongCat-Next research webpage" loading="lazy"></div>
             </div>
             <p class="artifact-stage-label"><span>Responsive</span><span>Executable HTML</span></p>
           </div>
           <div class="artifact-study__copy">
-            <p class="artifact-study__index">02 / Paper to web</p>
+            <p class="artifact-study__index">03 / Paper to web</p>
             <h3>An editorial research page built for reading, not just viewing.</h3>
-            <p>The SAM 2 paper becomes a responsive long-form artifact with grounded figures, quantitative evidence, and verified project links.</p>
+            <p>LongCat-Next becomes a responsive long-form artifact with grounded figures, quantitative evidence, and verified project links.</p>
+            <button type="button" data-open-artifact data-artifact-kind="iframe" data-artifact-src="./artifacts/web/longcat-next/index.html" data-artifact-title="LongCat-Next research webpage" data-artifact-new-tab="./artifacts/web/longcat-next/index.html">Open research webpage</button>
             <dl><div><dt>Source</dt><dd>Paper, figures, project links</dd></div><div><dt>Artifact</dt><dd>Responsive HTML and CSS</dd></div><div><dt>Status</dt><dd>Exploratory generalization study</dd></div></dl>
           </div>
         </div>
@@ -175,17 +192,18 @@
         <div class="artifact-study" id="artifact-panel-video" role="tabpanel" aria-labelledby="artifact-tab-video" data-artifact-panel="video" hidden>
           <div class="artifact-study__stage artifact-study__stage--video">
             <div class="video-specimen">
-              <video muted loop playsinline preload="metadata" poster="./assets/studies/video-poster.webp" aria-label="Generated SAM 2 motion explainer">
-                <source src="./assets/studies/SAM2-motion-explainer.mp4" type="video/mp4">
+              <video muted loop playsinline preload="metadata" poster="./assets/studies/ddpm-conference-poster.webp" aria-label="Generated DDPM conference video teaser">
+                <source data-preview-src="./assets/studies/ddpm-conference-teaser.mp4" type="video/mp4">
               </video>
               <span class="video-specimen__play" aria-hidden="true">▶</span>
             </div>
-            <p class="artifact-stage-label"><span>72 seconds</span><span>Silent motion explainer</span></p>
+            <p class="artifact-stage-label"><span>6 minutes</span><span>Conference video</span></p>
           </div>
           <div class="artifact-study__copy">
-            <p class="artifact-study__index">03 / Paper to video</p>
-            <h3>Six scenes that move from problem to evidence.</h3>
-            <p>The SAM 2 explainer turns the paper's interaction model, architecture, qualitative examples, and benchmark results into a timed visual sequence.</p>
+            <p class="artifact-study__index">04 / Paper to video</p>
+            <h3>A conference talk that moves from method to evidence.</h3>
+            <p>The DDPM conference video turns the paper's diffusion process, qualitative examples, and evaluation results into a timed visual sequence.</p>
+            <button type="button" data-open-artifact data-artifact-kind="video" data-artifact-src="./assets/studies/ddpm-conference-video-6min.mp4" data-artifact-title="Denoising Diffusion Probabilistic Models conference video" data-artifact-new-tab="./assets/studies/ddpm-conference-video-6min.mp4">Watch conference video</button>
             <dl><div><dt>Source</dt><dd>Paper, figures, evaluation</dd></div><div><dt>Artifact</dt><dd>1920 × 1080 H.264 video</dd></div><div><dt>Status</dt><dd>Exploratory generalization study</dd></div></dl>
           </div>
         </div>
@@ -340,6 +358,14 @@
           <a class="text-link" href="#posters">Return to artifact index <span aria-hidden="true">↑</span></a>
         </div>
       </div>
+    </dialog>
+
+    <dialog id="artifact-viewer" aria-labelledby="artifact-viewer-title">
+      <button type="button" class="artifact-viewer__close" aria-label="Close artifact viewer">×</button>
+      <p class="artifact-viewer__type" id="artifact-viewer-type"></p>
+      <h2 id="artifact-viewer-title"></h2>
+      <div id="artifact-viewer-stage" class="artifact-viewer__stage"></div>
+      <a id="artifact-viewer-external" target="_blank" rel="noreferrer">Open in new tab</a>
     </dialog>
 
     <script src="./site-data.js"></script>

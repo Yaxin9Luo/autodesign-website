@@ -6,9 +6,9 @@
     "build": "node scripts/build-production.mjs",
     "deploy": "npm run build && node scripts/check-production.mjs && wrangler pages deploy dist --project-name autodesign --branch main --commit-dirty=true",
     "vendor": "node scripts/vendor-three.mjs",
-    "test": "node scripts/check-intro-state.mjs && node scripts/check-scene-state.mjs && node scripts/check-scene-focus.mjs && node scripts/check-lifecycle.mjs && node scripts/check-site.mjs",
-    "test:browser": "node scripts/check-browser.mjs",
-    "test:production": "npm run build && node scripts/check-production.mjs && SITE_ROOT=dist node scripts/check-browser.mjs"
+    "test": "node scripts/check-process-group.mjs && node scripts/check-intro-state.mjs && node scripts/check-scene-state.mjs && node scripts/check-scene-focus.mjs && node scripts/check-lifecycle.mjs && node scripts/check-site.mjs",
+    "test:browser": "node scripts/run-browser-check.mjs",
+    "test:production": "npm run build && node scripts/check-production.mjs && node scripts/check-production-host.mjs"
   },
   "dependencies": {
     "three": "0.185.1"

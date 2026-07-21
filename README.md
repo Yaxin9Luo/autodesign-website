@@ -23,7 +23,7 @@ npm run test:browser
 
 The Three.js runtime and postprocessing modules are vendored under `vendor/three/`; the public site does not depend on a CDN. Browser verification should confirm that `canvas[data-scene]` reaches `running` or `static` with no console errors. Reduced-motion, save-data, narrow-screen, and WebGL-fallback paths intentionally remove or simplify continuous rendering.
 
-Release QA covers `1440x900`, `1280x800`, `768x1024`, `390x844`, and `320x667`. At each size, verify the engine states, focused poster view, evidence transition, horizontal overflow, local asset responses, and console output. Also exercise reduced motion, save-data, WebGL fallback, scene visibility pause/resume, poster-dialog keyboard focus, and compact previous/next controls.
+Release QA covers `1440x900`, `1280x800`, `768x1024`, `430x932`, and `320x667`. At each size, verify the engine states, focused poster view, all four artifact tabs and viewer modes, evidence transition, horizontal overflow, local asset responses, and console output. Also exercise reduced motion, save-data, WebGL fallback, scene visibility pause/resume, both dialogs' keyboard focus, DDPM video narration/captions, and compact previous/next controls.
 
 The browser smoke check covers the primary automated release paths. Manual release review should still cover:
 
@@ -35,14 +35,26 @@ The browser smoke check covers the primary automated release paths. Manual relea
 
 ## Curated Assets
 
-The checked-in assets are publication-ready derivatives of approved AutoDesign outputs. Source selection and transcoding remain in the private AutoDesign development workspace; this deployment repository contains only the assets required by the public site.
+The checked-in assets are publication-ready derivatives of approved AutoDesign outputs. The showcase uses LongCat-Next for the poster, slide, and web specimens, and Denoising Diffusion Probabilistic Models (DDPM) for the conference-video specimen. The LongCat-Next poster is validated PosterHarness output; the slide deck, research page, and DDPM video remain exploratory generalization studies rather than validated product claims.
+
+Source selection remains in the private AutoDesign development workspace. To regenerate the checked-in derivatives, set `AUTODESIGN_PROMO_ROOT` to the source bundle containing the standalone LongCat-Next slide/web exports and DDPM video/captions, and set `AUTODESIGN_POSTER_SOURCE` to the approved LongCat-Next poster image. The poster, slide HTML, web HTML and preview PNG, DDPM MP4, and captions are SHA-256 gated before any generated file is written:
+
+```bash
+AUTODESIGN_PROMO_ROOT=/absolute/path/to/promotion-sources \
+AUTODESIGN_POSTER_SOURCE=/absolute/path/to/approved-longcat-next-poster.png \
+node scripts/prepare-promotional-assets.mjs
+```
+
+The deployment repository retains only the generated files required by the public site.
 
 ## Production Deployment
 
 Generate and verify the allowlisted production package under the ignored `dist/` directory:
 
 ```bash
+npm test
 npm run test:production
+git diff --check
 ```
 
 Pull requests run the deterministic and browser release checks without touching production. A successful push to `main` deploys the verified `dist/` package to the existing `autodesign` Cloudflare Pages project through GitHub Actions. The workflow reads `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` from repository Actions secrets.

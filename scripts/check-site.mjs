@@ -49,6 +49,22 @@ const posterSlugs = [
   "m87",
 ];
 const failures = [];
+const expect = (condition, message) => {
+  if (!condition) failures.push(message);
+};
+const relativeLuminance = (hex) => {
+  const channels = hex.slice(1).match(/.{2}/g).map((channel) => parseInt(channel, 16) / 255);
+  const linear = channels.map((channel) => (
+    channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+  ));
+  return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+};
+const contrastRatio = (foreground, background) => {
+  const foregroundLuminance = relativeLuminance(foreground);
+  const backgroundLuminance = relativeLuminance(background);
+  return (Math.max(foregroundLuminance, backgroundLuminance) + 0.05)
+    / (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
+};
 const threeFiles = [
   "vendor/three/three.module.min.js",
   "vendor/three/three.core.min.js",
@@ -93,8 +109,54 @@ for (const file of vendoredJavaScriptFiles) {
   }
 }
 
-for (const file of ["index.html", "styles.css", "site-data.js", "app.js", "page-lifecycle.js", "scene-state.js", "three-scene.js", "intro-state.js", "intro-audio.js", "intro-scene.js"]) {
+for (const file of ["index.html", "styles.css", "site-data.js", "app.js", "artifact-showcase.js", "page-lifecycle.js", "scene-state.js", "three-scene.js", "intro-state.js", "intro-audio.js", "intro-scene.js", "scripts/prepare-promotional-assets.mjs"]) {
   if (!existsSync(resolve(root, file))) failures.push("missing " + file);
+}
+
+if (existsSync(resolve(root, "scripts/prepare-promotional-assets.mjs"))) {
+  const preparationScript = read("scripts/prepare-promotional-assets.mjs");
+  const approvedSourceSha256 = [
+    "6290d4be1bc4a7b0432941f875415102c78099d8e2c837431c375480115a3cf9",
+    "90d3ec2e27b470b2c9c5e208e26bd8b31e9e97effa896da9fb475c8ac750423c",
+    "e7a37c2df61b6ab333b1f8b2b66437b094be5fd086ea92b8ac4f8aebbfb7cd59",
+    "63b80b2bd025aab9e44ffd23e467c2fc985d81eb303ad3cdd1b4c3f2c68c8b50",
+    "98e94d39767e563d105d69342c03daf36efcb615134032a986f1236b7bd777c8",
+    "c48c263dda465d2a6100c51c3dfb104e35dd59e1a631143c84c4435fddd4e6d8",
+  ];
+  for (const hash of approvedSourceSha256) {
+    if (!preparationScript.includes(hash)) failures.push("promotional asset preparation missing approved SHA-256 " + hash);
+  }
+  for (const source of ["slideSource", "webSource", "webPreviewSource", "videoSource", "captionsSource"]) {
+    if (!preparationScript.includes(`approvedSourceContents.get(${source})`)) {
+      failures.push("promotional asset generation must consume validated bytes for " + source);
+    }
+  }
+  if (!/writeFile\(approvedWebPreviewInput,\s*approvedSourceContents\.get\(webPreviewSource\)\)/s.test(preparationScript)) {
+    failures.push("promotional Web preview must stage validated bytes in its temporary input");
+  }
+  if (!/transcodeWebp\(approvedWebPreviewInput,\s*resolve\(studiesOutput, "longcat-next-web\.webp"\)\)/s.test(preparationScript)) {
+    failures.push("promotional Web preview cwebp must consume its validated temporary input");
+  }
+  if (preparationScript.includes("transcodeWebp(webPreviewSource")) {
+    failures.push("promotional Web preview cwebp must not reopen the source path after validation");
+  }
+  for (const symbol of [
+    'createHash("sha256")',
+    "Approved source SHA-256 mismatch",
+    "normalizeGeneratedHtml",
+    "autodesign:artifact-viewer:escape",
+  ]) {
+    if (!preparationScript.includes(symbol)) failures.push("promotional asset preparation missing " + symbol);
+  }
+  const validationBoundary = preparationScript.indexOf("await validateApprovedSources");
+  const firstOutputWrite = preparationScript.indexOf("await mkdir");
+  if (validationBoundary < 0 || firstOutputWrite < 0 || validationBoundary > firstOutputWrite) {
+    failures.push("promotional sources must be SHA-256 validated before output writes");
+  }
+  const overwriteFlagCount = preparationScript.match(/"-y"/g)?.length ?? 0;
+  if (overwriteFlagCount !== 2) {
+    failures.push("promotional asset preparation must set exactly two FFmpeg overwrite flags");
+  }
 }
 
 if (existsSync(resolve(root, "intro-scene.js"))) {
@@ -149,6 +211,14 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   if (!html.includes('"three": "./vendor/three/three.module.min.js"')) failures.push("missing local three import");
   if (!html.includes('"three/addons/": "./vendor/three/addons/"')) failures.push("missing local three addons import");
   if (!html.includes("https://designanything.ai")) failures.push("missing platform CTA");
+  const tabOrder = [...html.matchAll(/data-artifact-tab="([^"]+)"/g)].map((match) => match[1]);
+  expect(JSON.stringify(tabOrder) === JSON.stringify(["poster", "slides", "web", "video"]), "artifact tab order is invalid");
+  for (const token of ["artifact-viewer", "data-open-artifact", "data-artifact-src", "Validated PosterHarness output"]) {
+    expect(html.includes(token), "artifact showcase missing " + token);
+  }
+  expect(html.includes("<span>12 slides</span>"), "Slides stage must report the source's 12 slides");
+  expect(html.includes("twelve editable frames"), "Slides narrative must describe twelve editable frames");
+  expect(!/\b(?:10 slides|ten editable frames)\b/i.test(html), "stale ten-slide copy remains");
   for (const symbol of [
     "Meta-Harness Optimization Loop",
     "meta-loop-orbit",
@@ -235,7 +305,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     "renderEvolution",
     "renderHarness",
     "renderTransferResults",
-    "bindArtifactStudies",
+    "bindArtifactShowcase",
     'controller?.goToState("system")',
     'controller?.goToState("artifacts")',
     'controller?.goToState("poster", activePosterIndex)',
@@ -317,6 +387,11 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     ]) {
       if (!scene.includes(symbol)) failures.push("three-scene.js missing " + symbol);
     }
+    for (const texture of ["slide-03.webp", "webpage.webp", "video-poster.webp"]) {
+      if (!scene.includes(`./assets/studies/${texture}`)) {
+        failures.push("three-scene.js missing retained texture " + texture);
+      }
+    }
     if (scene.includes('canvas.addEventListener("click"')) {
       failures.push("canvas activation must raycast pointer/touch instead of handling generic clicks");
     }
@@ -371,6 +446,30 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
 
   const styles = read("styles.css");
   const sceneState = read("scene-state.js");
+  const colorTokens = new Map(
+    [...styles.matchAll(/--([a-z0-9-]+):\s*(#[0-9a-f]{6});/gi)]
+      .map((match) => [match[1], match[2].toLowerCase()]),
+  );
+  for (const [name, foregroundToken, background, minimum] of [
+    ["light-surface focus ring", "focus-ring-dark", "#efece3", 3],
+    ["dark-surface focus ring", "focus-ring-light", "#07090c", 3],
+    ["unselected artifact tab", "artifact-tab-text", "#edf1ed", 4.5],
+    ["artifact tab number", "artifact-tab-number", "#edf1ed", 4.5],
+    ["artifact metadata", "artifact-metadata", "#edf1ed", 4.5],
+    ["poster dialog metadata", "dialog-metadata", "#efece3", 4.5],
+    ["dark-stage metadata", "stage-metadata", "#101719", 4.5],
+  ]) {
+    const foreground = colorTokens.get(foregroundToken);
+    expect(Boolean(foreground), `missing contrast token --${foregroundToken}`);
+    if (foreground) {
+      expect(contrastRatio(foreground, background) >= minimum,
+        `${name} contrast is below ${minimum}:1`);
+      expect((styles.match(new RegExp(`var\\(--${foregroundToken}\\)`, "g"))?.length ?? 0) > 0,
+        `contrast token --${foregroundToken} is not used`);
+    }
+  }
+  expect(/:focus-visible\s*\{[^}]*var\(--focus-ring-dark\)[^}]*var\(--focus-ring-light\)/s.test(styles),
+    "focus-visible must use a two-tone contrast ring");
   for (const symbol of [
     "POSTER_COMPACT_MAX_WIDTH",
     "isCompactPosterViewport",
@@ -464,7 +563,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     if (!sceneFocus.includes(symbol)) failures.push("scene-focus.js missing " + symbol);
   }
 
-  for (const file of ["app.js", "page-lifecycle.js", "scene-focus.js", "scene-state.js", "three-scene.js"]) {
+  for (const file of ["app.js", "artifact-showcase.js", "page-lifecycle.js", "scene-focus.js", "scene-state.js", "three-scene.js"]) {
     try {
       execFileSync(process.execPath, ["--check", resolve(root, file)], { stdio: "pipe" });
     } catch (error) {
@@ -685,6 +784,32 @@ for (const asset of [
   if (existsSync(resolve(root, asset))) failures.push("unused generated asset remains " + asset);
 }
 
+const promotionalAssets = [
+  "assets/studies/longcat-next-poster.webp",
+  "assets/studies/longcat-next-slide-cover.webp",
+  "assets/studies/longcat-next-slide-method.webp",
+  "assets/studies/longcat-next-slide-results.webp",
+  "assets/studies/longcat-next-web.webp",
+  "assets/studies/ddpm-conference-poster.webp",
+  "assets/studies/ddpm-conference-teaser.mp4",
+  "assets/studies/ddpm-conference-video-6min.mp4",
+  "assets/studies/ddpm-conference.en.vtt",
+  "artifacts/slides/longcat-next/index.html",
+  "artifacts/web/longcat-next/index.html",
+];
+
+for (const artifact of [
+  "artifacts/slides/longcat-next/index.html",
+  "artifacts/web/longcat-next/index.html",
+]) {
+  if (!existsSync(resolve(root, artifact))) continue;
+  const source = read(artifact);
+  if (/[\t ]+$/m.test(source)) failures.push("generated artifact has trailing whitespace: " + artifact);
+  if (!source.includes("autodesign:artifact-viewer:escape")) {
+    failures.push("generated artifact is missing the viewer Escape bridge: " + artifact);
+  }
+}
+
 const assets = [
   "assets/fonts/fraunces-latin.woff2",
   "assets/fonts/inter-tight-latin.woff2",
@@ -693,8 +818,8 @@ const assets = [
     "assets/posters/" + slug + "-1600.webp",
   ]),
   ...["00", "01", "02", "03", "04"].map((id) => `assets/evolution/evolution-${id}.webp`),
-  ...["slide-01", "slide-03", "slide-05", "webpage", "video-poster"].map((slug) => `assets/studies/${slug}.webp`),
-  "assets/studies/SAM2-motion-explainer.mp4",
+  ...["slide-03", "webpage", "video-poster"].map((slug) => `assets/studies/${slug}.webp`),
+  ...promotionalAssets,
 ];
 
 for (const asset of assets) {
@@ -708,6 +833,8 @@ for (const asset of assets) {
   if (size === 0) failures.push("empty " + asset);
   if (asset.includes("-640.webp") && size > 60000) failures.push("oversized card image " + asset);
   if (asset.includes("-1600.webp") && size > 250000) failures.push("oversized inspector image " + asset);
+  if (asset.endsWith("-teaser.mp4") && size >= 6 * 1024 * 1024) failures.push("oversized teaser " + asset);
+  if (promotionalAssets.includes(asset) && size >= 25 * 1024 * 1024) failures.push("oversized promotional artifact " + asset);
 }
 
 if (failures.length > 0) {

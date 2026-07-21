@@ -1,4 +1,5 @@
 import { createArtifactScene } from "./three-scene.js";
+import { bindArtifactShowcase } from "./artifact-showcase.js";
 import { bindPageLifecycle } from "./page-lifecycle.js";
 import { bindSceneFocus } from "./scene-focus.js";
 
@@ -161,53 +162,6 @@ function renderTransferResults() {
       </div>`;
     root.append(row);
   });
-}
-
-function bindArtifactStudies() {
-  const tabs = [...document.querySelectorAll("[data-artifact-tab]")];
-  const panels = [...document.querySelectorAll("[data-artifact-panel]")];
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-  const select = (name, focus = false) => {
-    tabs.forEach((tab) => {
-      const selected = tab.dataset.artifactTab === name;
-      tab.setAttribute("aria-selected", String(selected));
-      tab.tabIndex = selected ? 0 : -1;
-      if (selected && focus) tab.focus();
-    });
-    panels.forEach((panel) => {
-      const selected = panel.dataset.artifactPanel === name;
-      panel.hidden = !selected;
-      const video = panel.querySelector("video");
-      if (!video) return;
-      if (selected && !reducedMotion.matches) video.play().catch(() => {});
-      else video.pause();
-    });
-  };
-
-  tabs.forEach((tab, index) => {
-    tab.addEventListener("click", () => select(tab.dataset.artifactTab));
-    tab.addEventListener("keydown", (event) => {
-      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-      event.preventDefault();
-      let next = index;
-      if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
-      if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
-      if (event.key === "Home") next = 0;
-      if (event.key === "End") next = tabs.length - 1;
-      select(tabs[next].dataset.artifactTab, true);
-    });
-  });
-
-  const handleMotionChange = () => {
-    const selectedPanel = panels.find((panel) => !panel.hidden);
-    const video = selectedPanel?.querySelector("video");
-    if (!video) return;
-    if (reducedMotion.matches) video.pause();
-    else video.play().catch(() => {});
-  };
-  reducedMotion.addEventListener("change", handleMotionChange);
-  return () => reducedMotion.removeEventListener("change", handleMotionChange);
 }
 
 function updatePosterCaption(index) {
@@ -484,7 +438,7 @@ renderMetrics();
 renderEvolution();
 renderHarness();
 renderTransferResults();
-const unbindArtifactStudies = bindArtifactStudies();
+const unbindArtifactShowcase = bindArtifactShowcase();
 renderPosterControls();
 bindDialog();
 initArtifactEngine();
@@ -509,6 +463,6 @@ window.addEventListener("pagehide", (event) => {
   if (!event.persisted) {
     unbindSemanticNavigation();
     unbindIntroControls();
-    unbindArtifactStudies();
+    unbindArtifactShowcase();
   }
 });
