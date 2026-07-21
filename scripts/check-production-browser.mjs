@@ -25,6 +25,16 @@ try {
   await page.waitForFunction(() => document.getElementById("scene-shell")?.dataset.introPhase === "complete");
 
   await page.locator("#artifact-tab-slides").click();
+  const hostedSlideFit = await page.locator("#artifact-panel-slides").evaluate((panel) => {
+    const stage = panel.querySelector(".artifact-study__stage").getBoundingClientRect();
+    const frame = panel.querySelector(".slide-carousel__frame").getBoundingClientRect();
+    return { frame: { bottom: frame.bottom, height: frame.height, top: frame.top, width: frame.width }, stage: { bottom: stage.bottom, top: stage.top } };
+  });
+  assert.ok(hostedSlideFit.frame.top >= hostedSlideFit.stage.top - 1
+    && hostedSlideFit.frame.bottom <= hostedSlideFit.stage.bottom + 1,
+  `hosted Slide page is clipped by its stage: ${JSON.stringify(hostedSlideFit)}`);
+  assert.ok(Math.abs(hostedSlideFit.frame.width / hostedSlideFit.frame.height - (16 / 9)) <= 0.01,
+    `hosted Slide page is not 16:9: ${JSON.stringify(hostedSlideFit)}`);
   await page.locator("#artifact-panel-slides [data-open-artifact]").click();
   await page.locator("#artifact-viewer-stage .artifact-slide-viewer").waitFor({ state: "visible" });
   assert.equal(await page.locator("#artifact-viewer-stage video").count(), 0,

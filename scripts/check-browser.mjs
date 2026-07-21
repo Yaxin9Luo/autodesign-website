@@ -202,10 +202,32 @@ async function runDesktop(browser, url) {
   const embeddedSlide = page.locator("#artifact-panel-slides [data-slide-current-image]");
   await embeddedSlide.waitFor({ state: "visible" });
   assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-01\.webp\?v=675b8b1$/);
+  const slideFit = await page.locator("#artifact-panel-slides").evaluate((panel) => {
+    const stage = panel.querySelector(".artifact-study__stage").getBoundingClientRect();
+    const frame = panel.querySelector(".slide-carousel__frame").getBoundingClientRect();
+    const image = panel.querySelector("[data-slide-current-image]").getBoundingClientRect();
+    return {
+      frame: { bottom: frame.bottom, height: frame.height, top: frame.top, width: frame.width },
+      image: { height: image.height, width: image.width },
+      stage: { bottom: stage.bottom, height: stage.height, top: stage.top, width: stage.width },
+    };
+  });
+  assert.ok(slideFit.frame.top >= slideFit.stage.top - 1 && slideFit.frame.bottom <= slideFit.stage.bottom + 1,
+    `Embedded slide is clipped by its stage: ${JSON.stringify(slideFit)}`);
+  assert.ok(Math.abs(slideFit.frame.width / slideFit.frame.height - (16 / 9)) <= 0.01,
+    `Embedded slide frame is not 16:9: ${JSON.stringify(slideFit)}`);
+  assert.ok(Math.abs(slideFit.image.width - slideFit.frame.width) <= 2
+    && Math.abs(slideFit.image.height - slideFit.frame.height) <= 2,
+  `Embedded slide does not fit its frame: ${JSON.stringify(slideFit)}`);
   assert.equal(await page.locator("#artifact-panel-slides [data-slide-current]").textContent(), "01");
   await page.locator("#artifact-panel-slides [data-slide-next]").click();
   assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-02\.webp\?v=675b8b1$/);
   assert.equal(await page.locator("#artifact-panel-slides [data-slide-current]").textContent(), "02");
+  const nextSlideSize = await embeddedSlide.boundingBox();
+  assert.ok(nextSlideSize
+    && Math.abs(nextSlideSize.width - slideFit.image.width) <= 1
+    && Math.abs(nextSlideSize.height - slideFit.image.height) <= 1,
+  `Slide navigation changed the page geometry: ${JSON.stringify({ before: slideFit.image, after: nextSlideSize })}`);
   await page.locator("#artifact-panel-slides [data-slide-prev]").click();
   assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-01\.webp\?v=675b8b1$/);
 
