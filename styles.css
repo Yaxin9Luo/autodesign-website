@@ -1992,6 +1992,8 @@ html.dialog-open body {
 
 .slide-carousel__frame {
   position: relative;
+  display: grid;
+  aspect-ratio: 16 / 9;
   margin: 0;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.32);
@@ -2002,7 +2004,7 @@ html.dialog-open body {
 .slide-carousel__frame img {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: 100%;
   object-fit: contain;
 }
 
