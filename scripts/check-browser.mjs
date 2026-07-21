@@ -201,13 +201,13 @@ async function runDesktop(browser, url) {
   await page.locator("#artifact-tab-slides").click();
   const embeddedSlide = page.locator("#artifact-panel-slides [data-slide-current-image]");
   await embeddedSlide.waitFor({ state: "visible" });
-  assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-01\.webp$/);
+  assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-01\.webp\?v=675b8b1$/);
   assert.equal(await page.locator("#artifact-panel-slides [data-slide-current]").textContent(), "01");
   await page.locator("#artifact-panel-slides [data-slide-next]").click();
-  assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-02\.webp$/);
+  assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-02\.webp\?v=675b8b1$/);
   assert.equal(await page.locator("#artifact-panel-slides [data-slide-current]").textContent(), "02");
   await page.locator("#artifact-panel-slides [data-slide-prev]").click();
-  assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-01\.webp$/);
+  assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-01\.webp\?v=675b8b1$/);
 
   await page.locator("#artifact-tab-web").click();
   const webViewport = page.locator("#artifact-panel-web .browser-specimen__viewport");
@@ -250,9 +250,9 @@ async function runDesktop(browser, url) {
       await slideImage.waitFor({ state: "visible" });
       assert.ok(await slideImage.evaluate((image) => image.complete && image.naturalWidth > 0),
         "Slide viewer image did not decode");
-      assert.match(await slideImage.getAttribute("src"), /longcat-next-slide-01\.webp$/);
+      assert.match(await slideImage.getAttribute("src"), /longcat-next-slide-01\.webp\?v=675b8b1$/);
       await artifact.locator("[data-viewer-slide-next]").click();
-      assert.match(await slideImage.getAttribute("src"), /longcat-next-slide-02\.webp$/);
+      assert.match(await slideImage.getAttribute("src"), /longcat-next-slide-02\.webp\?v=675b8b1$/);
       const fitWidth = (await slideImage.boundingBox())?.width ?? 0;
       await artifact.locator("[data-viewer-slide-zoom-in]").click();
       const zoomedWidth = (await slideImage.boundingBox())?.width ?? 0;
