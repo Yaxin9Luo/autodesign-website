@@ -81,6 +81,8 @@ for (const [route, file] of [
 ]) {
   const artifactHeaders = headerBlock(route);
   assert.match(artifactHeaders, /default-src 'none'/, `${route} CSP must deny unspecified sources`);
+  assert.match(artifactHeaders, /connect-src 'self' https:\/\/cloudflareinsights\.com/,
+    `${route} CSP must allow Cloudflare same-origin RUM reporting`);
   assert.match(artifactHeaders, /frame-ancestors 'self'/, `${route} CSP must allow only same-origin framing`);
   assert.doesNotMatch(artifactHeaders, /'unsafe-inline'/, `${route} CSP must hash inline code`);
   for (const hash of [...inlineHashes(file, "script"), ...inlineHashes(file, "style")]) {
