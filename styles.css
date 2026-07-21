@@ -719,6 +719,16 @@ html:not(.intro-active) .intro-controls {
   line-height: 1.46;
 }
 
+.hero-suite {
+  max-width: 32rem;
+  margin: -12px 0 28px;
+  color: rgba(244, 247, 245, 0.62);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  line-height: 1.55;
+  text-transform: uppercase;
+}
+
 .text-link {
   display: inline-flex;
   gap: 0.5rem;
@@ -1474,6 +1484,12 @@ html.dialog-open body {
     font-size: 1rem;
   }
 
+  .hero-suite {
+    max-width: 20rem;
+    margin-bottom: 22px;
+    font-size: 0.62rem;
+  }
+
   .hero-next,
   .hero-status {
     display: none;
@@ -1874,6 +1890,22 @@ html.dialog-open body {
   color: #4e625c;
   font-size: 1.08rem;
   line-height: 1.58;
+}
+
+.artifact-suite-flow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin: -38px 0 30px;
+  padding: 12px 0;
+  border-top: 1px solid #84968f;
+  color: #0b4f44;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .artifact-tabs {
@@ -3414,6 +3446,12 @@ a.resource-link:hover {
     top: 48px;
     right: -12px;
     font-size: 9rem;
+  }
+
+  .artifact-suite-flow {
+    flex-wrap: wrap;
+    margin-top: -22px;
+    line-height: 1.5;
   }
 
   .artifact-tabs {
