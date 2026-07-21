@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:22.784
+Denoising Diffusion Probabilistic Models asks a striking question: can image generation be learned as the reversal of a simple corruption process? Ho, Jain, and Abbeel show that the answer is yes. Their model turns Gaussian denoising into a high-quality generator, while connecting variational learning, score matching, and Langevin-style sampling in one framework.
+
+00:00:25.000 --> 00:00:54.397
+Before this work, leading generative families exposed a persistent tradeoff. Autoregressive and flow models offered tractable likelihoods, but often sampled sequentially or imposed architectural constraints. GANs produced sharp images, but did not provide likelihoods. Diffusion models were principled latent-variable models, yet their image quality lagged. The paper's goal is not merely to revive diffusion, but to identify the parameterization that makes it competitive.
+
+00:00:55.000 --> 00:01:21.325
+The core construction has two directions. The forward process, q, is fixed: at every step it adds a small amount of Gaussian noise, gradually transforming a data sample x zero into an almost isotropic Gaussian x T. Generation runs the chain backward. A neural network parameterizes p theta of x t minus one given x t, predicting how to remove noise one step at a time. Only this reverse direction is learned.
+
+00:01:30.000 --> 00:01:55.749
+A crucial convenience is that we never need to simulate every forward step during training. Define alpha t as one minus beta t, and alpha bar t as the cumulative product. Then x t can be sampled directly from x zero: scale the clean image by the square root of alpha bar t, and add standard Gaussian noise scaled by the remaining variance. This closed form makes random-timestep training efficient and stable.
+
+00:02:02.000 --> 00:02:29.157
+The paper's decisive modeling choice is what the network predicts. Instead of directly regressing the posterior mean, the network predicts the Gaussian noise epsilon that produced x t. That output can be converted back into the reverse-process mean analytically. With fixed reverse variances, training reduces to a simple mean-squared error between the sampled noise and epsilon theta of x t and t. The target is known exactly for every synthetic training pair.
+
+00:02:35.000 --> 00:03:05.869
+This is more than a convenient loss. Across noise levels, epsilon prediction resembles denoising score matching: the network learns the direction that increases probability around corrupted data. In the reverse chain, the corresponding update resembles annealed Langevin dynamics. The result is a conceptual bridge. Variational inference fits a finite-time reverse process, score matching supplies the denoising field, and Langevin-style steps explain how samples move from noise toward data.
+
+00:03:08.000 --> 00:03:38.059
+The interpolation experiment makes the hierarchy of noise scales visible. Two images are diffused to the same timestep, their latent states are interpolated, and the reverse model denoises the path. At smaller t, interpolation preserves identity and fine detail. At larger t, it changes coarser structure and produces more varied outcomes. The chain therefore does not treat all information equally: global attributes emerge before small texture and pixel-level detail.
+
+00:03:40.000 --> 00:04:09.611
+The authors interpret the reverse trajectory as progressive decompression. Figure seven gives a visual counterpart: from a highly diffused state, stochastic reconstructions share only broad structure; as t falls, identity and fine detail become constrained. The companion CIFAR10 rate-distortion analysis shows distortion dropping steeply at low rates. Together, the evidence suggests that early reverse steps recover recognizable structure, while later bits refine subtler information.
+
+00:04:10.000 --> 00:04:38.032
+Figure eight performs denoised interpolation between two source images. The authors diffuse both endpoints to the same timestep, interpolate their noisy states, and run the reverse model. At smaller t, the path mainly blends fine details. At larger t, it traverses coarser attributes and yields more varied, sometimes novel samples. This is qualitative evidence that noise level controls the scale of change, not proof of a discrete semantic representation.
+
+00:04:42.000 --> 00:05:09.981
+On unconditional CIFAR10, the simplified epsilon-prediction objective reaches an Inception Score of 9.46 and FID of 3.17. The parameterization is decisive: a learned-variance mean-prediction baseline records FID 23.69, while variational epsilon prediction with fixed variance records 13.51. The gap supports the paper's conclusion that prediction target and objective weighting drive sample quality.
+
+00:05:12.000 --> 00:05:39.435
+The result is strong, but the tradeoffs matter. Sampling uses one thousand neural network evaluations in the reported experiments, making generation much slower than a single GAN pass. And despite excellent perceptual quality, the models are not competitive with the best likelihood-based generators on log likelihood. The progressive-coding analysis suggests why: likelihood rewards exact low-level detail, while human judgments and FID emphasize recognizable structure and perceptual realism.
+
+00:05:40.000 --> 00:05:55.701
+DDPM unified fixed Gaussian corruption, epsilon-parameterized denoising, and a simple training objective into a state-of-the-art generator. That parameterization made diffusion a practical foundation for modern image synthesis.

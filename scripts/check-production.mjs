@@ -17,7 +17,13 @@ const required = [
   "styles.css",
   "three-scene.js",
   "assets/posters/attention-1600.webp",
+  "assets/studies/longcat-next-poster.webp",
+  "assets/studies/ddpm-conference-teaser.mp4",
+  "assets/studies/ddpm-conference-video-6min.mp4",
+  "assets/studies/ddpm-conference.en.vtt",
   "assets/studies/SAM2-motion-explainer.mp4",
+  "artifacts/slides/longcat-next/index.html",
+  "artifacts/web/longcat-next/index.html",
   "vendor/three/three.module.min.js",
 ];
 const forbidden = ["node_modules", "scripts", "package.json", "package-lock.json", "README.md"];

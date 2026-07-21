@@ -25,6 +25,7 @@ await rm(output, { force: true, recursive: true });
 await mkdir(output, { recursive: true });
 for (const file of runtimeFiles) await cp(resolve(root, file), resolve(output, file));
 await cp(resolve(root, "assets"), resolve(output, "assets"), { recursive: true });
+await cp(resolve(root, "artifacts"), resolve(output, "artifacts"), { recursive: true });
 await cp(resolve(root, "vendor"), resolve(output, "vendor"), { recursive: true });
 
 console.log(`research-site production build: ${output}`);

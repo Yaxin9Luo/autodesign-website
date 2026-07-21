@@ -685,6 +685,20 @@ for (const asset of [
   if (existsSync(resolve(root, asset))) failures.push("unused generated asset remains " + asset);
 }
 
+const promotionalAssets = [
+  "assets/studies/longcat-next-poster.webp",
+  "assets/studies/longcat-next-slide-cover.webp",
+  "assets/studies/longcat-next-slide-method.webp",
+  "assets/studies/longcat-next-slide-results.webp",
+  "assets/studies/longcat-next-web.webp",
+  "assets/studies/ddpm-conference-poster.webp",
+  "assets/studies/ddpm-conference-teaser.mp4",
+  "assets/studies/ddpm-conference-video-6min.mp4",
+  "assets/studies/ddpm-conference.en.vtt",
+  "artifacts/slides/longcat-next/index.html",
+  "artifacts/web/longcat-next/index.html",
+];
+
 const assets = [
   "assets/fonts/fraunces-latin.woff2",
   "assets/fonts/inter-tight-latin.woff2",
@@ -693,8 +707,7 @@ const assets = [
     "assets/posters/" + slug + "-1600.webp",
   ]),
   ...["00", "01", "02", "03", "04"].map((id) => `assets/evolution/evolution-${id}.webp`),
-  ...["slide-01", "slide-03", "slide-05", "webpage", "video-poster"].map((slug) => `assets/studies/${slug}.webp`),
-  "assets/studies/SAM2-motion-explainer.mp4",
+  ...promotionalAssets,
 ];
 
 for (const asset of assets) {
@@ -708,6 +721,8 @@ for (const asset of assets) {
   if (size === 0) failures.push("empty " + asset);
   if (asset.includes("-640.webp") && size > 60000) failures.push("oversized card image " + asset);
   if (asset.includes("-1600.webp") && size > 250000) failures.push("oversized inspector image " + asset);
+  if (asset.endsWith("-teaser.mp4") && size >= 6 * 1024 * 1024) failures.push("oversized teaser " + asset);
+  if (promotionalAssets.includes(asset) && size >= 25 * 1024 * 1024) failures.push("oversized promotional artifact " + asset);
 }
 
 if (failures.length > 0) {
