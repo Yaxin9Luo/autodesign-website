@@ -19,6 +19,7 @@ const required = [
   "three-scene.js",
   "assets/posters/attention-1600.webp",
   "assets/studies/longcat-next-poster.webp",
+  ...Array.from({ length: 12 }, (_, index) => `assets/studies/longcat-next-slide-${String(index + 1).padStart(2, "0")}.webp`),
   "assets/studies/ddpm-conference-teaser.mp4",
   "assets/studies/ddpm-conference-video-6min.mp4",
   "assets/studies/ddpm-conference.en.vtt",

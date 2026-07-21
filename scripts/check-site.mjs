@@ -216,6 +216,11 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   for (const token of ["artifact-viewer", "data-open-artifact", "data-artifact-src", "Validated PosterHarness output"]) {
     expect(html.includes(token), "artifact showcase missing " + token);
   }
+  for (const token of ["data-slide-carousel", "data-slide-prev", "data-slide-next", 'data-artifact-kind="slides"']) {
+    expect(html.includes(token), "interactive slide showcase missing " + token);
+  }
+  expect(html.includes("longcat-next-poster.webp?v=413b9868"), "Poster source must bypass stale deployment fallbacks");
+  expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
   expect(html.includes("<span>12 slides</span>"), "Slides stage must report the source's 12 slides");
   expect(html.includes("twelve editable frames"), "Slides narrative must describe twelve editable frames");
   expect(!/\b(?:10 slides|ten editable frames)\b/i.test(html), "stale ten-slide copy remains");
@@ -786,9 +791,7 @@ for (const asset of [
 
 const promotionalAssets = [
   "assets/studies/longcat-next-poster.webp",
-  "assets/studies/longcat-next-slide-cover.webp",
-  "assets/studies/longcat-next-slide-method.webp",
-  "assets/studies/longcat-next-slide-results.webp",
+  ...Array.from({ length: 12 }, (_, index) => `assets/studies/longcat-next-slide-${String(index + 1).padStart(2, "0")}.webp`),
   "assets/studies/longcat-next-web.webp",
   "assets/studies/ddpm-conference-poster.webp",
   "assets/studies/ddpm-conference-teaser.mp4",

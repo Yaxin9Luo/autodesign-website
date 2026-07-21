@@ -4,6 +4,7 @@ const ARTIFACT_ESCAPE_MESSAGE = "autodesign:artifact-viewer:escape";
 const viewerTypes = {
   image: "Poster",
   iframe: "Interactive artifact",
+  slides: "Slide deck",
   video: "Conference video",
 };
 
@@ -32,6 +33,7 @@ export function bindArtifactShowcase({
   const cleanupListeners = [];
   let sectionVisible = !page.IntersectionObserver;
   let opener = null;
+  let viewerCleanup = [];
 
   const listen = (target, eventName, handler) => {
     target?.addEventListener(eventName, handler);
@@ -89,6 +91,35 @@ export function bindArtifactShowcase({
     });
   });
 
+  const slideSource = (template, index) => template.replace("{index}", String(index).padStart(2, "0"));
+
+  root.querySelectorAll("[data-slide-carousel]").forEach((carousel) => {
+    const image = carousel.querySelector("[data-slide-current-image]");
+    const current = carousel.querySelector("[data-slide-current]");
+    const previous = carousel.querySelector("[data-slide-prev]");
+    const next = carousel.querySelector("[data-slide-next]");
+    const count = Number(carousel.dataset.slideCount);
+    const template = carousel.dataset.slideTemplate;
+    let index = 1;
+
+    const render = () => {
+      image.src = slideSource(template, index);
+      image.alt = `Slide ${index} of ${count} from the generated LongCat-Next research presentation`;
+      current.textContent = String(index).padStart(2, "0");
+      previous.disabled = index === 1;
+      next.disabled = index === count;
+    };
+
+    listen(previous, "click", () => {
+      index = Math.max(1, index - 1);
+      render();
+    });
+    listen(next, "click", () => {
+      index = Math.min(count, index + 1);
+      render();
+    });
+  });
+
   let visibilityObserver = null;
   if (page.IntersectionObserver && section) {
     visibilityObserver = new page.IntersectionObserver(([entry]) => {
@@ -101,6 +132,7 @@ export function bindArtifactShowcase({
   listen(dataConnection, "change", syncTeaser);
 
   const clearStage = () => {
+    viewerCleanup.splice(0).forEach((cleanup) => cleanup());
     unloadVideo(stage.querySelector("video"));
     const iframe = stage.querySelector("iframe");
     if (iframe) iframe.src = "about:blank";
@@ -108,6 +140,7 @@ export function bindArtifactShowcase({
     stage.classList.remove(
       "artifact-viewer__stage--poster",
       "artifact-viewer__stage--html",
+      "artifact-viewer__stage--slides",
       "artifact-viewer__stage--video",
     );
   };
@@ -124,7 +157,100 @@ export function bindArtifactShowcase({
     finishClose();
   };
 
-  const createViewerArtifact = (kind, source, artifactTitle) => {
+  const createSlideViewer = (sourceTemplate, count, artifactTitle) => {
+    const wrapper = documentObject.createElement("div");
+    wrapper.className = "artifact-slide-viewer";
+    wrapper.tabIndex = 0;
+    wrapper.setAttribute("aria-label", `${artifactTitle}, ${count} slides`);
+
+    const toolbar = documentObject.createElement("div");
+    toolbar.className = "artifact-slide-viewer__toolbar";
+    const viewport = documentObject.createElement("div");
+    viewport.className = "artifact-slide-viewer__viewport";
+    const image = documentObject.createElement("img");
+    image.dataset.viewerSlideImage = "";
+    image.width = 1920;
+    image.height = 1080;
+    image.draggable = false;
+    viewport.append(image);
+
+    const makeButton = (label, text, dataName) => {
+      const button = documentObject.createElement("button");
+      button.type = "button";
+      button.ariaLabel = label;
+      button.title = label;
+      button.textContent = text;
+      button.dataset[dataName] = "";
+      return button;
+    };
+
+    const previous = makeButton("Previous slide", "‹", "viewerSlidePrev");
+    const next = makeButton("Next slide", "›", "viewerSlideNext");
+    const zoomOut = makeButton("Zoom out", "−", "viewerSlideZoomOut");
+    const reset = makeButton("Reset zoom", "100%", "viewerSlideReset");
+    const zoomIn = makeButton("Zoom in", "+", "viewerSlideZoomIn");
+    const status = documentObject.createElement("span");
+    status.className = "artifact-slide-viewer__status";
+    status.setAttribute("aria-live", "polite");
+    toolbar.append(previous, status, next, zoomOut, reset, zoomIn);
+    wrapper.append(toolbar, viewport);
+
+    let index = 1;
+    let zoom = 1;
+    const updateGeometry = () => {
+      const fitWidth = Math.min(viewport.clientWidth, viewport.clientHeight * (16 / 9));
+      if (fitWidth > 0) image.style.width = `${Math.round(fitWidth * zoom)}px`;
+      reset.textContent = `${Math.round(zoom * 100)}%`;
+    };
+    const render = () => {
+      image.src = slideSource(sourceTemplate, index);
+      image.alt = `Slide ${index} of ${count} from ${artifactTitle}`;
+      status.textContent = `${String(index).padStart(2, "0")} / ${count}`;
+      previous.disabled = index === 1;
+      next.disabled = index === count;
+      viewport.scrollTo({ left: 0, top: 0, behavior: "auto" });
+    };
+    const changeSlide = (delta) => {
+      index = Math.max(1, Math.min(count, index + delta));
+      render();
+    };
+    const changeZoom = (delta) => {
+      zoom = Math.max(0.5, Math.min(2.5, zoom + delta));
+      updateGeometry();
+    };
+
+    const viewerListen = (target, eventName, handler) => {
+      target.addEventListener(eventName, handler);
+      viewerCleanup.push(() => target.removeEventListener(eventName, handler));
+    };
+    viewerListen(previous, "click", () => changeSlide(-1));
+    viewerListen(next, "click", () => changeSlide(1));
+    viewerListen(zoomOut, "click", () => changeZoom(-0.25));
+    viewerListen(zoomIn, "click", () => changeZoom(0.25));
+    viewerListen(reset, "click", () => {
+      zoom = 1;
+      updateGeometry();
+      viewport.scrollTo({ left: 0, top: 0, behavior: "auto" });
+    });
+    viewerListen(wrapper, "keydown", (event) => {
+      if (event.key === "ArrowLeft") changeSlide(-1);
+      else if (event.key === "ArrowRight") changeSlide(1);
+      else return;
+      event.preventDefault();
+    });
+    viewerListen(image, "load", updateGeometry);
+
+    if (page.ResizeObserver) {
+      const observer = new page.ResizeObserver(updateGeometry);
+      observer.observe(viewport);
+      viewerCleanup.push(() => observer.disconnect());
+    }
+    render();
+    stage.classList.add("artifact-viewer__stage--slides");
+    return wrapper;
+  };
+
+  const createViewerArtifact = (kind, source, artifactTitle, options = {}) => {
     if (kind === "image") {
       const image = documentObject.createElement("img");
       image.src = source;
@@ -139,6 +265,9 @@ export function bindArtifactShowcase({
       iframe.setAttribute("sandbox", "allow-scripts allow-popups");
       stage.classList.add("artifact-viewer__stage--html");
       return iframe;
+    }
+    if (kind === "slides") {
+      return createSlideViewer(options.sourceTemplate, options.count, artifactTitle);
     }
     const video = documentObject.createElement("video");
     video.src = source;
@@ -159,13 +288,23 @@ export function bindArtifactShowcase({
 
   const openViewer = (trigger) => {
     if (typeof viewer.showModal !== "function") return;
-    const { artifactKind, artifactSrc, artifactTitle, artifactNewTab } = trigger.dataset;
+    const {
+      artifactKind,
+      artifactSrc,
+      artifactSrcTemplate,
+      artifactCount,
+      artifactTitle,
+      artifactNewTab,
+    } = trigger.dataset;
     clearStage();
     opener = trigger;
     title.textContent = artifactTitle;
     type.textContent = viewerTypes[artifactKind] ?? "Artifact";
     external.href = artifactNewTab;
-    stage.append(createViewerArtifact(artifactKind, artifactSrc, artifactTitle));
+    stage.append(createViewerArtifact(artifactKind, artifactSrc, artifactTitle, {
+      count: Number(artifactCount),
+      sourceTemplate: artifactSrcTemplate,
+    }));
     viewer.showModal();
     documentElement?.classList.add("dialog-open");
     closeButton.focus();

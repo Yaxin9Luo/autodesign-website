@@ -198,22 +198,67 @@ async function runDesktop(browser, url) {
     return video?.paused && !source?.hasAttribute("src") && video.networkState === video.NETWORK_NO_SOURCE;
   });
 
+  await page.locator("#artifact-tab-slides").click();
+  const embeddedSlide = page.locator("#artifact-panel-slides [data-slide-current-image]");
+  await embeddedSlide.waitFor({ state: "visible" });
+  assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-01\.webp$/);
+  assert.equal(await page.locator("#artifact-panel-slides [data-slide-current]").textContent(), "01");
+  await page.locator("#artifact-panel-slides [data-slide-next]").click();
+  assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-02\.webp$/);
+  assert.equal(await page.locator("#artifact-panel-slides [data-slide-current]").textContent(), "02");
+  await page.locator("#artifact-panel-slides [data-slide-prev]").click();
+  assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-01\.webp$/);
+
+  await page.locator("#artifact-tab-web").click();
+  const webViewport = page.locator("#artifact-panel-web .browser-specimen__viewport");
+  const webGeometry = await webViewport.evaluate((viewport) => ({
+    clientHeight: viewport.clientHeight,
+    scrollHeight: viewport.scrollHeight,
+  }));
+  assert.ok(webGeometry.clientHeight > 0 && webGeometry.scrollHeight > webGeometry.clientHeight,
+    `Web preview must scroll inside a fixed viewport: ${JSON.stringify(webGeometry)}`);
+  const webScroll = await webViewport.evaluate((viewport) => {
+    viewport.scrollTop = viewport.scrollHeight;
+    return { top: viewport.scrollTop, maximum: viewport.scrollHeight - viewport.clientHeight };
+  });
+  assert.ok(webScroll.top > 0 && Math.abs(webScroll.top - webScroll.maximum) <= 1,
+    `Web preview cannot reach its final content: ${JSON.stringify(webScroll)}`);
+
   for (const name of ["poster", "slides", "web", "video"]) {
     await page.locator(`#artifact-tab-${name}`).click();
     const trigger = page.locator(`#artifact-panel-${name} [data-open-artifact]`);
     const kind = await trigger.getAttribute("data-artifact-kind");
     const source = await trigger.getAttribute("data-artifact-src");
     await trigger.click();
-    const artifact = page.locator(`#artifact-viewer-stage ${kind === "image" ? "img" : kind}`);
+    const selector = kind === "image" ? "img" : kind === "slides" ? ".artifact-slide-viewer" : kind;
+    const artifact = page.locator(`#artifact-viewer-stage ${selector}`);
     await artifact.waitFor({ state: "visible" });
     const detachedVideo = kind === "video" ? await artifact.elementHandle() : null;
-    assert.equal(await artifact.getAttribute("src"), source);
-    assert.equal(await page.locator("#artifact-viewer-stage").locator(kind === "image" ? "img" : kind).count(), 1);
+    if (kind !== "slides") assert.equal(await artifact.getAttribute("src"), source);
+    assert.equal(await page.locator("#artifact-viewer-stage").locator(selector).count(), 1);
     const stageBounds = await page.locator("#artifact-viewer-stage").boundingBox();
     const artifactBounds = await artifact.boundingBox();
     assert.ok(stageBounds && artifactBounds, `${name} viewer bounds are unavailable`);
     assert.ok(artifactBounds.width <= stageBounds.width + 1, `${name} viewer overflows horizontally`);
     assert.ok(artifactBounds.height <= stageBounds.height + 1, `${name} viewer overflows vertically`);
+    if (kind === "image") {
+      assert.ok(await artifact.evaluate((image) => image.complete && image.naturalWidth > 0),
+        "Poster viewer image did not decode");
+    }
+    if (kind === "slides") {
+      const slideImage = artifact.locator("[data-viewer-slide-image]");
+      await slideImage.waitFor({ state: "visible" });
+      assert.ok(await slideImage.evaluate((image) => image.complete && image.naturalWidth > 0),
+        "Slide viewer image did not decode");
+      assert.match(await slideImage.getAttribute("src"), /longcat-next-slide-01\.webp$/);
+      await artifact.locator("[data-viewer-slide-next]").click();
+      assert.match(await slideImage.getAttribute("src"), /longcat-next-slide-02\.webp$/);
+      const fitWidth = (await slideImage.boundingBox())?.width ?? 0;
+      await artifact.locator("[data-viewer-slide-zoom-in]").click();
+      const zoomedWidth = (await slideImage.boundingBox())?.width ?? 0;
+      assert.ok(zoomedWidth > fitWidth, `Slide zoom did not increase width: ${fitWidth} -> ${zoomedWidth}`);
+      await artifact.locator("[data-viewer-slide-reset]").click();
+    }
     if (kind === "iframe") {
       assert.equal(await artifact.getAttribute("sandbox"), "allow-scripts allow-popups");
       const frame = artifact.contentFrame();
@@ -222,20 +267,11 @@ async function runDesktop(browser, url) {
         if (document.readyState !== "loading") resolveReady();
         else document.addEventListener("DOMContentLoaded", resolveReady, { once: true });
       }));
-      if (name === "slides") {
-        assert.equal(await frame.locator(".deck-slide").count(), 12);
-        await frame.locator("body").evaluate((body) => {
-          body.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "ArrowRight" }));
-        });
-        assert.equal(await frame.locator('.deck-slide[aria-current="page"]').count(), 1,
-          "slide deck inline navigation script did not run");
-      } else {
-        await frame.locator("#figure-dialog").waitFor({ state: "attached" });
-        await frame.locator(".figure-trigger").first().click();
-        await frame.locator("#figure-dialog").waitFor({ state: "visible" });
-        await frame.locator("#dialog-close").click();
-        await frame.locator("#figure-dialog").waitFor({ state: "hidden" });
-      }
+      await frame.locator("#figure-dialog").waitFor({ state: "attached" });
+      await frame.locator(".figure-trigger").first().click();
+      await frame.locator("#figure-dialog").waitFor({ state: "visible" });
+      await frame.locator("#dialog-close").click();
+      await frame.locator("#figure-dialog").waitFor({ state: "hidden" });
       await frame.locator("body").press("Escape");
       await page.locator("#artifact-viewer").waitFor({ state: "hidden", timeout: 3_000 });
       assert.equal(await page.locator("#artifact-viewer-stage").evaluate((stage) => stage.childElementCount), 0);
@@ -248,7 +284,19 @@ async function runDesktop(browser, url) {
       assert.equal(await captions.getAttribute("src"), "./assets/studies/ddpm-conference.en.vtt");
       assert.equal(await captions.getAttribute("label"), "English");
       assert.equal(await captions.getAttribute("default"), "");
+      await artifact.evaluate((video) => new Promise((resolveReady, reject) => {
+        if (video.readyState >= HTMLMediaElement.HAVE_METADATA) resolveReady();
+        else {
+          video.addEventListener("loadedmetadata", resolveReady, { once: true });
+          video.addEventListener("error", () => reject(new Error("Full video failed to load")), { once: true });
+        }
+      }));
+      assert.ok(await artifact.evaluate((video) => video.duration > 350), "Full video duration is unavailable");
+      await artifact.evaluate((video) => video.play());
+      await page.waitForFunction(() => !document.querySelector("#artifact-viewer-stage video")?.paused);
+      await artifact.evaluate((video) => video.pause());
     }
+    await page.locator("#artifact-viewer .artifact-viewer__close").focus();
     await page.keyboard.press("Shift+Tab");
     assert.equal(await page.locator("#artifact-viewer-external").evaluate((element) => document.activeElement === element), true);
     await page.keyboard.press("Tab");
