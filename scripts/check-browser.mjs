@@ -88,6 +88,47 @@ async function assertNoOverflow(page) {
   assert.ok(overflow <= 1, `horizontal overflow: ${overflow}px`);
 }
 
+async function assertMobileArtifactControls(page) {
+  const tabState = await page.locator(".artifact-tabs").evaluate((tablist) => ({
+    clientWidth: tablist.clientWidth,
+    scrollWidth: tablist.scrollWidth,
+    tabs: [...tablist.querySelectorAll("[data-artifact-tab]")].map((tab) => ({
+      clientHeight: tab.clientHeight,
+      clientWidth: tab.clientWidth,
+      scrollHeight: tab.scrollHeight,
+      scrollWidth: tab.scrollWidth,
+      text: tab.textContent.replace(/\s+/g, " ").trim(),
+      top: tab.offsetTop,
+      width: tab.getBoundingClientRect().width,
+    })),
+  }));
+  assert.ok(tabState.scrollWidth > tabState.clientWidth, "mobile artifact tabs should scroll horizontally");
+  assert.deepEqual(tabState.tabs.map((tab) => tab.text), ["01 Poster", "02 Slides", "03 Web", "04 Video"]);
+  assert.equal(new Set(tabState.tabs.map((tab) => tab.top)).size, 1, "mobile artifact tabs should stay on one row");
+  assert.ok(Math.max(...tabState.tabs.map((tab) => tab.width)) - Math.min(...tabState.tabs.map((tab) => tab.width)) <= 1,
+    "mobile artifact tabs should have stable equal widths");
+  for (const tab of tabState.tabs) {
+    assert.ok(tab.scrollWidth <= tab.clientWidth + 1, `artifact tab label is clipped horizontally: ${tab.text}`);
+    assert.ok(tab.scrollHeight <= tab.clientHeight + 1, `artifact tab label is clipped vertically: ${tab.text}`);
+  }
+}
+
+async function assertMobileViewer(page) {
+  const trigger = page.locator("#artifact-panel-poster [data-open-artifact]");
+  await trigger.click();
+  const viewer = page.locator("#artifact-viewer");
+  await viewer.waitFor({ state: "visible" });
+  const viewport = page.viewportSize();
+  const bounds = await viewer.boundingBox();
+  assert.ok(viewport && bounds, "artifact viewer bounds are unavailable");
+  assert.ok(Math.abs(bounds.x) <= 1 && Math.abs(bounds.y) <= 1, `artifact viewer origin is ${bounds.x},${bounds.y}`);
+  assert.ok(Math.abs(bounds.width - viewport.width) <= 1, `artifact viewer width is ${bounds.width}px, expected ${viewport.width}px`);
+  assert.ok(Math.abs(bounds.height - viewport.height) <= 1, `artifact viewer height is ${bounds.height}px, expected ${viewport.height}px`);
+  await assertNoOverflow(page);
+  await page.keyboard.press("Escape");
+  assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
+}
+
 async function assertDrawCalls(page, maximum) {
   await page.waitForFunction(() => Number(document.getElementById("scene-shell")?.dataset.drawCalls) > 0);
   const drawCalls = await page.locator("#scene-shell").getAttribute("data-draw-calls");
@@ -147,12 +188,19 @@ async function runDesktop(browser, url) {
     const detachedVideo = kind === "video" ? await artifact.elementHandle() : null;
     assert.equal(await artifact.getAttribute("src"), source);
     assert.equal(await page.locator("#artifact-viewer-stage").locator(kind === "image" ? "img" : kind).count(), 1);
+    const stageBounds = await page.locator("#artifact-viewer-stage").boundingBox();
+    const artifactBounds = await artifact.boundingBox();
+    assert.ok(stageBounds && artifactBounds, `${name} viewer bounds are unavailable`);
+    assert.ok(artifactBounds.width <= stageBounds.width + 1, `${name} viewer overflows horizontally`);
+    assert.ok(artifactBounds.height <= stageBounds.height + 1, `${name} viewer overflows vertically`);
     if (kind === "iframe") {
       assert.notEqual(await artifact.getAttribute("sandbox"), null);
     }
     if (kind === "video") {
       const captions = artifact.locator('track[kind="captions"][srclang="en"]');
+      assert.equal(await captions.count(), 1);
       assert.equal(await captions.getAttribute("src"), "./assets/studies/ddpm-conference.en.vtt");
+      assert.equal(await captions.getAttribute("label"), "English");
       assert.equal(await captions.getAttribute("default"), "");
     }
     await page.keyboard.press("Shift+Tab");
@@ -173,6 +221,8 @@ async function runDesktop(browser, url) {
     assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
   }
 
+  await page.locator("#scene-shell").scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => !document.querySelector(".site-header")?.classList.contains("site-header--paper"));
   await page.locator("#intro-replay").click();
   await waitForPhase(page, "armed");
   assert.equal(await page.locator("#artifact-canvas").count(), 1);
@@ -182,9 +232,9 @@ async function runDesktop(browser, url) {
   await page.close();
 }
 
-async function runMobile(browser, url) {
+async function runMobile(browser, url, viewport) {
   const page = await browser.newPage({
-    viewport: { width: 430, height: 932 },
+    viewport,
     isMobile: true,
     hasTouch: true,
   });
@@ -194,7 +244,13 @@ async function runMobile(browser, url) {
   await assertDrawCalls(page, 70);
   await page.keyboard.press("ArrowDown");
   await waitForPhase(page, "complete");
-  assert.deepEqual(errors, [], `mobile console errors: ${errors.join(" | ")}`);
+  await page.locator("#artifact-studies").scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => document.querySelector(".site-header")?.classList.contains("site-header--paper"));
+  assert.equal(await page.locator(".intro-controls").isVisible(), false);
+  await assertMobileArtifactControls(page);
+  await assertMobileViewer(page);
+  await assertNoOverflow(page);
+  assert.deepEqual(errors, [], `${viewport.width}px mobile console errors: ${errors.join(" | ")}`);
   await page.close();
 }
 
@@ -208,12 +264,21 @@ async function runReducedMotion(browser, url) {
   await page.keyboard.press("ArrowDown");
   await waitForPhase(page, "complete", 1_500);
   await page.locator("#artifact-tab-video").click();
-  const teaserState = await page.locator("#artifact-panel-video video").evaluate((video) => ({
+  const teaser = page.locator("#artifact-panel-video video");
+  const teaserState = await teaser.evaluate((video) => ({
+    currentTime: video.currentTime,
     networkState: video.networkState,
     paused: video.paused,
     source: video.querySelector("source")?.getAttribute("src") ?? null,
   }));
-  assert.deepEqual(teaserState, { networkState: 3, paused: true, source: null });
+  await page.waitForTimeout(250);
+  assert.deepEqual(await teaser.evaluate((video) => ({
+    currentTime: video.currentTime,
+    networkState: video.networkState,
+    paused: video.paused,
+    source: video.querySelector("source")?.getAttribute("src") ?? null,
+  })), teaserState);
+  assert.deepEqual(teaserState, { currentTime: 0, networkState: 3, paused: true, source: null });
   assert.deepEqual(errors, [], `reduced-motion console errors: ${errors.join(" | ")}`);
   await page.close();
 }
@@ -286,7 +351,8 @@ try {
     headless: true,
   });
   await runDesktop(browser, url);
-  await runMobile(browser, url);
+  await runMobile(browser, url, { width: 430, height: 932 });
+  await runMobile(browser, url, { width: 320, height: 667 });
   await runReducedMotion(browser, url);
   await runSaveData(browser, url);
   await runFallback(browser, url, false);
