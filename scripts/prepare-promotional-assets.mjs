@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
-import { cp, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { cp, mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import process from "node:process";
@@ -13,6 +14,7 @@ if (!sourceRoot || !posterSource) {
   throw new Error("Set AUTODESIGN_PROMO_ROOT and AUTODESIGN_POSTER_SOURCE");
 }
 
+const APPROVED_POSTER_SHA256 = "6290d4be1bc4a7b0432941f875415102c78099d8e2c837431c375480115a3cf9";
 const run = promisify(execFile);
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const studiesOutput = resolve(root, "assets/studies");
@@ -23,6 +25,12 @@ const webSource = resolve(sourceRoot, "landing-pages/longcat-next--20260720-1947
 const webPreviewSource = resolve(sourceRoot, "landing-pages/longcat-next--20260720-194725-f842c2f9/preview.png");
 const videoSource = resolve(sourceRoot, "videos/ddpm-conference-video/ddpm-conference-video-6min.mp4");
 const captionsSource = resolve(sourceRoot, "videos/ddpm-conference-video/subtitles.en.vtt");
+const posterSha256 = createHash("sha256").update(await readFile(posterSource)).digest("hex");
+if (posterSha256 !== APPROVED_POSTER_SHA256) {
+  throw new Error(
+    `Approved PosterHarness poster SHA-256 mismatch: expected ${APPROVED_POSTER_SHA256}, received ${posterSha256} from ${posterSource}`,
+  );
+}
 
 const generated = [];
 const record = (path) => {
@@ -71,6 +79,7 @@ try {
   const posterFrame = resolve(temporaryDirectory, "ddpm-poster.png");
   await run("ffmpeg", [
     "-hide_banner",
+    "-y",
     "-loglevel", "error",
     "-ss", "5",
     "-i", videoSource,
@@ -85,6 +94,7 @@ try {
     .join(";");
   await run("ffmpeg", [
     "-hide_banner",
+    "-y",
     "-loglevel", "error",
     "-i", videoSource,
     "-filter_complex", `${excerpts};[v0][v1][v2][v3]concat=n=4:v=1:a=0,format=yuv420p[v]`,

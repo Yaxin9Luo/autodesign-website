@@ -93,8 +93,24 @@ for (const file of vendoredJavaScriptFiles) {
   }
 }
 
-for (const file of ["index.html", "styles.css", "site-data.js", "app.js", "page-lifecycle.js", "scene-state.js", "three-scene.js", "intro-state.js", "intro-audio.js", "intro-scene.js"]) {
+for (const file of ["index.html", "styles.css", "site-data.js", "app.js", "page-lifecycle.js", "scene-state.js", "three-scene.js", "intro-state.js", "intro-audio.js", "intro-scene.js", "scripts/prepare-promotional-assets.mjs"]) {
   if (!existsSync(resolve(root, file))) failures.push("missing " + file);
+}
+
+if (existsSync(resolve(root, "scripts/prepare-promotional-assets.mjs"))) {
+  const preparationScript = read("scripts/prepare-promotional-assets.mjs");
+  const approvedPosterSha256 = "6290d4be1bc4a7b0432941f875415102c78099d8e2c837431c375480115a3cf9";
+  for (const symbol of [
+    `const APPROVED_POSTER_SHA256 = "${approvedPosterSha256}"`,
+    'createHash("sha256")',
+    "Approved PosterHarness poster SHA-256 mismatch",
+  ]) {
+    if (!preparationScript.includes(symbol)) failures.push("promotional asset preparation missing " + symbol);
+  }
+  const overwriteFlagCount = preparationScript.match(/"-y"/g)?.length ?? 0;
+  if (overwriteFlagCount !== 2) {
+    failures.push("promotional asset preparation must set exactly two FFmpeg overwrite flags");
+  }
 }
 
 if (existsSync(resolve(root, "intro-scene.js"))) {
