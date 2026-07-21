@@ -49,6 +49,9 @@ const posterSlugs = [
   "m87",
 ];
 const failures = [];
+const expect = (condition, message) => {
+  if (!condition) failures.push(message);
+};
 const threeFiles = [
   "vendor/three/three.module.min.js",
   "vendor/three/three.core.min.js",
@@ -165,6 +168,11 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   if (!html.includes('"three": "./vendor/three/three.module.min.js"')) failures.push("missing local three import");
   if (!html.includes('"three/addons/": "./vendor/three/addons/"')) failures.push("missing local three addons import");
   if (!html.includes("https://designanything.ai")) failures.push("missing platform CTA");
+  const tabOrder = [...html.matchAll(/data-artifact-tab="([^"]+)"/g)].map((match) => match[1]);
+  expect(JSON.stringify(tabOrder) === JSON.stringify(["poster", "slides", "web", "video"]), "artifact tab order is invalid");
+  for (const token of ["artifact-viewer", "data-open-artifact", "data-artifact-src", "Validated PosterHarness output"]) {
+    expect(html.includes(token), "artifact showcase missing " + token);
+  }
   for (const symbol of [
     "Meta-Harness Optimization Loop",
     "meta-loop-orbit",
