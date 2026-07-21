@@ -104,16 +104,15 @@ try {
   await page.goto(pathToFileURL(slidesOutput).href, { waitUntil: "load" });
   await page.evaluate(() => document.fonts.ready);
 
-  for (const [index, name] of [
-    [1, "cover"],
-    [4, "method"],
-    [7, "results"],
-  ]) {
+  for (const index of Array.from({ length: 12 }, (_, slideIndex) => slideIndex + 1)) {
     const temporarySlide = resolve(temporaryDirectory, `slide-${index}.png`);
     const slide = page.locator(`[data-slide-index="${index}"]`);
     await slide.scrollIntoViewIfNeeded();
     await slide.screenshot({ animations: "disabled", path: temporarySlide });
-    await transcodeWebp(temporarySlide, resolve(studiesOutput, `longcat-next-slide-${name}.webp`));
+    await transcodeWebp(
+      temporarySlide,
+      resolve(studiesOutput, `longcat-next-slide-${String(index).padStart(2, "0")}.webp`),
+    );
   }
 
   const posterFrame = resolve(temporaryDirectory, "ddpm-poster.png");
@@ -158,6 +157,6 @@ try {
   await rm(temporaryDirectory, { force: true, recursive: true });
 }
 
-if (generated.length !== 11) {
-  throw new Error(`Expected 11 generated paths, received ${generated.length}`);
+if (generated.length !== 20) {
+  throw new Error(`Expected 20 generated paths, received ${generated.length}`);
 }
