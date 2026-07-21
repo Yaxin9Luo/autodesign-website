@@ -37,7 +37,7 @@ The browser smoke check covers the primary automated release paths. Manual relea
 
 The checked-in assets are publication-ready derivatives of approved AutoDesign outputs. The showcase uses LongCat-Next for the poster, slide, and web specimens, and Denoising Diffusion Probabilistic Models (DDPM) for the conference-video specimen. The LongCat-Next poster is validated PosterHarness output; the slide deck, research page, and DDPM video remain exploratory generalization studies rather than validated product claims.
 
-Source selection remains in the private AutoDesign development workspace. To regenerate the checked-in derivatives, set `AUTODESIGN_PROMO_ROOT` to the source bundle containing the standalone LongCat-Next slide/web exports and DDPM video/captions, and set `AUTODESIGN_POSTER_SOURCE` to the approved LongCat-Next poster image. The poster input is SHA-256 gated before generation:
+Source selection remains in the private AutoDesign development workspace. To regenerate the checked-in derivatives, set `AUTODESIGN_PROMO_ROOT` to the source bundle containing the standalone LongCat-Next slide/web exports and DDPM video/captions, and set `AUTODESIGN_POSTER_SOURCE` to the approved LongCat-Next poster image. The poster, slide HTML, web HTML, DDPM MP4, and captions are SHA-256 gated before any generated file is written:
 
 ```bash
 AUTODESIGN_PROMO_ROOT=/absolute/path/to/promotion-sources \

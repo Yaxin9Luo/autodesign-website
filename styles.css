@@ -25,6 +25,13 @@
   --teal: #63d6b3;
   --vermilion: #e86a52;
   --yellow: #f2c14e;
+  --focus-ring-dark: #0b4f44;
+  --focus-ring-light: #ffffff;
+  --artifact-tab-text: #42554e;
+  --artifact-tab-number: #465a52;
+  --artifact-metadata: #45584f;
+  --dialog-metadata: #4e5b55;
+  --stage-metadata: #b9c4bf;
   --page: min(1312px, calc(100vw - 64px));
   --sans: "Inter Tight", Arial, sans-serif;
   --serif: "Fraunces", Georgia, serif;
@@ -76,8 +83,9 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid var(--teal);
-  outline-offset: 4px;
+  outline: 3px solid var(--focus-ring-dark);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px var(--focus-ring-light);
 }
 
 ::selection {
@@ -1246,7 +1254,7 @@ html:not(.intro-active) .intro-controls {
 }
 
 #dialog-metadata dt {
-  color: var(--muted);
+  color: var(--dialog-metadata);
   font-family: var(--mono);
   font-size: 0.7rem;
 }
@@ -1890,7 +1898,7 @@ html.dialog-open body {
   border-right: 1px solid #a9b8b2;
   border-radius: 0;
   background: transparent;
-  color: #65766f;
+  color: var(--artifact-tab-text);
   font-family: var(--serif);
   font-size: 1.25rem;
   text-align: left;
@@ -1903,7 +1911,7 @@ html.dialog-open body {
 }
 
 .artifact-tabs button span {
-  color: #71827b;
+  color: var(--artifact-tab-number);
   font-family: var(--mono);
   font-size: 0.62rem;
 }
@@ -1970,7 +1978,7 @@ html.dialog-open body {
   display: flex;
   justify-content: space-between;
   margin: 0;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--stage-metadata);
   font-family: var(--mono);
   font-size: 0.61rem;
   text-transform: uppercase;
@@ -2039,7 +2047,7 @@ html.dialog-open body {
 
 .browser-specimen__bar span {
   margin-left: auto;
-  color: #65736e;
+  color: var(--artifact-metadata);
   font-family: var(--mono);
   font-size: 0.55rem;
   text-transform: uppercase;
@@ -2165,7 +2173,7 @@ html.dialog-open body {
 }
 
 .artifact-study__copy dt {
-  color: #697a73;
+  color: var(--artifact-metadata);
   font-family: var(--mono);
   font-size: 0.59rem;
   text-transform: uppercase;
@@ -3414,7 +3422,16 @@ a.resource-link:hover {
   }
 
   .artifact-viewer__stage--poster {
+    display: block;
     padding: 10px;
+    overscroll-behavior: contain;
+    touch-action: pan-x pan-y;
+  }
+
+  .artifact-viewer__stage--poster img {
+    width: 1024px;
+    max-width: none;
+    max-height: none;
   }
 
   .harness-protocol {

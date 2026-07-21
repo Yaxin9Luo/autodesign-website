@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
-import { cp, mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import process from "node:process";
@@ -14,7 +14,6 @@ if (!sourceRoot || !posterSource) {
   throw new Error("Set AUTODESIGN_PROMO_ROOT and AUTODESIGN_POSTER_SOURCE");
 }
 
-const APPROVED_POSTER_SHA256 = "6290d4be1bc4a7b0432941f875415102c78099d8e2c837431c375480115a3cf9";
 const run = promisify(execFile);
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const studiesOutput = resolve(root, "assets/studies");
@@ -25,12 +24,46 @@ const webSource = resolve(sourceRoot, "landing-pages/longcat-next--20260720-1947
 const webPreviewSource = resolve(sourceRoot, "landing-pages/longcat-next--20260720-194725-f842c2f9/preview.png");
 const videoSource = resolve(sourceRoot, "videos/ddpm-conference-video/ddpm-conference-video-6min.mp4");
 const captionsSource = resolve(sourceRoot, "videos/ddpm-conference-video/subtitles.en.vtt");
-const posterSha256 = createHash("sha256").update(await readFile(posterSource)).digest("hex");
-if (posterSha256 !== APPROVED_POSTER_SHA256) {
-  throw new Error(
-    `Approved PosterHarness poster SHA-256 mismatch: expected ${APPROVED_POSTER_SHA256}, received ${posterSha256} from ${posterSource}`,
-  );
-}
+const approvedSources = [
+  ["PosterHarness poster", posterSource, "6290d4be1bc4a7b0432941f875415102c78099d8e2c837431c375480115a3cf9"],
+  ["Slides HTML", slideSource, "90d3ec2e27b470b2c9c5e208e26bd8b31e9e97effa896da9fb475c8ac750423c"],
+  ["Web HTML", webSource, "e7a37c2df61b6ab333b1f8b2b66437b094be5fd086ea92b8ac4f8aebbfb7cd59"],
+  ["DDPM MP4", videoSource, "98e94d39767e563d105d69342c03daf36efcb615134032a986f1236b7bd777c8"],
+  ["DDPM VTT", captionsSource, "c48c263dda465d2a6100c51c3dfb104e35dd59e1a631143c84c4435fddd4e6d8"],
+];
+const validateApprovedSources = async () => {
+  const contents = new Map();
+  for (const [label, path, expectedSha256] of approvedSources) {
+    const content = await readFile(path);
+    const actualSha256 = createHash("sha256").update(content).digest("hex");
+    if (actualSha256 !== expectedSha256) {
+      throw new Error(
+        `Approved source SHA-256 mismatch for ${label}: expected ${expectedSha256}, received ${actualSha256} from ${path}`,
+      );
+    }
+    contents.set(path, content);
+  }
+  return contents;
+};
+const approvedSourceContents = await validateApprovedSources();
+
+const ARTIFACT_ESCAPE_MESSAGE = "autodesign:artifact-viewer:escape";
+const escapeBridge = `<script>
+    window.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || window.parent === window) return;
+      event.preventDefault();
+      window.parent.postMessage("${ARTIFACT_ESCAPE_MESSAGE}", "*");
+    });
+  </script>`;
+const normalizeGeneratedHtml = (source) => {
+  const normalized = source
+    .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]+$/gm, "")
+    .replace(/\s+$/, "\n");
+  const bodyClose = normalized.lastIndexOf("</body>");
+  if (bodyClose < 0) throw new Error("Generated HTML is missing </body>");
+  return `${normalized.slice(0, bodyClose)}${escapeBridge}\n${normalized.slice(bodyClose)}`;
+};
 
 const generated = [];
 const record = (path) => {
@@ -47,21 +80,25 @@ await mkdir(resolve(slidesOutput, ".."), { recursive: true });
 await mkdir(resolve(webOutput, ".."), { recursive: true });
 
 const temporaryDirectory = await mkdtemp(join(tmpdir(), "autodesign-promo-"));
+const approvedPosterInput = resolve(temporaryDirectory, "approved-poster.png");
+const approvedVideoInput = resolve(temporaryDirectory, "approved-ddpm.mp4");
 let browser;
 try {
-  await cp(slideSource, slidesOutput);
+  await writeFile(approvedPosterInput, approvedSourceContents.get(posterSource));
+  await writeFile(approvedVideoInput, approvedSourceContents.get(videoSource));
+  await writeFile(slidesOutput, normalizeGeneratedHtml(approvedSourceContents.get(slideSource).toString("utf8")));
   record(slidesOutput);
-  await cp(webSource, webOutput);
+  await writeFile(webOutput, normalizeGeneratedHtml(approvedSourceContents.get(webSource).toString("utf8")));
   record(webOutput);
-  await cp(captionsSource, resolve(studiesOutput, "ddpm-conference.en.vtt"));
+  await writeFile(resolve(studiesOutput, "ddpm-conference.en.vtt"), approvedSourceContents.get(captionsSource));
   record(resolve(studiesOutput, "ddpm-conference.en.vtt"));
 
-  await transcodeWebp(posterSource, resolve(studiesOutput, "longcat-next-poster.webp"));
+  await transcodeWebp(approvedPosterInput, resolve(studiesOutput, "longcat-next-poster.webp"));
   await transcodeWebp(webPreviewSource, resolve(studiesOutput, "longcat-next-web.webp"));
 
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
-  await page.goto(pathToFileURL(slideSource).href, { waitUntil: "load" });
+  await page.goto(pathToFileURL(slidesOutput).href, { waitUntil: "load" });
   await page.evaluate(() => document.fonts.ready);
 
   for (const [index, name] of [
@@ -82,7 +119,7 @@ try {
     "-y",
     "-loglevel", "error",
     "-ss", "5",
-    "-i", videoSource,
+    "-i", approvedVideoInput,
     "-frames:v", "1",
     posterFrame,
   ]);
@@ -96,7 +133,7 @@ try {
     "-hide_banner",
     "-y",
     "-loglevel", "error",
-    "-i", videoSource,
+    "-i", approvedVideoInput,
     "-filter_complex", `${excerpts};[v0][v1][v2][v3]concat=n=4:v=1:a=0,format=yuv420p[v]`,
     "-map", "[v]",
     "-an",
@@ -111,7 +148,7 @@ try {
   record(teaserOutput);
 
   const fullVideoOutput = resolve(studiesOutput, "ddpm-conference-video-6min.mp4");
-  await cp(videoSource, fullVideoOutput);
+  await writeFile(fullVideoOutput, approvedSourceContents.get(videoSource));
   record(fullVideoOutput);
 } finally {
   await browser?.close();

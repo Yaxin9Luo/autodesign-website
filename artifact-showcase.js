@@ -1,4 +1,5 @@
 const VIDEO_CAPTIONS_SRC = "./assets/studies/ddpm-conference.en.vtt";
+const ARTIFACT_ESCAPE_MESSAGE = "autodesign:artifact-viewer:escape";
 
 const viewerTypes = {
   image: "Poster",
@@ -180,6 +181,11 @@ export function bindArtifactShowcase({
     closeViewer();
   });
   listen(viewer, "close", finishClose);
+  listen(page, "message", (event) => {
+    const iframe = stage.querySelector("iframe");
+    if (!viewer.open || event.data !== ARTIFACT_ESCAPE_MESSAGE || event.source !== iframe?.contentWindow) return;
+    closeViewer();
+  });
   listen(viewer, "keydown", (event) => {
     if (event.key !== "Tab") return;
     const focusable = [...viewer.querySelectorAll(

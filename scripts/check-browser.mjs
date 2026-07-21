@@ -124,6 +124,27 @@ async function assertMobileViewer(page) {
   assert.ok(Math.abs(bounds.x) <= 1 && Math.abs(bounds.y) <= 1, `artifact viewer origin is ${bounds.x},${bounds.y}`);
   assert.ok(Math.abs(bounds.width - viewport.width) <= 1, `artifact viewer width is ${bounds.width}px, expected ${viewport.width}px`);
   assert.ok(Math.abs(bounds.height - viewport.height) <= 1, `artifact viewer height is ${bounds.height}px, expected ${viewport.height}px`);
+  const posterGeometry = await page.locator("#artifact-viewer-stage").evaluate((stage) => {
+    const image = stage.querySelector("img");
+    return {
+      clientHeight: stage.clientHeight,
+      clientWidth: stage.clientWidth,
+      imageHeight: image?.getBoundingClientRect().height ?? 0,
+      imageWidth: image?.getBoundingClientRect().width ?? 0,
+      scrollHeight: stage.scrollHeight,
+      scrollWidth: stage.scrollWidth,
+    };
+  });
+  assert.ok(posterGeometry.imageWidth >= 960,
+    `mobile poster width is ${posterGeometry.imageWidth}px; expected an inspectable canvas`);
+  assert.ok(posterGeometry.scrollWidth > posterGeometry.clientWidth,
+    `mobile poster stage does not overflow horizontally: ${JSON.stringify(posterGeometry)}`);
+  const scrollPosition = await page.locator("#artifact-viewer-stage").evaluate((stage) => {
+    stage.scrollLeft = stage.scrollWidth;
+    return { left: stage.scrollLeft, maximum: stage.scrollWidth - stage.clientWidth };
+  });
+  assert.ok(scrollPosition.left > 0 && Math.abs(scrollPosition.left - scrollPosition.maximum) <= 1,
+    `mobile poster stage cannot pan to its horizontal edge: ${JSON.stringify(scrollPosition)}`);
   await assertNoOverflow(page);
   await page.keyboard.press("Escape");
   assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
@@ -194,7 +215,32 @@ async function runDesktop(browser, url) {
     assert.ok(artifactBounds.width <= stageBounds.width + 1, `${name} viewer overflows horizontally`);
     assert.ok(artifactBounds.height <= stageBounds.height + 1, `${name} viewer overflows vertically`);
     if (kind === "iframe") {
-      assert.notEqual(await artifact.getAttribute("sandbox"), null);
+      assert.equal(await artifact.getAttribute("sandbox"), "allow-scripts allow-popups");
+      const frame = artifact.contentFrame();
+      await frame.locator("body").waitFor();
+      await frame.locator("body").evaluate(() => new Promise((resolveReady) => {
+        if (document.readyState !== "loading") resolveReady();
+        else document.addEventListener("DOMContentLoaded", resolveReady, { once: true });
+      }));
+      if (name === "slides") {
+        assert.equal(await frame.locator(".deck-slide").count(), 12);
+        await frame.locator("body").evaluate((body) => {
+          body.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "ArrowRight" }));
+        });
+        assert.equal(await frame.locator('.deck-slide[aria-current="page"]').count(), 1,
+          "slide deck inline navigation script did not run");
+      } else {
+        await frame.locator("#figure-dialog").waitFor({ state: "attached" });
+        await frame.locator(".figure-trigger").first().click();
+        await frame.locator("#figure-dialog").waitFor({ state: "visible" });
+        await frame.locator("#dialog-close").click();
+        await frame.locator("#figure-dialog").waitFor({ state: "hidden" });
+      }
+      await frame.locator("body").press("Escape");
+      await page.locator("#artifact-viewer").waitFor({ state: "hidden", timeout: 3_000 });
+      assert.equal(await page.locator("#artifact-viewer-stage").evaluate((stage) => stage.childElementCount), 0);
+      assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
+      continue;
     }
     if (kind === "video") {
       const captions = artifact.locator('track[kind="captions"][srclang="en"]');
