@@ -216,13 +216,25 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   for (const token of ["artifact-viewer", "data-open-artifact", "data-artifact-src", "Validated PosterHarness output"]) {
     expect(html.includes(token), "artifact showcase missing " + token);
   }
+  for (const phrase of [
+    "complete research communication suite",
+    "Poster · Slides · Web · Narrated Video",
+    "human-guided refinement",
+    "Exploratory meta-harness generalization",
+    "generated narration",
+    "synchronized subtitles",
+  ]) {
+    expect(html.includes(phrase), `paper communication suite messaging missing: ${phrase}`);
+  }
+  expect(html.includes('class="hero-suite"'), "Hero suite message is missing");
+  expect(html.includes('class="artifact-suite-flow"'), "Artifact suite workflow is missing");
   for (const token of ["data-slide-carousel", "data-slide-prev", "data-slide-next", 'data-artifact-kind="slides"']) {
     expect(html.includes(token), "interactive slide showcase missing " + token);
   }
   expect(html.includes("longcat-next-poster.webp?v=413b9868"), "Poster source must bypass stale deployment fallbacks");
   expect(html.includes("longcat-next-slide-{index}.webp?v=675b8b1"), "Slide sources must bypass stale deployment fallbacks");
   expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
-  expect(html.includes("styles.css?v=20260721d"), "Stylesheet must bypass stale browser caches");
+  expect(html.includes("styles.css?v=20260721e"), "Stylesheet must bypass stale browser caches");
   expect(html.includes("app.js?v=20260721c"), "Application entrypoint must bypass stale browser caches");
   expect(read("app.js").includes("artifact-showcase.js?v=20260721c"), "Artifact showcase module must bypass stale browser caches");
   expect(html.includes('class="browser-specimen__viewport">\n                <iframe'), "Web specimen must embed the real research webpage");
@@ -235,7 +247,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     "meta-loop-orbit",
     "poster-harness-core",
     "Accepted state",
-    "Artifact studies / emerging formats",
+    "Paper communication suite / research generalization",
     "10-paper controlled subset",
     "100-paper AutoPosterBench main track",
   ]) {

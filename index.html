@@ -14,7 +14,7 @@
     <title>AutoDesign — The Artifact Engine</title>
     <link rel="canonical" href="https://autodesign.designanything.ai/">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23080b0e'/%3E%3Cpath d='M7 24 16 6l9 18h-4l-5-10-5 10Z' fill='%2300bfa5'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="./styles.css?v=20260721d">
+    <link rel="stylesheet" href="./styles.css?v=20260721e">
   </head>
   <body>
     <header class="site-header">
@@ -100,6 +100,7 @@
               <p class="eyebrow">Meta-harness optimization / 2026</p>
               <h1 id="hero-title">AutoDesign</h1>
               <p class="hero-dek">A research system for improving the harness that turns source material into faithful, editable artifacts.</p>
+              <p class="hero-suite">From one paper to a complete research communication suite: an editable poster, presentation slides, a research webpage, and a narrated conference video with synchronized subtitles.</p>
               <a class="text-link text-link--light" href="#optimization" data-scene-target="system">Enter the engine <span aria-hidden="true">↓</span></a>
             </div>
             <p class="hero-next">Next / the optimization object</p>
@@ -128,10 +129,12 @@
 
       <section class="artifact-studies" id="artifact-studies" aria-labelledby="artifact-studies-title">
         <div class="artifact-studies__heading">
-          <p class="eyebrow">Artifact studies / emerging formats</p>
-          <h2 id="artifact-studies-title">One validated poster.<br>Three emerging formats.</h2>
-          <p>PosterHarness is AutoDesign's validated academic-poster instantiation. These companion research specimens explore the same source-to-artifact workflow across slides, the web, and motion.</p>
+          <p class="eyebrow">Paper communication suite / research generalization</p>
+          <h2 id="artifact-studies-title">One paper.<br>A complete communication suite.</h2>
+          <p>AutoDesign's validated PosterHarness produces source-grounded academic posters through autonomous optimization and human-guided refinement. We further study how the same meta-harness optimization framework generalizes to slides, research webpages, and narrated videos.</p>
         </div>
+
+        <p class="artifact-suite-flow"><span>Paper</span><span aria-hidden="true">→</span><span>Poster · Slides · Web · Narrated Video</span></p>
 
         <div class="artifact-tabs" role="tablist" aria-label="Select an artifact study">
           <button type="button" role="tab" id="artifact-tab-poster" aria-selected="true" aria-controls="artifact-panel-poster" data-artifact-tab="poster"><span>01</span> Poster</button>
@@ -150,7 +153,7 @@
             <h3>A source-grounded poster that remains editable.</h3>
             <p>LongCat-Next is rendered as a dense academic poster with paper figures, benchmark evidence, and native HTML text for continued revision.</p>
             <button type="button" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/studies/longcat-next-poster.webp?v=413b9868" data-artifact-title="LongCat-Next research poster" data-artifact-new-tab="./assets/studies/longcat-next-poster.webp?v=413b9868">Inspect poster</button>
-            <dl><div><dt>Source</dt><dd>Paper, figures, tables</dd></div><div><dt>Artifact</dt><dd>Editable HTML poster</dd></div><div><dt>Status</dt><dd>Validated PosterHarness output</dd></div></dl>
+            <dl><div><dt>Use</dt><dd>Conference presentation</dd></div><div><dt>Artifact</dt><dd>Editable HTML poster</dd></div><div><dt>Status</dt><dd>Validated PosterHarness output</dd></div></dl>
           </div>
         </div>
 
@@ -171,7 +174,7 @@
             <h3>A research narrative, paced across twelve editable frames.</h3>
             <p>LongCat-Next is reorganized into a presentation sequence with paper figures, benchmark evidence, and a consistent visual grammar.</p>
             <button type="button" data-open-artifact data-artifact-kind="slides" data-artifact-src="./assets/studies/longcat-next-slide-01.webp?v=675b8b1" data-artifact-src-template="./assets/studies/longcat-next-slide-{index}.webp?v=675b8b1" data-artifact-count="12" data-artifact-title="LongCat-Next research slides" data-artifact-new-tab="./artifacts/slides/longcat-next/index.html">Open slide deck</button>
-            <dl><div><dt>Source</dt><dd>Paper, figures, tables</dd></div><div><dt>Artifact</dt><dd>HTML, PDF, and PPTX</dd></div><div><dt>Status</dt><dd>Exploratory generalization study</dd></div></dl>
+            <dl><div><dt>Use</dt><dd>Conference talk</dd></div><div><dt>Artifact</dt><dd>HTML, PDF, and PPTX</dd></div><div><dt>Status</dt><dd>Exploratory meta-harness generalization</dd></div></dl>
           </div>
         </div>
 
@@ -190,7 +193,7 @@
             <h3>An editorial research page built for reading, not just viewing.</h3>
             <p>LongCat-Next becomes a responsive long-form artifact with grounded figures, quantitative evidence, and verified project links.</p>
             <button type="button" data-open-artifact data-artifact-kind="iframe" data-artifact-src="./artifacts/web/longcat-next/index.html" data-artifact-title="LongCat-Next research webpage" data-artifact-new-tab="./artifacts/web/longcat-next/index.html">Open research webpage</button>
-            <dl><div><dt>Source</dt><dd>Paper, figures, project links</dd></div><div><dt>Artifact</dt><dd>Responsive HTML and CSS</dd></div><div><dt>Status</dt><dd>Exploratory generalization study</dd></div></dl>
+            <dl><div><dt>Use</dt><dd>Research dissemination</dd></div><div><dt>Artifact</dt><dd>Responsive HTML and CSS</dd></div><div><dt>Status</dt><dd>Exploratory meta-harness generalization</dd></div></dl>
           </div>
         </div>
 
@@ -207,9 +210,9 @@
           <div class="artifact-study__copy">
             <p class="artifact-study__index">04 / Paper to video</p>
             <h3>A conference talk that moves from method to evidence.</h3>
-            <p>The DDPM conference video turns the paper's diffusion process, qualitative examples, and evaluation results into a timed visual sequence.</p>
+            <p>The DDPM conference video combines generated narration, synchronized subtitles, paper figures, and evaluation results in a timed visual sequence.</p>
             <button type="button" data-open-artifact data-artifact-kind="video" data-artifact-src="./assets/studies/ddpm-conference-video-6min.mp4?v=98e94d39" data-artifact-title="Denoising Diffusion Probabilistic Models conference video" data-artifact-new-tab="./assets/studies/ddpm-conference-video-6min.mp4?v=98e94d39">Watch conference video</button>
-            <dl><div><dt>Source</dt><dd>Paper, figures, evaluation</dd></div><div><dt>Artifact</dt><dd>1920 × 1080 H.264 video</dd></div><div><dt>Status</dt><dd>Exploratory generalization study</dd></div></dl>
+            <dl><div><dt>Use</dt><dd>Narrated conference presentation</dd></div><div><dt>Artifact</dt><dd>1920 × 1080 H.264 video</dd></div><div><dt>Status</dt><dd>Exploratory meta-harness generalization</dd></div></dl>
           </div>
         </div>
       </section>

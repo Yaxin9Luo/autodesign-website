@@ -178,6 +178,14 @@ async function runDesktop(browser, url) {
   assert.equal(await page.locator("#intro-replay").isVisible(), true);
 
   assert.equal(await page.locator("[data-artifact-tab]").count(), 4);
+  const suiteFlow = page.locator(".artifact-suite-flow");
+  await suiteFlow.waitFor({ state: "visible" });
+  const flowBounds = await suiteFlow.boundingBox();
+  const desktopViewport = page.viewportSize();
+  assert.ok(flowBounds && desktopViewport
+    && flowBounds.x >= 0
+    && flowBounds.x + flowBounds.width <= desktopViewport.width + 1,
+  `artifact suite workflow overflows desktop: ${JSON.stringify(flowBounds)}`);
   assert.equal(await page.locator("#artifact-panel-poster").isVisible(), true);
   assert.equal(await page.locator("#artifact-panel-video source").getAttribute("src"), null);
   await page.locator("#artifact-tab-poster").focus();
@@ -389,6 +397,13 @@ async function runMobile(browser, url, viewport) {
   await page.locator("#artifact-studies").scrollIntoViewIfNeeded();
   await page.waitForFunction(() => document.querySelector(".site-header")?.classList.contains("site-header--paper"));
   assert.equal(await page.locator(".intro-controls").isVisible(), false);
+  const suiteFlow = page.locator(".artifact-suite-flow");
+  await suiteFlow.waitFor({ state: "visible" });
+  const flowBounds = await suiteFlow.boundingBox();
+  assert.ok(flowBounds
+    && flowBounds.x >= 0
+    && flowBounds.x + flowBounds.width <= viewport.width + 1,
+  `artifact suite workflow overflows ${viewport.width}px viewport: ${JSON.stringify(flowBounds)}`);
   await assertMobileArtifactControls(page);
   await assertMobileViewer(page);
   await assertNoOverflow(page);
