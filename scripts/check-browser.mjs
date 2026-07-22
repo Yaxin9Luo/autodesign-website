@@ -188,6 +188,10 @@ async function runLocales(browser, url) {
   };
 
   await switcher.waitFor({ state: "visible" });
+  const localeCatalogResource = await page.evaluate(() => performance.getEntriesByType("resource")
+    .map((entry) => entry.name)
+    .find((name) => name.includes("/locales.js")));
+  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260722c$/, "locale catalog request must bypass stale browser caches");
   assert.equal(await currentLabel.textContent(), "EN");
   assert.equal(await menu.isHidden(), true);
   await openMenu();

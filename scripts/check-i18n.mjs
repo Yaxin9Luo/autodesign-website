@@ -96,7 +96,9 @@ expect(index.includes("data-language-switcher"), "page must include a language s
 for (const locale of SUPPORTED_LOCALES) {
   expect(index.includes(`data-locale=\"${locale}\"`), `language switcher must include ${locale}`);
 }
-expect(index.includes("./i18n.js?v=20260722b"), "page must load the versioned i18n runtime");
+expect(index.includes("./i18n.js?v=20260722c"), "page must load the current versioned i18n runtime");
+expect(readFileSync(resolve(root, "i18n.js"), "utf8").includes("./locales.js?v=20260722c"), "i18n runtime must version its locale catalog import");
+expect(readFileSync(resolve(root, "language-menu.js"), "utf8").includes("./locales.js?v=20260722c"), "language menu must version its locale metadata import");
 
 if (failures.length) {
   console.error(`i18n checks failed (${failures.length}):`);

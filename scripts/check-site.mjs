@@ -209,7 +209,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   if (!html.includes('type="module"')) failures.push("missing ES module entrypoint");
   expect(html.includes('id="language-menu-trigger"'), "compact language menu trigger is missing");
   expect(html.includes('id="language-menu"'), "compact language menu panel is missing");
-  expect(html.includes('./language-menu.js?v=20260722b'), "language menu runtime is missing or stale");
+  expect(html.includes('./language-menu.js?v=20260722c'), "language menu runtime is missing or stale");
   if (!html.includes('type="importmap"')) failures.push("missing import map");
   if (!html.includes('"three": "./vendor/three/three.module.min.js"')) failures.push("missing local three import");
   if (!html.includes('"three/addons/": "./vendor/three/addons/"')) failures.push("missing local three addons import");
@@ -238,7 +238,9 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   expect(html.includes("longcat-next-slide-{index}.webp?v=675b8b1"), "Slide sources must bypass stale deployment fallbacks");
   expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
   expect(html.includes("styles.css?v=20260722b"), "Stylesheet must bypass stale browser caches");
-  expect(html.includes("app.js?v=20260722b"), "Application entrypoint must bypass stale browser caches");
+  expect(html.includes("app.js?v=20260722c"), "Application entrypoint must bypass stale browser caches");
+  expect(read("i18n.js").includes("locales.js?v=20260722c"), "i18n runtime must bypass stale locale catalog caches");
+  expect(read("language-menu.js").includes("locales.js?v=20260722c"), "language menu must bypass stale locale metadata caches");
   expect(read("app.js").includes("three-scene.js?v=20260721a"), "Three.js scene module must bypass stale browser caches");
   expect(read("app.js").includes("artifact-showcase.js?v=20260722b"), "Artifact showcase module must bypass stale browser caches");
   expect(html.includes('class="browser-specimen__viewport">\n                <iframe'), "Web specimen must embed the real research webpage");
