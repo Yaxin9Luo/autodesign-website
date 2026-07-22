@@ -13,6 +13,7 @@
 - Locale order is `en`, `zh-CN`, `ko`, `ar`, `ja`, `es`, `fr`, `de`, `ru`, `it`.
 - Arabic is RTL; every other locale is LTR.
 - Keep AutoDesign, PosterHarness, Meta-Harness, AutoPosterBench, Designer, Optimizer Code Agent, model names, metrics, formats, and benchmark identifiers in English.
+- Keep dense research-record, metric, optimization-state, and harness-stage details in English as professional content; localize their surrounding headings and controls.
 - Preserve `?lang=` precedence, persisted choice, browser-language detection, and English fallback.
 - Do not translate text embedded inside image, slide, poster, or video assets.
 

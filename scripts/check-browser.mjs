@@ -176,11 +176,57 @@ async function runLocales(browser, url) {
   await finishIntro(page);
 
   const switcher = page.locator("[data-language-switcher]");
-  await switcher.waitFor({ state: "visible" });
-  assert.deepEqual(await switcher.locator("[data-locale]").allTextContents(), ["EN", "中文", "العربية"]);
-  assert.deepEqual(await switcher.locator("[data-locale]").evaluateAll((buttons) => buttons.map((button) => button.tabIndex)), [0, 0, 0]);
+  const trigger = page.locator("#language-menu-trigger");
+  const menu = page.locator("#language-menu");
+  const currentLabel = page.locator("[data-language-current]");
+  const expectedLocales = ["en", "zh-CN", "ko", "ar", "ja", "es", "fr", "de", "ru", "it"];
+  const expectedLabels = ["English", "简体中文", "한국어", "العربية", "日本語", "Español", "Français", "Deutsch", "Русский", "Italiano"];
+  const openMenu = async () => {
+    await trigger.click();
+    await menu.waitFor({ state: "visible" });
+    assert.equal(await trigger.getAttribute("aria-expanded"), "true");
+  };
 
-  await switcher.locator('[data-locale="zh-CN"]').click();
+  await switcher.waitFor({ state: "visible" });
+  assert.equal(await currentLabel.textContent(), "EN");
+  assert.equal(await menu.isHidden(), true);
+  await openMenu();
+  assert.deepEqual(
+    await menu.locator("[data-locale]").evaluateAll((options) => options.map((option) => option.dataset.locale)),
+    expectedLocales,
+  );
+  assert.deepEqual(await menu.locator("[data-locale] > span").allTextContents(), expectedLabels);
+
+  await menu.locator('[data-locale="ko"]').click();
+  assert.equal(await page.locator("html").getAttribute("lang"), "ko");
+  assert.equal(await page.locator("html").getAttribute("dir"), "ltr");
+  assert.match(page.url(), /[?&]lang=ko(?:&|#|$)/);
+  assert.match(await page.locator(".hero-dek").textContent(), /연구 시스템/);
+  assert.match(await page.locator("#harness-title").textContent(), /디자인 시스템/);
+  assert.match(await page.locator("body").textContent(), /PosterHarness/);
+  assert.equal(await menu.locator('[data-locale="ko"]').getAttribute("aria-checked"), "true");
+  assert.equal(await currentLabel.textContent(), "한국어");
+  assert.equal(await menu.isHidden(), true);
+  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), "ko");
+  await assertNoOverflow(page);
+
+  await page.reload({ waitUntil: "networkidle" });
+  assert.equal(await page.locator("html").getAttribute("lang"), "ko");
+  assert.match(await page.locator(".hero-dek").textContent(), /연구 시스템/);
+  await waitForPhase(page, "armed");
+  await finishIntro(page);
+
+  await trigger.focus();
+  await page.keyboard.press("ArrowDown");
+  await menu.waitFor({ state: "visible" });
+  assert.equal(await menu.locator('[data-locale="en"]').evaluate((option) => document.activeElement === option), true);
+  await page.keyboard.press("End");
+  assert.equal(await menu.locator('[data-locale="it"]').evaluate((option) => document.activeElement === option), true);
+  await page.keyboard.press("Home");
+  assert.equal(await menu.locator('[data-locale="en"]').evaluate((option) => document.activeElement === option), true);
+  await page.keyboard.press("ArrowDown");
+  assert.equal(await menu.locator('[data-locale="zh-CN"]').evaluate((option) => document.activeElement === option), true);
+  await page.keyboard.press("Enter");
   assert.equal(await page.locator("html").getAttribute("lang"), "zh-CN");
   assert.equal(await page.locator("html").getAttribute("dir"), "ltr");
   assert.match(page.url(), /[?&]lang=zh-CN(?:&|#|$)/);
@@ -188,17 +234,18 @@ async function runLocales(browser, url) {
   assert.match(await page.locator("#evolution-state-title").textContent(), /产物/);
   assert.match(await page.locator("#harness-title").textContent(), /设计系统/);
   assert.match(await page.locator("body").textContent(), /PosterHarness/);
-  assert.equal(await switcher.locator('[data-locale="zh-CN"]').getAttribute("aria-pressed"), "true");
+  assert.equal(await menu.locator('[data-locale="zh-CN"]').getAttribute("aria-checked"), "true");
+  assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
   assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), "zh-CN");
   await assertNoOverflow(page);
 
-  await page.reload({ waitUntil: "networkidle" });
-  assert.equal(await page.locator("html").getAttribute("lang"), "zh-CN");
-  assert.match(await page.locator(".hero-dek").textContent(), /研究系统/);
-  await waitForPhase(page, "armed");
-  await finishIntro(page);
+  await openMenu();
+  await page.mouse.click(8, 240);
+  await menu.waitFor({ state: "hidden" });
+  assert.equal(await trigger.getAttribute("aria-expanded"), "false");
 
-  await page.locator('[data-locale="ar"]').click();
+  await openMenu();
+  await menu.locator('[data-locale="ar"]').click();
   assert.equal(await page.locator("html").getAttribute("lang"), "ar");
   assert.equal(await page.locator("html").getAttribute("dir"), "rtl");
   assert.match(page.url(), /[?&]lang=ar(?:&|#|$)/);
@@ -206,19 +253,48 @@ async function runLocales(browser, url) {
   assert.match(await page.locator("#evolution-state-title").textContent(), /المخرج/);
   await page.locator(".evolution-node").nth(1).click();
   assert.match(await page.locator("#evolution-state-detail").textContent(), /Optimizer Code Agent/);
-  assert.equal(await page.locator('[data-locale="ar"]').getAttribute("aria-pressed"), "true");
+  assert.equal(await menu.locator('[data-locale="ar"]').getAttribute("aria-checked"), "true");
+  assert.equal(await currentLabel.textContent(), "العربية");
   assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), "ar");
   assert.equal(await page.locator(".language-switcher").evaluate((element) => getComputedStyle(element).direction), "ltr");
   await assertNoOverflow(page);
+
+  const remainingDesktopLocales = [
+    { locale: "ja", label: "日本語", hero: /研究システム/ },
+    { locale: "es", label: "ES", hero: /sistema de investigación/i },
+    { locale: "fr", label: "FR", hero: /système de recherche/i },
+    { locale: "it", label: "IT", hero: /sistema di ricerca/i },
+  ];
+  for (const { locale, label, hero } of remainingDesktopLocales) {
+    await openMenu();
+    await menu.locator(`[data-locale="${locale}"]`).click();
+    assert.equal(await page.locator("html").getAttribute("lang"), locale);
+    assert.equal(await page.locator("html").getAttribute("dir"), "ltr");
+    assert.equal(await currentLabel.textContent(), label);
+    assert.match(await page.locator(".hero-dek").textContent(), hero);
+    assert.equal(await menu.locator(`[data-locale="${locale}"]`).getAttribute("aria-checked"), "true");
+    await assertNoOverflow(page);
+  }
   assert.deepEqual(errors, [], `locale console errors: ${errors.join(" | ")}`);
   await page.close();
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const mobileErrors = watchConsole(mobile);
-  await openArmed(mobile, localeUrl(url, "ar"));
+  await openArmed(mobile, localeUrl(url, "de"));
   await finishIntro(mobile);
-  assert.equal(await mobile.locator("html").getAttribute("dir"), "rtl");
+  assert.equal(await mobile.locator("html").getAttribute("lang"), "de");
   await mobile.locator("[data-language-switcher]").waitFor({ state: "visible" });
+  assert.equal(await mobile.locator("[data-language-current]").textContent(), "DE");
+  await mobile.locator("#language-menu-trigger").click();
+  await mobile.locator("#language-menu").waitFor({ state: "visible" });
+  const menuBounds = await mobile.locator("#language-menu").boundingBox();
+  assert.ok(menuBounds && menuBounds.x >= -1 && menuBounds.x + menuBounds.width <= 391,
+    `mobile language menu overflows: ${JSON.stringify(menuBounds)}`);
+  await mobile.locator('[data-locale="ru"]').scrollIntoViewIfNeeded();
+  await mobile.locator('[data-locale="ru"]').click();
+  assert.equal(await mobile.locator("html").getAttribute("lang"), "ru");
+  assert.equal(await mobile.locator("[data-language-current]").textContent(), "RU");
+  assert.match(await mobile.locator("#results-title").textContent(), /Преимущества/);
   const headerLayout = await mobile.locator(".site-header").evaluate((header) => ({
     header: header.getBoundingClientRect().toJSON(),
     controls: [...header.querySelectorAll(":scope > *")]
@@ -230,7 +306,7 @@ async function runLocales(browser, url) {
       `mobile locale control overflows: ${JSON.stringify(control)}`);
   }
   await assertNoOverflow(mobile);
-  assert.deepEqual(mobileErrors, [], `Arabic mobile console errors: ${mobileErrors.join(" | ")}`);
+  assert.deepEqual(mobileErrors, [], `mobile locale console errors: ${mobileErrors.join(" | ")}`);
   await mobile.close();
 }
 

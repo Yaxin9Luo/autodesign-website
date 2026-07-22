@@ -14,6 +14,7 @@ const required = [
   "intro-audio.js",
   "intro-scene.js",
   "intro-state.js",
+  "language-menu.js",
   "locales.js",
   "robots.txt",
   "sitemap.xml",

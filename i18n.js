@@ -2,14 +2,20 @@ import { LOCALES, MESSAGES, SUPPORTED_LOCALES } from "./locales.js";
 
 const STORAGE_KEY = "autodesign.locale";
 let activeLocale = "en";
-let initialized = false;
 
 export function normalizeLocale(value) {
   if (!value || typeof value !== "string") return null;
   const normalized = value.trim().replaceAll("_", "-").toLowerCase();
   if (normalized === "en" || normalized.startsWith("en-")) return "en";
   if (normalized === "zh" || normalized.startsWith("zh-")) return "zh-CN";
+  if (normalized === "ko" || normalized.startsWith("ko-")) return "ko";
   if (normalized === "ar" || normalized.startsWith("ar-")) return "ar";
+  if (normalized === "ja" || normalized.startsWith("ja-")) return "ja";
+  if (normalized === "es" || normalized.startsWith("es-")) return "es";
+  if (normalized === "fr" || normalized.startsWith("fr-")) return "fr";
+  if (normalized === "de" || normalized.startsWith("de-")) return "de";
+  if (normalized === "ru" || normalized.startsWith("ru-")) return "ru";
+  if (normalized === "it" || normalized.startsWith("it-")) return "it";
   return null;
 }
 
@@ -58,14 +64,6 @@ function updateDocumentMetadata() {
   document.querySelector('meta[name="description"]')?.setAttribute("content", t("meta.description"));
 }
 
-function updateSwitcher() {
-  if (typeof document === "undefined") return;
-  document.querySelectorAll("[data-locale]").forEach((button) => {
-    const selected = button.dataset.locale === activeLocale;
-    button.setAttribute("aria-pressed", String(selected));
-  });
-}
-
 export function setLocale(locale, { persist = true, updateUrl = true, announce = true } = {}) {
   const next = normalizeLocale(locale) ?? "en";
   activeLocale = next;
@@ -74,7 +72,6 @@ export function setLocale(locale, { persist = true, updateUrl = true, announce =
     document.documentElement.dir = LOCALES[next].dir;
     applyTranslations(document);
     updateDocumentMetadata();
-    updateSwitcher();
   }
   if (typeof window !== "undefined") {
     if (persist) window.localStorage?.setItem(STORAGE_KEY, next);
@@ -91,13 +88,6 @@ export function setLocale(locale, { persist = true, updateUrl = true, announce =
 
 export function initI18n() {
   if (typeof window === "undefined" || typeof document === "undefined") return activeLocale;
-  if (!initialized) {
-    document.querySelector("[data-language-switcher]")?.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-locale]");
-      if (button) setLocale(button.dataset.locale);
-    });
-    initialized = true;
-  }
   const locale = resolveLocale({
     search: window.location.search,
     stored: window.localStorage?.getItem(STORAGE_KEY),

@@ -14,16 +14,29 @@ const expect = (condition, message) => {
 };
 
 expect(
-  JSON.stringify(SUPPORTED_LOCALES) === JSON.stringify(["en", "zh-CN", "ar"]),
-  "supported locale order must be English, Simplified Chinese, Arabic",
+  JSON.stringify(SUPPORTED_LOCALES) === JSON.stringify(["en", "zh-CN", "ko", "ar", "ja", "es", "fr", "de", "ru", "it"]),
+  "supported locale order must match the approved ten-language menu",
 );
 expect(LOCALES.ar?.dir === "rtl", "Arabic must declare RTL direction");
-expect(LOCALES.en?.dir === "ltr" && LOCALES["zh-CN"]?.dir === "ltr", "English and Chinese must be LTR");
+for (const locale of ["en", "zh-CN", "ko", "ja", "es", "fr", "de", "ru", "it"]) {
+  expect(LOCALES[locale]?.dir === "ltr", `${locale} must declare LTR direction`);
+}
 
 expect(normalizeLocale("zh") === "zh-CN", "zh must normalize to zh-CN");
 expect(normalizeLocale("zh-Hans-CN") === "zh-CN", "zh-Hans-CN must normalize to zh-CN");
 expect(normalizeLocale("ar-SA") === "ar", "ar-SA must normalize to ar");
-expect(normalizeLocale("fr-FR") === null, "unsupported locales must normalize to null");
+for (const [regional, locale] of [
+  ["ko-KR", "ko"],
+  ["ja-JP", "ja"],
+  ["es-MX", "es"],
+  ["fr-CA", "fr"],
+  ["de-AT", "de"],
+  ["ru-RU", "ru"],
+  ["it-CH", "it"],
+]) {
+  expect(normalizeLocale(regional) === locale, `${regional} must normalize to ${locale}`);
+}
+expect(normalizeLocale("pt-BR") === null, "unsupported locales must normalize to null");
 
 expect(
   resolveLocale({ search: "?lang=ar", stored: "zh-CN", languages: ["en-US"] }) === "ar",
@@ -34,11 +47,11 @@ expect(
   "stored locale must take priority over browser language",
 );
 expect(
-  resolveLocale({ search: "", stored: null, languages: ["fr-FR", "ar-AE"] }) === "ar",
+  resolveLocale({ search: "", stored: null, languages: ["pt-BR", "ko-KR", "ar-AE"] }) === "ko",
   "browser language fallback must scan all preferred languages",
 );
 expect(
-  resolveLocale({ search: "?lang=xx", stored: null, languages: ["fr-FR"] }) === "en",
+  resolveLocale({ search: "?lang=xx", stored: null, languages: ["pt-BR"] }) === "en",
   "unsupported preferences must fall back to English",
 );
 
@@ -60,10 +73,22 @@ expect(
   "Arabic interpolation must preserve the paper title",
 );
 
-for (const locale of ["zh-CN", "ar"]) {
+for (const locale of SUPPORTED_LOCALES.filter((locale) => locale !== "en")) {
   const catalog = Object.values(MESSAGES[locale]).join("\n");
   for (const term of ["AutoDesign", "PosterHarness", "Meta-Harness", "AutoPosterBench", "Code Agent"]) {
     expect(catalog.includes(term), `${locale} catalog must preserve ${term}`);
+  }
+}
+
+for (const locale of ["ko", "ja", "es", "fr", "de", "ru", "it"]) {
+  expect(Boolean(MESSAGES[locale]), `${locale} must provide a message catalog`);
+  for (const key of ["hero.dek", "suite.title", "resources.title", "viewer.close"]) {
+    expect(Boolean(MESSAGES[locale]) && MESSAGES[locale][key] !== MESSAGES.en[key], `${locale} must translate representative key ${key}`);
+  }
+  for (const prefix of ["record.", "metric.", "evolutionData.", "harnessData."]) {
+    for (const key of englishKeys.filter((candidate) => candidate.startsWith(prefix))) {
+      expect(MESSAGES[locale][key] === MESSAGES.en[key], `${locale} must preserve professional detail ${key} in English`);
+    }
   }
 }
 
@@ -71,7 +96,7 @@ expect(index.includes("data-language-switcher"), "page must include a language s
 for (const locale of SUPPORTED_LOCALES) {
   expect(index.includes(`data-locale=\"${locale}\"`), `language switcher must include ${locale}`);
 }
-expect(index.includes("./i18n.js?v=20260722a"), "page must load the versioned i18n runtime");
+expect(index.includes("./i18n.js?v=20260722b"), "page must load the versioned i18n runtime");
 
 if (failures.length) {
   console.error(`i18n checks failed (${failures.length}):`);

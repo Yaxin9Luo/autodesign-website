@@ -41,13 +41,18 @@ The menu must:
 
 ## Translation Boundary
 
-Translate navigation, research narrative, controls, accessibility labels,
-dynamic optimization descriptions, artifact-viewer text, and metadata.
+Translate navigation, the high-level research narrative, controls,
+accessibility labels, artifact-viewer text, and metadata.
 
 Keep established technical names in English where translation would make the
 research taxonomy less precise, including AutoDesign, PosterHarness,
 Meta-Harness, AutoPosterBench, Designer, Optimizer Code Agent, model names,
 metrics, file formats, and benchmark identifiers.
+
+Dense professional records under the research record, metric details,
+optimization-state details, and harness-stage details remain in English. Their
+surrounding headings and controls are localized, preserving readability without
+weakening the project's technical vocabulary.
 
 Each locale catalog must contain every English message key. Interpolated values
 such as poster titles, counts, and system names must remain intact.
@@ -73,8 +78,8 @@ Regional browser tags normalize to their supported base locale, for example
 
 ## Verification
 
-- Locale tests verify order, metadata, key parity, normalization, fallback, and
-  preservation of technical terms.
+- Locale tests verify order, metadata, key parity, normalization, fallback,
+  translated high-level copy, and the English professional-detail boundary.
 - Browser tests open the compact menu, switch locales, verify persistence, and
   dismiss it with Escape and outside click.
 - Desktop and mobile checks cover long German/Russian labels, Japanese/Korean
