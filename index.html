@@ -14,7 +14,7 @@
     <title>AutoDesign — The Artifact Engine</title>
     <link rel="canonical" href="https://autodesign.designanything.ai/">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23080b0e'/%3E%3Cpath d='M7 24 16 6l9 18h-4l-5-10-5 10Z' fill='%2300bfa5'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="./styles.css?v=20260722a">
+    <link rel="stylesheet" href="./styles.css?v=20260722b">
   </head>
   <body>
     <header class="site-header">
@@ -25,10 +25,23 @@
         <a href="#posters" data-scene-target="artifacts" data-i18n="nav.posters">Posters</a>
         <a href="#results" data-i18n="nav.results">Results</a>
       </nav>
-      <div class="language-switcher" role="group" aria-label="Language" data-language-switcher data-i18n-aria-label="language.label">
-        <button type="button" data-locale="en" aria-pressed="true" lang="en">EN</button>
-        <button type="button" data-locale="zh-CN" aria-pressed="false" lang="zh-CN">中文</button>
-        <button type="button" data-locale="ar" aria-pressed="false" lang="ar" dir="rtl">العربية</button>
+      <div class="language-switcher" data-language-switcher data-language-menu-root>
+        <button class="language-menu-trigger" id="language-menu-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="language-menu" data-i18n-aria-label="language.label">
+          <span data-language-current>EN</span>
+          <span class="language-menu-trigger__chevron" aria-hidden="true">⌄</span>
+        </button>
+        <div class="language-menu" id="language-menu" role="menu" aria-labelledby="language-menu-trigger" hidden>
+          <button type="button" role="menuitemradio" data-locale="en" aria-checked="true" lang="en"><span>English</span><small>EN</small></button>
+          <button type="button" role="menuitemradio" data-locale="zh-CN" aria-checked="false" lang="zh-CN"><span>简体中文</span><small>中文</small></button>
+          <button type="button" role="menuitemradio" data-locale="ko" aria-checked="false" lang="ko"><span>한국어</span><small>KO</small></button>
+          <button type="button" role="menuitemradio" data-locale="ar" aria-checked="false" lang="ar"><span>العربية</span><small>AR</small></button>
+          <button type="button" role="menuitemradio" data-locale="ja" aria-checked="false" lang="ja"><span>日本語</span><small>JA</small></button>
+          <button type="button" role="menuitemradio" data-locale="es" aria-checked="false" lang="es"><span>Español</span><small>ES</small></button>
+          <button type="button" role="menuitemradio" data-locale="fr" aria-checked="false" lang="fr"><span>Français</span><small>FR</small></button>
+          <button type="button" role="menuitemradio" data-locale="de" aria-checked="false" lang="de"><span>Deutsch</span><small>DE</small></button>
+          <button type="button" role="menuitemradio" data-locale="ru" aria-checked="false" lang="ru"><span>Русский</span><small>RU</small></button>
+          <button type="button" role="menuitemradio" data-locale="it" aria-checked="false" lang="it"><span>Italiano</span><small>IT</small></button>
+        </div>
       </div>
       <a class="header-cta" href="https://designanything.ai" aria-label="Open DesignAnything" data-i18n-aria-label="nav.open"><span data-i18n="nav.open">Open DesignAnything</span> <span aria-hidden="true">↗</span></a>
     </header>
@@ -390,7 +403,8 @@
         }
       }
     </script>
-    <script type="module" src="./i18n.js?v=20260722a"></script>
-    <script type="module" src="./app.js?v=20260722a"></script>
+    <script type="module" src="./i18n.js?v=20260722b"></script>
+    <script type="module" src="./language-menu.js?v=20260722b"></script>
+    <script type="module" src="./app.js?v=20260722b"></script>
   </body>
 </html>
