@@ -5,6 +5,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { createIntroAudio } from "./intro-audio.js";
 import { createIntroScene } from "./intro-scene.js";
+import { t } from "./i18n.js?v=20260722a";
 import {
   INTRO_CHARGE_THRESHOLD,
   addIntroCharge,
@@ -828,25 +829,25 @@ function createArtifactSceneRuntime({
     if (introPrompt) {
       introPrompt.dataset.chargeLabel = `${chargeValue} / ${INTRO_CHARGE_THRESHOLD}`;
       introPrompt.textContent = introState.phase === "arriving"
-        ? "Collecting source material"
+        ? t("intro.collecting")
         : introState.phase === "armed"
-          ? "Scroll to ignite"
+          ? t("intro.scroll")
           : introState.phase === "charging"
-            ? "Keep scrolling"
-            : "Transforming information";
+            ? t("intro.continue")
+            : t("intro.transforming");
     }
     if (introAnnouncement && announcedIntroPhase !== introState.phase) {
       const phaseAnnouncements = {
-        arriving: "Multimodal input is gathering",
-        armed: "Design singularity ready. Scroll to ignite",
-        charging: "Design singularity charging",
-        shockwave: "Big Bang ignited",
-        expansion: "Information expanding",
-        assembly: "Multimodal output assembling",
-        portal: "Opening the AutoDesign Artifact Engine",
-        complete: "AutoDesign ready",
+        arriving: t("intro.announceArriving"),
+        armed: t("intro.announceArmed"),
+        charging: t("intro.announceCharging"),
+        shockwave: t("intro.announceShockwave"),
+        expansion: t("intro.announceExpansion"),
+        assembly: t("intro.announceAssembly"),
+        portal: t("intro.announcePortal"),
+        complete: t("intro.announceComplete"),
       };
-      introAnnouncement.textContent = phaseAnnouncements[introState.phase] ?? "AutoDesign information genesis";
+      introAnnouncement.textContent = phaseAnnouncements[introState.phase] ?? t("intro.label");
       announcedIntroPhase = introState.phase;
     }
     if (bloomPass) {
@@ -864,6 +865,13 @@ function createArtifactSceneRuntime({
       bloomPass.threshold = introState.complete ? 0.98 : introState.phase === "assembly" ? 0.99 : 0.78;
     }
   }
+
+  const syncIntroLocale = () => {
+    announcedIntroPhase = null;
+    syncIntroPresentation();
+  };
+  window.addEventListener("autodesign:localechange", syncIntroLocale);
+  registerRollback(() => window.removeEventListener("autodesign:localechange", syncIntroLocale));
 
   function finishIntro() {
     if (introCompletionHandled) return;

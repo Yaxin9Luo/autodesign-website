@@ -220,7 +220,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     "complete research communication suite",
     "Poster · Slides · Web · Narrated Video",
     "human-guided refinement",
-    "Exploratory meta-harness generalization",
+    "Exploratory Meta-Harness generalization",
     "generated narration",
     "synchronized subtitles",
   ]) {
@@ -234,13 +234,13 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   expect(html.includes("longcat-next-poster.webp?v=413b9868"), "Poster source must bypass stale deployment fallbacks");
   expect(html.includes("longcat-next-slide-{index}.webp?v=675b8b1"), "Slide sources must bypass stale deployment fallbacks");
   expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
-  expect(html.includes("styles.css?v=20260721e"), "Stylesheet must bypass stale browser caches");
-  expect(html.includes("app.js?v=20260721d"), "Application entrypoint must bypass stale browser caches");
+  expect(html.includes("styles.css?v=20260722a"), "Stylesheet must bypass stale browser caches");
+  expect(html.includes("app.js?v=20260722a"), "Application entrypoint must bypass stale browser caches");
   expect(read("app.js").includes("three-scene.js?v=20260721a"), "Three.js scene module must bypass stale browser caches");
-  expect(read("app.js").includes("artifact-showcase.js?v=20260721c"), "Artifact showcase module must bypass stale browser caches");
+  expect(read("app.js").includes("artifact-showcase.js?v=20260722a"), "Artifact showcase module must bypass stale browser caches");
   expect(html.includes('class="browser-specimen__viewport">\n                <iframe'), "Web specimen must embed the real research webpage");
   expect(!html.includes('src="./assets/studies/longcat-next-web.webp"'), "Web specimen must not use the blank-ended screenshot");
-  expect(html.includes("<span>12 slides</span>"), "Slides stage must report the source's 12 slides");
+  expect(html.includes('data-i18n="suite.slidesStage">12 slides</span>'), "Slides stage must report the source's 12 slides");
   expect(html.includes("twelve editable frames"), "Slides narrative must describe twelve editable frames");
   expect(!/\b(?:10 slides|ten editable frames)\b/i.test(html), "stale ten-slide copy remains");
   for (const symbol of [
@@ -320,7 +320,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     "poster-index__next",
     "selectPoster",
     "aria-current",
-    "Inspect poster",
+    't("posters.inspect")',
     "researchRecord",
     "metrics",
     "bindPageLifecycle",

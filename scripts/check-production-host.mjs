@@ -34,6 +34,8 @@ const wranglerRun = runBoundedProcess(process.execPath, [
   "pages",
   "dev",
   "dist",
+  "--compatibility-date",
+  "2026-07-21",
   "--ip",
   "127.0.0.1",
   "--port",
