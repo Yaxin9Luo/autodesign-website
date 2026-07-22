@@ -1,5 +1,6 @@
 import { createArtifactScene } from "./three-scene.js?v=20260721a";
-import { bindArtifactShowcase } from "./artifact-showcase.js?v=20260721c";
+import { bindArtifactShowcase } from "./artifact-showcase.js?v=20260722a";
+import { t } from "./i18n.js?v=20260722a";
 import { bindPageLifecycle } from "./page-lifecycle.js";
 import { bindSceneFocus } from "./scene-focus.js";
 
@@ -22,6 +23,14 @@ let previousPosterButton = null;
 let nextPosterButton = null;
 let posterCaptionMeta = null;
 let posterCaptionTitle = null;
+let activeEvolutionIndex = 0;
+let activeHarnessIndex = 0;
+
+function dataMessage(group, id, field, fallback) {
+  const key = `${group}.${id}.${field}`;
+  const value = t(key);
+  return value === key ? fallback : value;
+}
 
 function posterImage(slug, width) {
   return `./assets/posters/${slug}-${width}.webp`;
@@ -29,6 +38,7 @@ function posterImage(slug, width) {
 
 function renderResearchRecord() {
   const root = byId("research-record");
+  root.replaceChildren();
 
   for (const [number, title, detail] of researchRecord) {
     const item = document.createElement("article");
@@ -39,8 +49,8 @@ function renderResearchRecord() {
     const body = document.createElement("span");
 
     index.textContent = number;
-    heading.textContent = title;
-    body.textContent = detail;
+    heading.textContent = dataMessage("record", number, "title", title);
+    body.textContent = dataMessage("record", number, "detail", detail);
     item.append(index, heading, body);
     root.append(item);
   }
@@ -48,8 +58,9 @@ function renderResearchRecord() {
 
 function renderMetrics() {
   const root = byId("metric-grid");
+  root.replaceChildren();
 
-  for (const metric of metrics) {
+  metrics.forEach((metric, index) => {
     const item = document.createElement("div");
     const value = document.createElement("dt");
     const detail = document.createElement("dd");
@@ -57,12 +68,12 @@ function renderMetrics() {
     const scope = document.createElement("span");
 
     value.textContent = metric.value;
-    label.textContent = metric.label;
-    scope.textContent = metric.scope;
+    label.textContent = dataMessage("metric", index, "label", metric.label);
+    scope.textContent = dataMessage("metric", index, "scope", metric.scope);
     detail.append(label, scope);
     item.append(value, detail);
     root.append(item);
-  }
+  });
 }
 
 function renderEvolution() {
@@ -70,8 +81,10 @@ function renderEvolution() {
   const image = byId("evolution-image");
   const patchView = byId("patch-view");
   const buttons = [];
+  rail.replaceChildren();
 
   const selectState = (index) => {
+    activeEvolutionIndex = index;
     const state = evolution[index];
     image.classList.add("is-changing");
     const nextSource = `./assets/evolution/${state.image}.webp`;
@@ -82,17 +95,19 @@ function renderEvolution() {
     };
     preload.src = nextSource;
 
-    byId("evolution-frame-index").textContent = `State ${state.id}`;
-    byId("evolution-frame-status").textContent = state.status;
+    const phase = dataMessage("evolutionData", state.id, "phase", state.phase);
+    const component = dataMessage("evolutionData", state.id, "component", state.component);
+    byId("evolution-frame-index").textContent = t("evolution.state", { id: state.id });
+    byId("evolution-frame-status").textContent = dataMessage("evolutionData", state.id, "status", state.status);
     byId("evolution-frame-status").dataset.status = state.status;
-    byId("evolution-signal").textContent = state.signal;
-    byId("evolution-component").textContent = `${state.phase} / ${state.component}`;
-    byId("evolution-state-title").textContent = state.title;
-    byId("evolution-state-detail").textContent = state.detail;
+    byId("evolution-signal").textContent = dataMessage("evolutionData", state.id, "signal", state.signal);
+    byId("evolution-component").textContent = `${phase} / ${component}`;
+    byId("evolution-state-title").textContent = dataMessage("evolutionData", state.id, "title", state.title);
+    byId("evolution-state-detail").textContent = dataMessage("evolutionData", state.id, "detail", state.detail);
     patchView.replaceChildren();
     state.patch.forEach((line, lineIndex) => {
       const row = document.createElement("span");
-      row.textContent = line;
+      row.textContent = dataMessage("evolutionData", state.id, `patch${lineIndex}`, line);
       row.style.setProperty("--line-index", lineIndex);
       row.className = line.startsWith("-") ? "patch-line patch-line--negative" : "patch-line";
       patchView.append(row);
@@ -107,26 +122,31 @@ function renderEvolution() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `evolution-node evolution-node--${state.status}`;
-    button.innerHTML = `<span>${state.id}</span><strong>${state.phase}</strong><small>${state.component}</small>`;
-    button.setAttribute("aria-label", `Show ${state.phase} state ${state.id}: ${state.component}`);
+    const phase = dataMessage("evolutionData", state.id, "phase", state.phase);
+    const component = dataMessage("evolutionData", state.id, "component", state.component);
+    button.innerHTML = `<span>${state.id}</span><strong>${phase}</strong><small>${component}</small>`;
+    button.setAttribute("aria-label", t("evolution.showAria", { phase, id: state.id, component }));
     button.addEventListener("click", () => selectState(index));
     buttons.push(button);
     rail.append(button);
   });
 
-  selectState(0);
+  selectState(activeEvolutionIndex);
 }
 
 function renderHarness() {
   const root = byId("harness-stage-list");
   const buttons = [];
+  root.replaceChildren();
 
   const selectStage = (index) => {
+    activeHarnessIndex = index;
     const stage = harnessStages[index];
-    byId("harness-detail-index").textContent = `${stage.id} / ${stage.name}`;
-    byId("harness-detail-title").textContent = stage.summary;
-    byId("harness-detail-input").textContent = stage.input;
-    byId("harness-detail-output").textContent = stage.output;
+    const name = dataMessage("harnessData", stage.id, "name", stage.name);
+    byId("harness-detail-index").textContent = `${stage.id} / ${name}`;
+    byId("harness-detail-title").textContent = dataMessage("harnessData", stage.id, "summary", stage.summary);
+    byId("harness-detail-input").textContent = dataMessage("harnessData", stage.id, "input", stage.input);
+    byId("harness-detail-output").textContent = dataMessage("harnessData", stage.id, "output", stage.output);
     buttons.forEach((button, buttonIndex) => {
       button.setAttribute("aria-pressed", buttonIndex === index ? "true" : "false");
     });
@@ -136,14 +156,16 @@ function renderHarness() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "harness-stage";
-    button.innerHTML = `<span>${stage.id}</span><strong>${stage.short}</strong><small>${stage.name}</small>`;
-    button.setAttribute("aria-label", `Inspect ${stage.name}`);
+    const name = dataMessage("harnessData", stage.id, "name", stage.name);
+    const short = dataMessage("harnessData", stage.id, "short", stage.short);
+    button.innerHTML = `<span>${stage.id}</span><strong>${short}</strong><small>${name}</small>`;
+    button.setAttribute("aria-label", t("harness.inspect", { name }));
     button.addEventListener("click", () => selectStage(index));
     buttons.push(button);
     root.append(button);
   });
 
-  selectStage(0);
+  selectStage(activeHarnessIndex);
 }
 
 function renderTransferResults() {
@@ -167,7 +189,8 @@ function renderTransferResults() {
 function updatePosterCaption(index) {
   activePosterIndex = Math.max(0, Math.min(posters.length - 1, index));
   const poster = posters[activePosterIndex];
-  posterCaptionMeta.textContent = `${String(activePosterIndex + 1).padStart(2, "0")} / ${String(posters.length).padStart(2, "0")} · ${poster.discipline} · ${poster.year}`;
+  const discipline = dataMessage("posterData", poster.slug, "discipline", poster.discipline);
+  posterCaptionMeta.textContent = `${String(activePosterIndex + 1).padStart(2, "0")} / ${String(posters.length).padStart(2, "0")} · ${discipline} · ${poster.year}`;
   posterCaptionTitle.textContent = poster.title;
 
   posterButtons.forEach((button, buttonIndex) => {
@@ -179,6 +202,18 @@ function updatePosterCaption(index) {
   });
   previousPosterButton.disabled = activePosterIndex === 0;
   nextPosterButton.disabled = activePosterIndex === posters.length - 1;
+}
+
+function localizePosterControls() {
+  previousPosterButton.textContent = t("posters.previous");
+  previousPosterButton.setAttribute("aria-label", t("posters.previousAria"));
+  nextPosterButton.textContent = t("posters.next");
+  nextPosterButton.setAttribute("aria-label", t("posters.nextAria"));
+  posterButtons.forEach((button, index) => {
+    button.setAttribute("aria-label", t("posters.show", { title: posters[index].title }));
+  });
+  document.querySelector(".poster-caption__inspect").textContent = t("posters.inspect");
+  updatePosterCaption(activePosterIndex);
 }
 
 function selectPoster(index) {
@@ -195,15 +230,15 @@ function renderPosterControls() {
   previousPosterButton = document.createElement("button");
   previousPosterButton.type = "button";
   previousPosterButton.className = "poster-index__nav poster-index__previous";
-  previousPosterButton.textContent = "Previous";
-  previousPosterButton.setAttribute("aria-label", "Show previous poster");
+  previousPosterButton.textContent = t("posters.previous");
+  previousPosterButton.setAttribute("aria-label", t("posters.previousAria"));
   previousPosterButton.addEventListener("click", () => selectPoster(activePosterIndex - 1));
 
   nextPosterButton = document.createElement("button");
   nextPosterButton.type = "button";
   nextPosterButton.className = "poster-index__nav poster-index__next";
-  nextPosterButton.textContent = "Next";
-  nextPosterButton.setAttribute("aria-label", "Show next poster");
+  nextPosterButton.textContent = t("posters.next");
+  nextPosterButton.setAttribute("aria-label", t("posters.nextAria"));
   nextPosterButton.addEventListener("click", () => selectPoster(activePosterIndex + 1));
 
   posters.forEach((poster, index) => {
@@ -211,7 +246,7 @@ function renderPosterControls() {
     button.type = "button";
     button.className = "poster-index__button";
     button.textContent = String(index + 1).padStart(2, "0");
-    button.setAttribute("aria-label", `Show ${poster.title}`);
+    button.setAttribute("aria-label", t("posters.show", { title: poster.title }));
     button.title = poster.title;
     button.addEventListener("click", () => selectPoster(index));
     posterButtons.push(button);
@@ -233,7 +268,7 @@ function renderPosterControls() {
   const inspect = document.createElement("button");
   inspect.type = "button";
   inspect.className = "text-link text-link--light poster-caption__inspect";
-  inspect.textContent = "Inspect poster ↗";
+  inspect.textContent = t("posters.inspect");
   inspect.addEventListener("click", () => openPoster(posters[activePosterIndex], inspect));
 
   row.append(posterCaptionTitle, inspect);
@@ -241,18 +276,17 @@ function renderPosterControls() {
   updatePosterCaption(0);
 }
 
-export function openPoster(poster, trigger) {
-  opener = trigger;
+function renderPosterDialog(poster) {
   byId("dialog-image").src = posterImage(poster.slug, 1600);
-  byId("dialog-image").alt = poster.alt;
+  byId("dialog-image").alt = dataMessage("posterData", poster.slug, "alt", poster.alt);
   byId("dialog-title").textContent = poster.title;
-  byId("dialog-discipline").textContent = `${poster.discipline} / ${poster.year}`;
+  byId("dialog-discipline").textContent = `${dataMessage("posterData", poster.slug, "discipline", poster.discipline)} / ${poster.year}`;
 
   const metadata = byId("dialog-metadata");
   metadata.replaceChildren();
   for (const [term, detail] of [
-    ["Source", poster.source],
-    ["Artifact", poster.format],
+    [t("suite.flowInput"), dataMessage("posterData", poster.slug, "source", poster.source)],
+    [t("suite.artifact"), dataMessage("posterData", poster.slug, "format", poster.format)],
   ]) {
     const title = document.createElement("dt");
     const value = document.createElement("dd");
@@ -260,7 +294,11 @@ export function openPoster(poster, trigger) {
     value.textContent = detail;
     metadata.append(title, value);
   }
+}
 
+export function openPoster(poster, trigger) {
+  opener = trigger;
+  renderPosterDialog(poster);
   if (typeof dialog.showModal !== "function") return;
   dialog.showModal();
   document.documentElement.classList.add("dialog-open");
@@ -328,7 +366,7 @@ function bindIntroControls() {
   const syncSound = () => {
     const enabled = controller?.getIntroSound?.() === true;
     sound.setAttribute("aria-pressed", String(enabled));
-    sound.textContent = `Sound / ${enabled ? "On" : "Off"}`;
+    sound.textContent = t(enabled ? "intro.soundOn" : "intro.soundOff");
   };
   const toggleSound = () => {
     controller?.setIntroSound?.(controller?.getIntroSound?.() !== true);
@@ -341,11 +379,13 @@ function bindIntroControls() {
   replay.addEventListener("click", replayIntro);
   enter.addEventListener("click", enterSite);
   syncSound();
+  window.addEventListener("autodesign:localechange", syncSound);
 
   return () => {
     sound.removeEventListener("click", toggleSound);
     replay.removeEventListener("click", replayIntro);
     enter.removeEventListener("click", enterSite);
+    window.removeEventListener("autodesign:localechange", syncSound);
   };
 }
 
@@ -441,6 +481,14 @@ renderTransferResults();
 const unbindArtifactShowcase = bindArtifactShowcase();
 renderPosterControls();
 bindDialog();
+window.addEventListener("autodesign:localechange", () => {
+  renderResearchRecord();
+  renderMetrics();
+  renderEvolution();
+  renderHarness();
+  localizePosterControls();
+  if (dialog.open) renderPosterDialog(posters[activePosterIndex]);
+});
 initArtifactEngine();
 const unbindIntroControls = bindIntroControls();
 const headerController = initPersistentHeader();

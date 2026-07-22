@@ -83,6 +83,12 @@ async function openArmed(page, url) {
   await waitForPhase(page, "armed");
 }
 
+function localeUrl(url, locale) {
+  const localized = new URL(url);
+  localized.searchParams.set("lang", locale);
+  return localized.href;
+}
+
 async function assertNoOverflow(page) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   assert.ok(overflow <= 1, `horizontal overflow: ${overflow}px`);
@@ -157,10 +163,81 @@ async function assertDrawCalls(page, maximum) {
   assert.ok(Number(drawCalls) <= maximum, `draw calls exceeded ${maximum}: ${drawCalls}`);
 }
 
+async function finishIntro(page) {
+  await page.locator("#intro-sound").evaluate((element) => element.blur());
+  await page.keyboard.press("Space");
+  await waitForPhase(page, "complete");
+}
+
+async function runLocales(browser, url) {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const errors = watchConsole(page);
+  await openArmed(page, localeUrl(url, "en"));
+  await finishIntro(page);
+
+  const switcher = page.locator("[data-language-switcher]");
+  await switcher.waitFor({ state: "visible" });
+  assert.deepEqual(await switcher.locator("[data-locale]").allTextContents(), ["EN", "中文", "العربية"]);
+  assert.deepEqual(await switcher.locator("[data-locale]").evaluateAll((buttons) => buttons.map((button) => button.tabIndex)), [0, 0, 0]);
+
+  await switcher.locator('[data-locale="zh-CN"]').click();
+  assert.equal(await page.locator("html").getAttribute("lang"), "zh-CN");
+  assert.equal(await page.locator("html").getAttribute("dir"), "ltr");
+  assert.match(page.url(), /[?&]lang=zh-CN(?:&|#|$)/);
+  assert.match(await page.locator(".hero-dek").textContent(), /研究系统/);
+  assert.match(await page.locator("#evolution-state-title").textContent(), /产物/);
+  assert.match(await page.locator("#harness-title").textContent(), /设计系统/);
+  assert.match(await page.locator("body").textContent(), /PosterHarness/);
+  assert.equal(await switcher.locator('[data-locale="zh-CN"]').getAttribute("aria-pressed"), "true");
+  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), "zh-CN");
+  await assertNoOverflow(page);
+
+  await page.reload({ waitUntil: "networkidle" });
+  assert.equal(await page.locator("html").getAttribute("lang"), "zh-CN");
+  assert.match(await page.locator(".hero-dek").textContent(), /研究系统/);
+  await waitForPhase(page, "armed");
+  await finishIntro(page);
+
+  await page.locator('[data-locale="ar"]').click();
+  assert.equal(await page.locator("html").getAttribute("lang"), "ar");
+  assert.equal(await page.locator("html").getAttribute("dir"), "rtl");
+  assert.match(page.url(), /[?&]lang=ar(?:&|#|$)/);
+  assert.match(await page.locator(".hero-dek").textContent(), /نظام بحثي/);
+  assert.match(await page.locator("#evolution-state-title").textContent(), /المخرج/);
+  await page.locator(".evolution-node").nth(1).click();
+  assert.match(await page.locator("#evolution-state-detail").textContent(), /Optimizer Code Agent/);
+  assert.equal(await page.locator('[data-locale="ar"]').getAttribute("aria-pressed"), "true");
+  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), "ar");
+  assert.equal(await page.locator(".language-switcher").evaluate((element) => getComputedStyle(element).direction), "ltr");
+  await assertNoOverflow(page);
+  assert.deepEqual(errors, [], `locale console errors: ${errors.join(" | ")}`);
+  await page.close();
+
+  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const mobileErrors = watchConsole(mobile);
+  await openArmed(mobile, localeUrl(url, "ar"));
+  await finishIntro(mobile);
+  assert.equal(await mobile.locator("html").getAttribute("dir"), "rtl");
+  await mobile.locator("[data-language-switcher]").waitFor({ state: "visible" });
+  const headerLayout = await mobile.locator(".site-header").evaluate((header) => ({
+    header: header.getBoundingClientRect().toJSON(),
+    controls: [...header.querySelectorAll(":scope > *")]
+      .filter((element) => getComputedStyle(element).display !== "none")
+      .map((element) => ({ className: element.className, rect: element.getBoundingClientRect().toJSON() })),
+  }));
+  for (const control of headerLayout.controls) {
+    assert.ok(control.rect.left >= -1 && control.rect.right <= 391,
+      `mobile locale control overflows: ${JSON.stringify(control)}`);
+  }
+  await assertNoOverflow(mobile);
+  assert.deepEqual(mobileErrors, [], `Arabic mobile console errors: ${mobileErrors.join(" | ")}`);
+  await mobile.close();
+}
+
 async function runDesktop(browser, url) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const errors = watchConsole(page);
-  await openArmed(page, url);
+  await openArmed(page, localeUrl(url, "en"));
   assert.equal(await page.locator("#scene-shell").evaluate((element) => element.classList.contains("webgl-fallback")), false);
   await assertNoOverflow(page);
   await assertDrawCalls(page, 120);
@@ -389,7 +466,7 @@ async function runMobile(browser, url, viewport) {
     hasTouch: true,
   });
   const errors = watchConsole(page);
-  await openArmed(page, url);
+  await openArmed(page, localeUrl(url, "en"));
   await assertNoOverflow(page);
   await assertDrawCalls(page, 70);
   await page.keyboard.press("ArrowDown");
@@ -417,7 +494,7 @@ async function runReducedMotion(browser, url) {
     reducedMotion: "reduce",
   });
   const errors = watchConsole(page);
-  await openArmed(page, url);
+  await openArmed(page, localeUrl(url, "en"));
   await page.keyboard.press("ArrowDown");
   await waitForPhase(page, "complete", 1_500);
   await page.locator("#artifact-tab-video").click();
@@ -448,7 +525,7 @@ async function runSaveData(browser, url) {
     Object.defineProperty(navigator, "connection", { configurable: true, value: connection });
   });
   const errors = watchConsole(page);
-  await openArmed(page, url);
+  await openArmed(page, localeUrl(url, "en"));
   await page.keyboard.press("ArrowDown");
   await waitForPhase(page, "complete");
   await page.locator("#artifact-tab-video").click();
@@ -485,7 +562,7 @@ async function runFallback(browser, url, initializationFailure = false) {
     page,
     (message) => initializationFailure && message.includes("scene initialization failed"),
   );
-  await page.goto(url, { waitUntil: "networkidle" });
+  await page.goto(localeUrl(url, "en"), { waitUntil: "networkidle" });
   await page.waitForFunction(() => document.getElementById("scene-shell")?.classList.contains("webgl-fallback"));
   assert.equal(await page.locator("#intro-enter").isVisible(), true);
   await page.locator("#intro-enter").click();
@@ -507,6 +584,7 @@ try {
     ...(browserName === "chromium" && browserChannel !== "chromium" ? { channel: browserChannel } : {}),
     headless: true,
   });
+  await runLocales(browser, url);
   await runDesktop(browser, url);
   await runMobile(browser, url, { width: 430, height: 932 });
   await runMobile(browser, url, { width: 320, height: 667 });
