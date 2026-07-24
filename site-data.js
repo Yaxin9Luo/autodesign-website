@@ -1,21 +1,21 @@
 const metrics = Object.freeze([
   {
-    value: "77.55",
+    value: "78.32",
     label: "highest AutoPosterBench score",
-    scope: "among the 14 evaluated configurations",
+    scope: "on the 100-paper main track",
   },
   {
-    value: "77.47",
-    label: "with Claude 4.8",
-    scope: "on AutoPosterBench using AutoDesign PosterHarness and Claude Code",
+    value: "77.97",
+    label: "with GPT-5.5",
+    scope: "on AutoPosterBench using AutoDesign PosterHarness and Codex",
   },
   {
-    value: "+6.79",
+    value: "+7.45",
     label: "over Claude Design",
     scope: "same Claude Code + Claude 4.8 configuration",
   },
   {
-    value: "+5.26–39.05",
+    value: "+5.01–19.56",
     label: "improvement in matched configurations",
     scope: "across seven fixed Code Agent/model configurations on the controlled 10-paper subset",
   },
@@ -272,13 +272,13 @@ const harnessStages = Object.freeze([
 ]);
 
 const transferResults = Object.freeze([
-  { name: "Codex / GPT-5.5", before: 41.89, after: 80.94 },
-  { name: "Claude Code / Claude 4.8", before: 68.62, after: 73.88 },
-  { name: "Kimi Code / Kimi K2.7", before: 46.81, after: 72.20 },
-  { name: "Claude Code / Seed 2.1 Pro", before: 54.22, after: 70.58 },
-  { name: "ZCode / GLM 5.2", before: 34.86, after: 68.53 },
-  { name: "Claude Code / LongCat 2.0", before: 42.51, after: 54.69 },
-  { name: "Claude Code / DeepSeek V4 Pro", before: 33.74, after: 54.40 },
+  { name: "Codex / GPT-5.5", before: 75.87, after: 81.46 },
+  { name: "Claude Code / Claude 4.8", before: 69.55, after: 74.56 },
+  { name: "Claude Code / Kimi K2.7", before: 57.20, after: 70.12 },
+  { name: "Claude Code / Seed 2.1 Pro", before: 54.01, after: 71.83 },
+  { name: "Claude Code / GLM 5.2", before: 50.32, after: 64.33 },
+  { name: "Claude Code / LongCat 2.0", before: 43.26, after: 55.13 },
+  { name: "Claude Code / DeepSeek V4 Pro", before: 34.73, after: 54.29 },
 ]);
 
 window.AutoDesignSiteData = Object.freeze({

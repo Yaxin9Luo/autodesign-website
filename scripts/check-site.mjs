@@ -276,8 +276,13 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     if (!html.includes(symbol)) failures.push("index.html missing " + symbol);
   }
 
+  expect(html.includes("site-data.js?v=20260724a"), "Benchmark data source must bypass stale browser caches");
+  for (const score of ["78.32", "70.87", "69.45"]) {
+    expect(html.includes(score), "Leaderboard missing remeasured score " + score);
+  }
+
   const data = read("site-data.js");
-  for (const claim of ["77.55", "77.47", "+6.79", "+5.26–39.05", "100"]) {
+  for (const claim of ["78.32", "77.97", "+7.45", "+5.01–19.56", "100"]) {
     if (!data.includes(claim)) failures.push("missing approved claim " + claim);
   }
   if (data.includes("/api")) failures.push("site-data.js must not call /api");
@@ -289,6 +294,11 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     const siteData = sandbox.window.AutoDesignSiteData;
     if (!Array.isArray(siteData?.metrics) || siteData.metrics.length !== 5) {
       failures.push("site-data.js must expose five metrics");
+    }
+    const metricValues = siteData?.metrics?.map((metric) => metric.value);
+    const expectedMetricValues = ["78.32", "77.97", "+7.45", "+5.01–19.56", "100"];
+    if (JSON.stringify(metricValues) !== JSON.stringify(expectedMetricValues)) {
+      failures.push("site-data.js must expose the remeasured benchmark metrics");
     }
     if (!Array.isArray(siteData?.posters) || siteData.posters.length !== 12) {
       failures.push("site-data.js must expose twelve posters");
@@ -310,6 +320,19 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     }
     if (!Array.isArray(siteData?.transferResults) || siteData.transferResults.length !== 7) {
       failures.push("site-data.js must expose seven transfer results");
+    }
+    const expectedTransferResults = [
+      ["Codex / GPT-5.5", 75.87, 81.46],
+      ["Claude Code / Claude 4.8", 69.55, 74.56],
+      ["Claude Code / Kimi K2.7", 57.20, 70.12],
+      ["Claude Code / Seed 2.1 Pro", 54.01, 71.83],
+      ["Claude Code / GLM 5.2", 50.32, 64.33],
+      ["Claude Code / LongCat 2.0", 43.26, 55.13],
+      ["Claude Code / DeepSeek V4 Pro", 34.73, 54.29],
+    ];
+    const actualTransferResults = siteData?.transferResults?.map(({ name, before, after }) => [name, before, after]);
+    if (JSON.stringify(actualTransferResults) !== JSON.stringify(expectedTransferResults)) {
+      failures.push("site-data.js must expose the remeasured seven-configuration transfer data");
     }
   } catch (error) {
     failures.push("site-data.js failed to execute: " + error.message);
