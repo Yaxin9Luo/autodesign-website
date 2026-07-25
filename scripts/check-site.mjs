@@ -214,6 +214,16 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   if (!html.includes('"three": "./vendor/three/three.module.min.js"')) failures.push("missing local three import");
   if (!html.includes('"three/addons/": "./vendor/three/addons/"')) failures.push("missing local three addons import");
   if (!html.includes("https://designanything.ai")) failures.push("missing platform CTA");
+  const englishHarnessScope = "DesignHarness is AutoDesign's optimized design system, evaluated for academic paper-to-poster generation. It grounds the Designer in the paper, executes an editable artifact, inspects the browser result, and routes localized repair.";
+  const publicHarnessContent = [html, read("locales.js")];
+  expect(
+    publicHarnessContent.every((source) => source.includes(englishHarnessScope)),
+    "public runtime content must include the English DesignHarness evaluation scope statement",
+  );
+  expect(
+    publicHarnessContent.every((source) => !source.includes("poster-specific system")),
+    "public runtime content must not call DesignHarness poster-specific",
+  );
   const tabOrder = [...html.matchAll(/data-artifact-tab="([^"]+)"/g)].map((match) => match[1]);
   expect(JSON.stringify(tabOrder) === JSON.stringify(["poster", "slides", "web", "video"]), "artifact tab order is invalid");
   for (const token of ["artifact-viewer", "data-open-artifact", "data-artifact-src", "Validated DesignHarness output"]) {
