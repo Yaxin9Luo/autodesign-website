@@ -1,13 +1,13 @@
 const metrics = Object.freeze([
   {
     value: "78.32",
-    label: "highest AutoPosterBench score",
+    label: "highest PosterBench score",
     scope: "on the 100-paper main track",
   },
   {
     value: "77.97",
     label: "with GPT-5.5",
-    scope: "on AutoPosterBench using AutoDesign PosterHarness and Codex",
+    scope: "on PosterBench using AutoDesign DesignHarness and Codex",
   },
   {
     value: "+7.45",
@@ -22,7 +22,7 @@ const metrics = Object.freeze([
   {
     value: "100",
     label: "source papers",
-    scope: "across five disciplines in AutoPosterBench",
+    scope: "across five disciplines in PosterBench",
   },
 ]);
 
@@ -166,7 +166,7 @@ const researchRecord = Object.freeze([
   ["01", "Source context", "paper text, figures, tables, and assets"],
   ["02", "Renderable artifact", "an inspectable, editable HTML poster"],
   ["03", "Diagnostic evidence", "render, validation, and evaluation traces"],
-  ["04", "Candidate update", "a bounded update to PosterHarness"],
+  ["04", "Candidate update", "a bounded update to DesignHarness"],
   ["05", "Accepted state", "a retained harness state for future artifacts"],
 ]);
 
@@ -218,11 +218,11 @@ const evolution = Object.freeze([
   {
     id: "04",
     phase: "Final Harness",
-    component: "Optimized PosterHarness",
+    component: "Optimized DesignHarness",
     status: "final",
     image: "evolution-04",
     title: "Promote the strongest reusable system state.",
-    detail: "The final PosterHarness balances dense paper evidence with a clear three-column reading path, native tables, prominent qualitative results, and a finished visual identity. The improvement persists for future artifacts.",
+    detail: "The final DesignHarness balances dense paper evidence with a clear three-column reading path, native tables, prominent qualitative results, and a finished visual identity. The improvement persists for future artifacts.",
     signal: "Source-faithful · dense · readable · visually complete",
     patch: ["+ evidence-first composition", "+ stable hierarchy and bounded styling"],
   },

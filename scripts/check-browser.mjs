@@ -94,6 +94,13 @@ async function assertNoOverflow(page) {
   assert.ok(overflow <= 1, `horizontal overflow: ${overflow}px`);
 }
 
+async function assertPaperTerminology(page) {
+  const bodyText = await page.locator("body").textContent();
+  assert.match(bodyText, /DesignHarness/);
+  assert.match(bodyText, /PosterBench/);
+  assert.doesNotMatch(bodyText, /PosterHarness|AutoPosterBench/);
+}
+
 async function assertMobileArtifactControls(page) {
   const tabState = await page.locator(".artifact-tabs").evaluate((tablist) => ({
     clientWidth: tablist.clientWidth,
@@ -174,6 +181,7 @@ async function runLocales(browser, url) {
   const errors = watchConsole(page);
   await openArmed(page, localeUrl(url, "en"));
   await finishIntro(page);
+  await assertPaperTerminology(page);
 
   const switcher = page.locator("[data-language-switcher]");
   const trigger = page.locator("#language-menu-trigger");
@@ -207,7 +215,7 @@ async function runLocales(browser, url) {
   assert.match(page.url(), /[?&]lang=ko(?:&|#|$)/);
   assert.match(await page.locator(".hero-dek").textContent(), /연구 시스템/);
   assert.match(await page.locator("#harness-title").textContent(), /디자인 시스템/);
-  assert.match(await page.locator("body").textContent(), /PosterHarness/);
+  await assertPaperTerminology(page);
   assert.equal(await menu.locator('[data-locale="ko"]').getAttribute("aria-checked"), "true");
   assert.equal(await currentLabel.textContent(), "한국어");
   assert.equal(await menu.isHidden(), true);
@@ -237,7 +245,7 @@ async function runLocales(browser, url) {
   assert.match(await page.locator(".hero-dek").textContent(), /研究系统/);
   assert.match(await page.locator("#evolution-state-title").textContent(), /产物/);
   assert.match(await page.locator("#harness-title").textContent(), /设计系统/);
-  assert.match(await page.locator("body").textContent(), /PosterHarness/);
+  await assertPaperTerminology(page);
   assert.equal(await menu.locator('[data-locale="zh-CN"]').getAttribute("aria-checked"), "true");
   assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
   assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), "zh-CN");
@@ -255,6 +263,7 @@ async function runLocales(browser, url) {
   assert.match(page.url(), /[?&]lang=ar(?:&|#|$)/);
   assert.match(await page.locator(".hero-dek").textContent(), /نظام بحثي/);
   assert.match(await page.locator("#evolution-state-title").textContent(), /المخرج/);
+  await assertPaperTerminology(page);
   await page.locator(".evolution-node").nth(1).click();
   assert.match(await page.locator("#evolution-state-detail").textContent(), /Optimizer Code Agent/);
   assert.equal(await menu.locator('[data-locale="ar"]').getAttribute("aria-checked"), "true");
@@ -276,6 +285,7 @@ async function runLocales(browser, url) {
     assert.equal(await page.locator("html").getAttribute("dir"), "ltr");
     assert.equal(await currentLabel.textContent(), label);
     assert.match(await page.locator(".hero-dek").textContent(), hero);
+    await assertPaperTerminology(page);
     assert.equal(await menu.locator(`[data-locale="${locale}"]`).getAttribute("aria-checked"), "true");
     await assertNoOverflow(page);
   }
@@ -287,6 +297,7 @@ async function runLocales(browser, url) {
   await openArmed(mobile, localeUrl(url, "de"));
   await finishIntro(mobile);
   assert.equal(await mobile.locator("html").getAttribute("lang"), "de");
+  await assertPaperTerminology(mobile);
   await mobile.locator("[data-language-switcher]").waitFor({ state: "visible" });
   assert.equal(await mobile.locator("[data-language-current]").textContent(), "DE");
   await mobile.locator("#language-menu-trigger").click();
@@ -299,6 +310,7 @@ async function runLocales(browser, url) {
   assert.equal(await mobile.locator("html").getAttribute("lang"), "ru");
   assert.equal(await mobile.locator("[data-language-current]").textContent(), "RU");
   assert.match(await mobile.locator("#results-title").textContent(), /Преимущества/);
+  await assertPaperTerminology(mobile);
   const headerLayout = await mobile.locator(".site-header").evaluate((header) => ({
     header: header.getBoundingClientRect().toJSON(),
     controls: [...header.querySelectorAll(":scope > *")]

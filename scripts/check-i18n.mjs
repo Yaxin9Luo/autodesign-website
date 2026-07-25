@@ -73,10 +73,13 @@ expect(
   "Arabic interpolation must preserve the paper title",
 );
 
-for (const locale of SUPPORTED_LOCALES.filter((locale) => locale !== "en")) {
+for (const locale of SUPPORTED_LOCALES) {
   const catalog = Object.values(MESSAGES[locale]).join("\n");
-  for (const term of ["AutoDesign", "PosterHarness", "Meta-Harness", "AutoPosterBench", "Code Agent"]) {
+  for (const term of ["AutoDesign", "DesignHarness", "Meta-Harness", "PosterBench", "Code Agent"]) {
     expect(catalog.includes(term), `${locale} catalog must preserve ${term}`);
+  }
+  for (const term of ["PosterHarness", "AutoPosterBench"]) {
+    expect(!catalog.includes(term), `${locale} catalog must not contain legacy ${term}`);
   }
 }
 

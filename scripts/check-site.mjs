@@ -216,7 +216,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   if (!html.includes("https://designanything.ai")) failures.push("missing platform CTA");
   const tabOrder = [...html.matchAll(/data-artifact-tab="([^"]+)"/g)].map((match) => match[1]);
   expect(JSON.stringify(tabOrder) === JSON.stringify(["poster", "slides", "web", "video"]), "artifact tab order is invalid");
-  for (const token of ["artifact-viewer", "data-open-artifact", "data-artifact-src", "Validated PosterHarness output"]) {
+  for (const token of ["artifact-viewer", "data-open-artifact", "data-artifact-src", "Validated DesignHarness output"]) {
     expect(html.includes(token), "artifact showcase missing " + token);
   }
   for (const phrase of [
@@ -255,7 +255,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     "Accepted state",
     "Paper communication suite / research generalization",
     "10-paper controlled subset",
-    "100-paper AutoPosterBench main track",
+    "100-paper PosterBench main track",
   ]) {
     if (!html.includes(symbol)) failures.push("index.html missing " + symbol);
   }
@@ -282,6 +282,14 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   }
 
   const data = read("site-data.js");
+  for (const [sourceName, source] of [["index.html", html], ["site-data.js", data]]) {
+    for (const term of ["DesignHarness", "PosterBench"]) {
+      expect(source.includes(term), `${sourceName} must include ${term}`);
+    }
+    for (const term of ["PosterHarness", "AutoPosterBench"]) {
+      expect(!source.includes(term), `${sourceName} must not contain legacy ${term}`);
+    }
+  }
   for (const claim of ["78.32", "77.97", "+7.45", "+5.01–19.56", "100"]) {
     if (!data.includes(claim)) failures.push("missing approved claim " + claim);
   }
@@ -316,7 +324,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
       failures.push("evolution must end with Final Harness");
     }
     if (!Array.isArray(siteData?.harnessStages) || siteData.harnessStages.length !== 5) {
-      failures.push("site-data.js must expose five PosterHarness stages");
+      failures.push("site-data.js must expose five DesignHarness stages");
     }
     if (!Array.isArray(siteData?.transferResults) || siteData.transferResults.length !== 7) {
       failures.push("site-data.js must expose seven transfer results");
