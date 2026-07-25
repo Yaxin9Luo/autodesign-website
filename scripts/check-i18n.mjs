@@ -62,6 +62,18 @@ for (const locale of SUPPORTED_LOCALES) {
   expect(keys.every((key) => String(MESSAGES[locale][key]).trim()), `${locale} catalog must not contain empty messages`);
 }
 
+for (const locale of SUPPORTED_LOCALES) {
+  const harnessBody = MESSAGES[locale]["harness.body"];
+  expect(harnessBody.includes("DesignHarness"), `${locale} harness body must preserve DesignHarness`);
+  expect(!harnessBody.includes("poster-specific system"), `${locale} harness body must not make the stale poster-specific system claim`);
+  expect(!harnessBody.includes("PosterHarness"), `${locale} harness body must not contain legacy PosterHarness`);
+}
+expect(
+  MESSAGES.en["harness.body"]
+    === "DesignHarness is AutoDesign's optimized design system, evaluated for academic paper-to-poster generation. It grounds the Designer in the paper, executes an editable artifact, inspects the browser result, and routes localized repair.",
+  "English harness body must match the canonical DesignHarness scope",
+);
+
 expect(
   formatMessage("zh-CN", "viewer.slideAlt", { index: 3, count: 12, title: "LongCat-Next" })
     === "LongCat-Next 生成演示文稿的第 3 张，共 12 张",
