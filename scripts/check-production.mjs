@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { extname, resolve } from "node:path";
+import { extname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("../dist", import.meta.url)));
@@ -50,6 +50,19 @@ walk(root);
 assert.ok(files.length < 500, `unexpected production file count: ${files.length}`);
 for (const file of files) {
   assert.ok(statSync(file).size < 25 * 1024 * 1024, `production file exceeds 25 MiB: ${file}`);
+}
+
+const privateReferences = ["https://github.com/Yaxin9Luo/AutoDesign"];
+const textExtensions = new Set([".css", ".html", ".js", ".json", ".svg", ".txt", ".vtt", ".xml"]);
+for (const file of files.filter((path) => textExtensions.has(extname(path)))) {
+  const source = readFileSync(file, "utf8");
+  for (const reference of privateReferences) {
+    assert.equal(
+      source.includes(reference),
+      false,
+      `production package exposes private reference ${reference} in ${relative(root, file)}`,
+    );
+  }
 }
 
 const html = readFileSync(resolve(root, "index.html"), "utf8");
