@@ -2,7 +2,7 @@
 
 This repository contains the standalone static site for `autodesign.designanything.ai`. It does not use the DesignAnything Workbench API or Python runtime.
 
-The opening experience is the Artifact Engine: a scroll-driven Three.js scene that ingests source records, exposes the PosterHarness modules, assembles a real poster artifact, returns diagnostic evidence, and retains one accepted system update. The poster index and inspector remain semantic HTML, so the artifact path is usable when motion is reduced or WebGL is unavailable.
+The opening experience is the Artifact Engine: a scroll-driven Three.js scene that ingests source records, exposes the DesignHarness modules, assembles a real poster artifact, returns diagnostic evidence, and retains one accepted system update. The poster index and inspector remain semantic HTML, so the artifact path is usable when motion is reduced or WebGL is unavailable.
 
 ## Local Preview
 
@@ -35,7 +35,7 @@ The browser smoke check covers the primary automated release paths. Manual relea
 
 ## Curated Assets
 
-The checked-in assets are publication-ready derivatives of approved AutoDesign outputs. The showcase uses LongCat-Next for the poster, slide, and web specimens, and Denoising Diffusion Probabilistic Models (DDPM) for the conference-video specimen. The LongCat-Next poster is validated PosterHarness output; the slide deck, research page, and DDPM video remain exploratory generalization studies rather than validated product claims.
+The checked-in assets are publication-ready derivatives of approved AutoDesign outputs. The showcase uses LongCat-Next for the poster, slide, and web specimens, and Denoising Diffusion Probabilistic Models (DDPM) for the conference-video specimen. The LongCat-Next poster is validated DesignHarness output; the slide deck, research page, and DDPM video remain exploratory generalization studies rather than validated product claims.
 
 Source selection remains in the private AutoDesign development workspace. To regenerate the checked-in derivatives, set `AUTODESIGN_PROMO_ROOT` to the source bundle containing the standalone LongCat-Next slide/web exports and DDPM video/captions, and set `AUTODESIGN_POSTER_SOURCE` to the approved LongCat-Next poster image. The poster, slide HTML, web HTML and preview PNG, DDPM MP4, and captions are SHA-256 gated before any generated file is written:
 

@@ -101,6 +101,94 @@ async function assertPaperTerminology(page) {
   assert.doesNotMatch(bodyText, /PosterHarness|AutoPosterBench/);
 }
 
+async function assertResearchAccess(page, { labels, layout, direction = "ltr" }) {
+  const access = page.locator(".hero-access");
+  await access.waitFor({ state: "visible" });
+  assert.equal(await access.evaluate((element) => element.tagName), "NAV");
+  assert.equal(await access.getAttribute("aria-label"), labels.accessLabel);
+  assert.equal(await access.evaluate((element) => getComputedStyle(element).direction), direction);
+
+  const controls = access.locator(":scope > [data-hero-access]");
+  assert.equal(await controls.count(), 3, "research access must expose exactly three controls");
+  const system = access.locator('[data-hero-access="system"]');
+  const code = access.locator('[data-hero-access="code"]');
+  const paper = access.locator('[data-hero-access="paper"]');
+  assert.equal(await system.evaluate((element) => element.tagName), "A");
+  assert.equal(await system.getAttribute("href"), "https://designanything.ai");
+  assert.equal(await system.getAttribute("target"), "_blank");
+  assert.equal(await system.getAttribute("rel"), "noreferrer");
+  assert.equal(await code.evaluate((element) => element.tagName), "A");
+  assert.equal(await code.getAttribute("href"), "https://github.com/Yaxin9Luo/AutoDesign");
+  assert.equal(await code.getAttribute("target"), "_blank");
+  assert.equal(await code.getAttribute("rel"), "noreferrer");
+  assert.equal(await paper.evaluate((element) => element.tagName), "BUTTON");
+  assert.equal(await paper.isDisabled(), true);
+  assert.equal(await paper.getAttribute("href"), null);
+  assert.equal(await paper.evaluate((element) => {
+    element.focus();
+    return document.activeElement === element;
+  }), false, "disabled paper action must not receive focus");
+
+  for (const [key, value] of Object.entries(labels)) {
+    const message = access.locator(`[data-i18n="hero.${key}"]`);
+    assert.equal(await message.textContent(), value, `localized hero.${key} label is incorrect`);
+  }
+
+  const geometry = await access.evaluate((nav) => {
+    const navRect = nav.getBoundingClientRect();
+    return {
+      clientWidth: nav.clientWidth,
+      direction: getComputedStyle(nav).direction,
+      rect: navRect.toJSON(),
+      scrollWidth: nav.scrollWidth,
+      controls: [...nav.querySelectorAll(":scope > [data-hero-access]")].map((control) => {
+        const rect = control.getBoundingClientRect();
+        return { height: rect.height, left: rect.left, right: rect.right, top: rect.top, width: rect.width };
+      }),
+    };
+  });
+  const viewport = page.viewportSize();
+  assert.ok(viewport, "research access viewport is unavailable");
+  assert.equal(geometry.direction, direction);
+  assert.ok(geometry.scrollWidth <= geometry.clientWidth + 1, `research access content clips: ${JSON.stringify(geometry)}`);
+  assert.ok(geometry.rect.left >= -1 && geometry.rect.right <= viewport.width + 1,
+    `research access group overflows: ${JSON.stringify(geometry)}`);
+  for (const control of geometry.controls) {
+    assert.ok(control.height >= 44, `research access target is smaller than 44px: ${JSON.stringify(control)}`);
+    assert.ok(control.left >= -1 && control.right <= viewport.width + 1,
+      `research access control overflows: ${JSON.stringify(control)}`);
+  }
+  if (layout === "desktop") {
+    assert.equal(new Set(geometry.controls.map((control) => Math.round(control.top))).size, 1,
+      `desktop research access must be one segmented row: ${JSON.stringify(geometry)}`);
+  } else {
+    assert.equal(Math.round(geometry.controls[0].top), Math.round(geometry.controls[1].top),
+      `mobile primary actions must share the first row: ${JSON.stringify(geometry)}`);
+    assert.ok(geometry.controls[2].top > geometry.controls[0].top,
+      `mobile paper action must occupy a second row: ${JSON.stringify(geometry)}`);
+  }
+}
+
+async function assertCacheChain(page) {
+  const resources = await page.evaluate(() => performance.getEntriesByType("resource")
+    .map((entry) => {
+      const url = new URL(entry.name);
+      return `${url.pathname}${url.search}`;
+    }));
+  for (const resource of [
+    "/styles.css?v=20260725b",
+    "/site-data.js?v=20260725b",
+    "/i18n.js?v=20260725b",
+    "/locales.js?v=20260725b",
+    "/language-menu.js?v=20260725b",
+    "/app.js?v=20260725b",
+    "/three-scene.js?v=20260725b",
+    "/artifact-showcase.js?v=20260725b",
+  ]) {
+    assert.ok(resources.includes(resource), `cache chain did not request ${resource}: ${JSON.stringify(resources)}`);
+  }
+}
+
 async function assertMobileArtifactControls(page) {
   const tabState = await page.locator(".artifact-tabs").evaluate((tablist) => ({
     clientWidth: tablist.clientWidth,
@@ -182,6 +270,16 @@ async function runLocales(browser, url) {
   await openArmed(page, localeUrl(url, "en"));
   await finishIntro(page);
   await assertPaperTerminology(page);
+  await assertResearchAccess(page, {
+    layout: "desktop",
+    labels: {
+      accessLabel: "Research access",
+      openSystem: "Open System",
+      viewCode: "View Code",
+      readPaper: "Read Paper",
+      paperSoon: "Coming soon",
+    },
+  });
 
   const switcher = page.locator("[data-language-switcher]");
   const trigger = page.locator("#language-menu-trigger");
@@ -199,7 +297,8 @@ async function runLocales(browser, url) {
   const localeCatalogResource = await page.evaluate(() => performance.getEntriesByType("resource")
     .map((entry) => entry.name)
     .find((name) => name.includes("/locales.js")));
-  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260722c$/, "locale catalog request must bypass stale browser caches");
+  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260725b$/, "locale catalog request must bypass stale browser caches");
+  await assertCacheChain(page);
   assert.equal(await currentLabel.textContent(), "EN");
   assert.equal(await menu.isHidden(), true);
   await openMenu();
@@ -249,6 +348,16 @@ async function runLocales(browser, url) {
   assert.equal(await menu.locator('[data-locale="zh-CN"]').getAttribute("aria-checked"), "true");
   assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
   assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), "zh-CN");
+  await assertResearchAccess(page, {
+    layout: "desktop",
+    labels: {
+      accessLabel: "研究入口",
+      openSystem: "进入系统",
+      viewCode: "进入代码库",
+      readPaper: "阅读论文",
+      paperSoon: "即将推出",
+    },
+  });
   await assertNoOverflow(page);
 
   await openMenu();
@@ -270,6 +379,17 @@ async function runLocales(browser, url) {
   assert.equal(await currentLabel.textContent(), "العربية");
   assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), "ar");
   assert.equal(await page.locator(".language-switcher").evaluate((element) => getComputedStyle(element).direction), "ltr");
+  await assertResearchAccess(page, {
+    direction: "rtl",
+    layout: "desktop",
+    labels: {
+      accessLabel: "الوصول البحثي",
+      openSystem: "فتح النظام",
+      viewCode: "عرض الشفرة",
+      readPaper: "قراءة الورقة",
+      paperSoon: "قريبًا",
+    },
+  });
   await assertNoOverflow(page);
 
   const remainingDesktopLocales = [
@@ -563,6 +683,16 @@ async function runMobile(browser, url, viewport) {
   await assertDrawCalls(page, 70);
   await page.keyboard.press("ArrowDown");
   await waitForPhase(page, "complete");
+  await assertResearchAccess(page, {
+    layout: "mobile",
+    labels: {
+      accessLabel: "Research access",
+      openSystem: "Open System",
+      viewCode: "View Code",
+      readPaper: "Read Paper",
+      paperSoon: "Coming soon",
+    },
+  });
   await page.locator("#artifact-studies").scrollIntoViewIfNeeded();
   await page.waitForFunction(() => document.querySelector(".site-header")?.classList.contains("site-header--paper"));
   assert.equal(await page.locator(".intro-controls").isVisible(), false);

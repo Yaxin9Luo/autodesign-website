@@ -25,7 +25,7 @@ const webPreviewSource = resolve(sourceRoot, "landing-pages/longcat-next--202607
 const videoSource = resolve(sourceRoot, "videos/ddpm-conference-video/ddpm-conference-video-6min.mp4");
 const captionsSource = resolve(sourceRoot, "videos/ddpm-conference-video/subtitles.en.vtt");
 const approvedSources = [
-  ["PosterHarness poster", posterSource, "6290d4be1bc4a7b0432941f875415102c78099d8e2c837431c375480115a3cf9"],
+  ["DesignHarness poster", posterSource, "6290d4be1bc4a7b0432941f875415102c78099d8e2c837431c375480115a3cf9"],
   ["Slides HTML", slideSource, "90d3ec2e27b470b2c9c5e208e26bd8b31e9e97effa896da9fb475c8ac750423c"],
   ["Web HTML", webSource, "e7a37c2df61b6ab333b1f8b2b66437b094be5fd086ea92b8ac4f8aebbfb7cd59"],
   ["Web preview PNG", webPreviewSource, "63b80b2bd025aab9e44ffd23e467c2fc985d81eb303ad3cdd1b4c3f2c68c8b50"],

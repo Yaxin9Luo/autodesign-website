@@ -14,7 +14,7 @@
     <title>AutoDesign — The Artifact Engine</title>
     <link rel="canonical" href="https://autodesign.designanything.ai/">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23080b0e'/%3E%3Cpath d='M7 24 16 6l9 18h-4l-5-10-5 10Z' fill='%2300bfa5'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="./styles.css?v=20260722b">
+    <link rel="stylesheet" href="./styles.css?v=20260725b">
   </head>
   <body>
     <header class="site-header">
@@ -120,6 +120,21 @@
               <p class="hero-dek" data-i18n="hero.dek">A research system for improving the harness that turns source material into faithful, editable artifacts.</p>
               <p class="hero-suite" data-i18n="hero.suite">From one paper to a complete research communication suite: an editable poster, presentation slides, a research webpage, and a narrated conference video with synchronized subtitles.</p>
               <a class="text-link text-link--light" href="#optimization" data-scene-target="system"><span data-i18n="hero.enter">Enter the engine</span> <span aria-hidden="true">↓</span></a>
+              <nav class="hero-access" aria-label="Research access" data-i18n-aria-label="hero.accessLabel">
+                <span class="visually-hidden" data-i18n="hero.accessLabel">Research access</span>
+                <a class="hero-access__control" data-hero-access="system" href="https://designanything.ai" target="_blank" rel="noreferrer">
+                  <span class="hero-access__glyph" aria-hidden="true">↗</span>
+                  <span class="hero-access__copy"><span class="hero-access__label" data-i18n="hero.openSystem">Open System</span></span>
+                </a>
+                <a class="hero-access__control" data-hero-access="code" href="https://github.com/Yaxin9Luo/AutoDesign" target="_blank" rel="noreferrer">
+                  <span class="hero-access__glyph" aria-hidden="true">&lt;&gt;</span>
+                  <span class="hero-access__copy"><span class="hero-access__label" data-i18n="hero.viewCode">View Code</span></span>
+                </a>
+                <button class="hero-access__control hero-access__control--paper" type="button" data-hero-access="paper" disabled>
+                  <span class="hero-access__glyph" aria-hidden="true">P</span>
+                  <span class="hero-access__copy"><span class="hero-access__label" data-i18n="hero.readPaper">Read Paper</span><span class="hero-access__status" data-i18n="hero.paperSoon">Coming soon</span></span>
+                </button>
+              </nav>
             </div>
             <p class="hero-next" data-i18n="hero.next">Next / the optimization object</p>
             <p class="hero-status"><span data-i18n="hero.statusLabel">System state</span> <span data-i18n="hero.status">DesignHarness / observable / editable</span></p>
@@ -357,7 +372,7 @@
         </div>
         <div class="resource-list">
           <span class="resource-link resource-link--pending"><b>P</b><span><strong data-i18n="resources.paper">Paper</strong><small data-i18n="resources.soon">Coming soon</small></span></span>
-          <span class="resource-link resource-link--pending"><b>C</b><span><strong data-i18n="resources.code">Research code</strong><small data-i18n="resources.codeSoon">Public release coming soon</small></span></span>
+          <a class="resource-link" href="https://github.com/Yaxin9Luo/AutoDesign" target="_blank" rel="noreferrer"><b>C</b><span><strong data-i18n="resources.code">Research code</strong><small data-i18n="resources.codeDetail">Open public repository ↗</small></span></a>
           <a class="resource-link" href="#posters" data-scene-target="artifacts"><b>G</b><span><strong data-i18n="resources.gallery">Poster gallery</strong><small data-i18n="resources.galleryDetail">Inspect generated artifacts</small></span></a>
           <a class="resource-link" href="https://designanything.ai"><b>E</b><span><strong data-i18n="resources.editor">Live editor</strong><small data-i18n="resources.editorDetail">Open DesignAnything.ai ↗</small></span></a>
         </div>
@@ -394,7 +409,7 @@
       <a id="artifact-viewer-external" target="_blank" rel="noreferrer" data-i18n="viewer.newTab">Open in new tab</a>
     </dialog>
 
-    <script src="./site-data.js?v=20260724a"></script>
+    <script src="./site-data.js?v=20260725b"></script>
     <script type="importmap">
       {
         "imports": {
@@ -403,8 +418,8 @@
         }
       }
     </script>
-    <script type="module" src="./i18n.js?v=20260722c"></script>
-    <script type="module" src="./language-menu.js?v=20260722c"></script>
-    <script type="module" src="./app.js?v=20260722c"></script>
+    <script type="module" src="./i18n.js?v=20260725b"></script>
+    <script type="module" src="./language-menu.js?v=20260725b"></script>
+    <script type="module" src="./app.js?v=20260725b"></script>
   </body>
 </html>

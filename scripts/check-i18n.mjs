@@ -56,10 +56,25 @@ expect(
 );
 
 const englishKeys = Object.keys(MESSAGES.en).sort();
+const heroAccessKeys = ["hero.accessLabel", "hero.openSystem", "hero.viewCode", "hero.readPaper", "hero.paperSoon"];
 for (const locale of SUPPORTED_LOCALES) {
   const keys = Object.keys(MESSAGES[locale] ?? {}).sort();
   expect(JSON.stringify(keys) === JSON.stringify(englishKeys), `${locale} catalog must match English keys`);
   expect(keys.every((key) => String(MESSAGES[locale][key]).trim()), `${locale} catalog must not contain empty messages`);
+  for (const key of heroAccessKeys) {
+    expect(Boolean(MESSAGES[locale]?.[key]), `${locale} catalog must provide ${key}`);
+  }
+}
+
+for (const [locale, expected] of [
+  ["en", ["Research access", "Open System", "View Code", "Read Paper", "Coming soon"]],
+  ["zh-CN", ["研究入口", "进入系统", "进入代码库", "阅读论文", "即将推出"]],
+  ["ar", ["الوصول البحثي", "فتح النظام", "عرض الشفرة", "قراءة الورقة", "قريبًا"]],
+]) {
+  expect(
+    JSON.stringify(heroAccessKeys.map((key) => MESSAGES[locale]?.[key])) === JSON.stringify(expected),
+    `${locale} hero research access labels must remain localized`,
+  );
 }
 
 for (const locale of SUPPORTED_LOCALES) {
@@ -111,9 +126,10 @@ expect(index.includes("data-language-switcher"), "page must include a language s
 for (const locale of SUPPORTED_LOCALES) {
   expect(index.includes(`data-locale=\"${locale}\"`), `language switcher must include ${locale}`);
 }
-expect(index.includes("./i18n.js?v=20260722c"), "page must load the current versioned i18n runtime");
-expect(readFileSync(resolve(root, "i18n.js"), "utf8").includes("./locales.js?v=20260722c"), "i18n runtime must version its locale catalog import");
-expect(readFileSync(resolve(root, "language-menu.js"), "utf8").includes("./locales.js?v=20260722c"), "language menu must version its locale metadata import");
+expect(index.includes("./i18n.js?v=20260725b"), "page must load the current versioned i18n runtime");
+expect(readFileSync(resolve(root, "i18n.js"), "utf8").includes("./locales.js?v=20260725b"), "i18n runtime must version its locale catalog import");
+expect(readFileSync(resolve(root, "language-menu.js"), "utf8").includes("./i18n.js?v=20260725b"), "language menu must version its i18n runtime import");
+expect(readFileSync(resolve(root, "language-menu.js"), "utf8").includes("./locales.js?v=20260725b"), "language menu must version its locale metadata import");
 
 if (failures.length) {
   console.error(`i18n checks failed (${failures.length}):`);

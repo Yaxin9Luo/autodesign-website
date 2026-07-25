@@ -209,11 +209,33 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   if (!html.includes('type="module"')) failures.push("missing ES module entrypoint");
   expect(html.includes('id="language-menu-trigger"'), "compact language menu trigger is missing");
   expect(html.includes('id="language-menu"'), "compact language menu panel is missing");
-  expect(html.includes('./language-menu.js?v=20260722c'), "language menu runtime is missing or stale");
+  expect(html.includes('./language-menu.js?v=20260725b'), "language menu runtime is missing or stale");
   if (!html.includes('type="importmap"')) failures.push("missing import map");
   if (!html.includes('"three": "./vendor/three/three.module.min.js"')) failures.push("missing local three import");
   if (!html.includes('"three/addons/": "./vendor/three/addons/"')) failures.push("missing local three addons import");
   if (!html.includes("https://designanything.ai")) failures.push("missing platform CTA");
+  const heroAccess = html.match(/<nav class="hero-access"[\s\S]*?<\/nav>/)?.[0] ?? "";
+  const heroAccessControls = [...heroAccess.matchAll(/<(a|button)\b([^>]*)>/g)];
+  const accessControl = (name) => heroAccessControls.find(([, , attributes]) => attributes.includes(`data-hero-access="${name}"`));
+  expect(Boolean(heroAccess), "hero research access navigation is missing");
+  expect(/aria-label="Research access"/.test(heroAccess), "hero research access navigation needs a semantic label");
+  expect(heroAccess.includes('data-i18n-aria-label="hero.accessLabel"'), "hero research access label must localize");
+  expect(heroAccessControls.length === 3, "hero research access navigation must contain exactly three controls");
+  for (const key of ["hero.accessLabel", "hero.openSystem", "hero.viewCode", "hero.readPaper", "hero.paperSoon"]) {
+    expect(heroAccess.includes(`data-i18n="${key}"`), `hero research access is missing localized ${key}`);
+  }
+  const openSystem = accessControl("system");
+  expect(openSystem?.[1] === "a", "Open System must be an anchor");
+  expect(/href="https:\/\/designanything\.ai"/.test(openSystem?.[2] ?? ""), "Open System must use the live system URL");
+  expect(/target="_blank"/.test(openSystem?.[2] ?? "") && /rel="noreferrer"/.test(openSystem?.[2] ?? ""), "Open System must open safely in a new tab");
+  const viewCode = accessControl("code");
+  expect(viewCode?.[1] === "a", "View Code must be an anchor");
+  expect(/href="https:\/\/github\.com\/Yaxin9Luo\/AutoDesign"/.test(viewCode?.[2] ?? ""), "View Code must use the live GitHub URL");
+  expect(/target="_blank"/.test(viewCode?.[2] ?? "") && /rel="noreferrer"/.test(viewCode?.[2] ?? ""), "View Code must open safely in a new tab");
+  const readPaper = accessControl("paper");
+  expect(readPaper?.[1] === "button", "Read Paper must be a native button");
+  expect(/\bdisabled\b/.test(readPaper?.[2] ?? ""), "Read Paper must remain disabled");
+  expect(!/\bhref=/.test(readPaper?.[2] ?? ""), "Read Paper must not invent an href");
   const englishHarnessScope = "DesignHarness is AutoDesign's optimized design system, evaluated for academic paper-to-poster generation. It grounds the Designer in the paper, executes an editable artifact, inspects the browser result, and routes localized repair.";
   const publicHarnessContent = [html, read("locales.js")];
   expect(
@@ -247,12 +269,28 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   expect(html.includes("longcat-next-poster.webp?v=413b9868"), "Poster source must bypass stale deployment fallbacks");
   expect(html.includes("longcat-next-slide-{index}.webp?v=675b8b1"), "Slide sources must bypass stale deployment fallbacks");
   expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
-  expect(html.includes("styles.css?v=20260722b"), "Stylesheet must bypass stale browser caches");
-  expect(html.includes("app.js?v=20260722c"), "Application entrypoint must bypass stale browser caches");
-  expect(read("i18n.js").includes("locales.js?v=20260722c"), "i18n runtime must bypass stale locale catalog caches");
-  expect(read("language-menu.js").includes("locales.js?v=20260722c"), "language menu must bypass stale locale metadata caches");
-  expect(read("app.js").includes("three-scene.js?v=20260721a"), "Three.js scene module must bypass stale browser caches");
-  expect(read("app.js").includes("artifact-showcase.js?v=20260722b"), "Artifact showcase module must bypass stale browser caches");
+  const cacheVersion = "20260725b";
+  const cacheChain = [
+    ["index.html", html, `styles.css?v=${cacheVersion}`],
+    ["index.html", html, `site-data.js?v=${cacheVersion}`],
+    ["index.html", html, `i18n.js?v=${cacheVersion}`],
+    ["index.html", html, `language-menu.js?v=${cacheVersion}`],
+    ["index.html", html, `app.js?v=${cacheVersion}`],
+    ["i18n.js", read("i18n.js"), `locales.js?v=${cacheVersion}`],
+    ["language-menu.js", read("language-menu.js"), `i18n.js?v=${cacheVersion}`],
+    ["language-menu.js", read("language-menu.js"), `locales.js?v=${cacheVersion}`],
+    ["app.js", read("app.js"), `three-scene.js?v=${cacheVersion}`],
+    ["app.js", read("app.js"), `artifact-showcase.js?v=${cacheVersion}`],
+    ["app.js", read("app.js"), `i18n.js?v=${cacheVersion}`],
+    ["three-scene.js", read("three-scene.js"), `i18n.js?v=${cacheVersion}`],
+    ["artifact-showcase.js", read("artifact-showcase.js"), `i18n.js?v=${cacheVersion}`],
+  ];
+  for (const [file, source, specifier] of cacheChain) {
+    expect(source.includes(specifier), `${file} must use ${specifier}`);
+  }
+  for (const [file, source] of cacheChain) {
+    expect(!source.includes("i18n.js?v=20260722c"), `${file} must not retain a stale i18n module specifier`);
+  }
   expect(html.includes('class="browser-specimen__viewport">\n                <iframe'), "Web specimen must embed the real research webpage");
   expect(!html.includes('src="./assets/studies/longcat-next-web.webp"'), "Web specimen must not use the blank-ended screenshot");
   expect(html.includes('data-i18n="suite.slidesStage">12 slides</span>'), "Slides stage must report the source's 12 slides");
@@ -286,7 +324,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     if (!html.includes(symbol)) failures.push("index.html missing " + symbol);
   }
 
-  expect(html.includes("site-data.js?v=20260724a"), "Benchmark data source must bypass stale browser caches");
+  expect(html.includes("site-data.js?v=20260725b"), "Benchmark data source must bypass stale browser caches");
   for (const score of ["78.32", "70.87", "69.45"]) {
     expect(html.includes(score), "Leaderboard missing remeasured score " + score);
   }
@@ -304,6 +342,15 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     if (!data.includes(claim)) failures.push("missing approved claim " + claim);
   }
   if (data.includes("/api")) failures.push("site-data.js must not call /api");
+
+  const resourceList = html.match(/<div class="resource-list">[\s\S]*?<\/div>/)?.[0] ?? "";
+  expect(/<span class="resource-link resource-link--pending"/.test(resourceList), "paper resource must remain visibly pending");
+  expect(resourceList.includes('data-i18n="resources.soon"'), "paper resource must retain its pending detail");
+  const codeResource = resourceList.match(/<a class="resource-link"[^>]*href="https:\/\/github\.com\/Yaxin9Luo\/AutoDesign"[^>]*>[\s\S]*?<\/a>/)?.[0] ?? "";
+  expect(Boolean(codeResource), "research code resource must use the live GitHub URL");
+  expect(/target="_blank"/.test(codeResource) && /rel="noreferrer"/.test(codeResource), "research code resource must open safely in a new tab");
+  expect(codeResource.includes('data-i18n="resources.codeDetail"'), "research code resource must expose a localized public-repository detail");
+  expect(!resourceList.includes("resources.codeSoon"), "research code resource must not remain pending");
 
   try {
     const sandbox = { window: {} };
