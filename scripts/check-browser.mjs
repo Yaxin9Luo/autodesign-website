@@ -117,10 +117,13 @@ async function assertResearchAccess(page, { labels, layout, direction = "ltr" })
   assert.equal(await system.getAttribute("href"), "https://designanything.ai");
   assert.equal(await system.getAttribute("target"), "_blank");
   assert.equal(await system.getAttribute("rel"), "noreferrer");
-  assert.equal(await code.evaluate((element) => element.tagName), "A");
-  assert.equal(await code.getAttribute("href"), "https://github.com/Yaxin9Luo/AutoDesign");
-  assert.equal(await code.getAttribute("target"), "_blank");
-  assert.equal(await code.getAttribute("rel"), "noreferrer");
+  assert.equal(await code.evaluate((element) => element.tagName), "BUTTON");
+  assert.equal(await code.isDisabled(), true);
+  assert.equal(await code.getAttribute("href"), null);
+  assert.equal(await code.evaluate((element) => {
+    element.focus();
+    return document.activeElement === element;
+  }), false, "disabled code action must not receive focus");
   assert.equal(await paper.evaluate((element) => element.tagName), "BUTTON");
   assert.equal(await paper.isDisabled(), true);
   assert.equal(await paper.getAttribute("href"), null);
@@ -276,6 +279,7 @@ async function runLocales(browser, url) {
       accessLabel: "Research access",
       openSystem: "Open System",
       viewCode: "View Code",
+      codeSoon: "Code release planned",
       readPaper: "Read Paper",
       paperSoon: "Coming soon",
     },
@@ -354,6 +358,7 @@ async function runLocales(browser, url) {
       accessLabel: "研究入口",
       openSystem: "进入系统",
       viewCode: "进入代码库",
+      codeSoon: "代码即将发布",
       readPaper: "阅读论文",
       paperSoon: "即将推出",
     },
@@ -386,6 +391,7 @@ async function runLocales(browser, url) {
       accessLabel: "الوصول البحثي",
       openSystem: "فتح النظام",
       viewCode: "عرض الشفرة",
+      codeSoon: "إصدار الشفرة قريبًا",
       readPaper: "قراءة الورقة",
       paperSoon: "قريبًا",
     },

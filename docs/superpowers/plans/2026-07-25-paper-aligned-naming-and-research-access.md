@@ -13,7 +13,7 @@
 - The website must use `DesignHarness` and `PosterBench` everywhere visible; it must not show `PosterHarness` or `AutoPosterBench`.
 - Preserve the paper's evidence boundary: academic poster generation is the validated DesignHarness instantiation; slides, research webpages, and narrated video remain exploratory Meta-Harness generalization studies.
 - Use only the current paper-backed public results: 100-paper PosterBench, 78.32 AutoDesign (Claude Code / Claude 4.8), 77.97 AutoDesign (Codex / GPT-5.5), 70.87 Claude Design, 69.45 OpenDesign, and the controlled attachment range +5.01 to +19.56 points.
-- Add exactly three prominent hero actions: Open System (`https://designanything.ai`), View Code (`https://github.com/Yaxin9Luo/AutoDesign`), and Read Paper (disabled, visible `Coming soon`, no fabricated URL).
+- Add exactly three prominent hero actions: Open System (`https://designanything.ai`), View Code (disabled with a localized release-planned status until the private repository is public), and Read Paper (disabled, visible `Coming soon`, no fabricated URL).
 - Professional terms remain in English across locale packs; surrounding UI labels are translated in all ten supported locales.
 - Do not edit the Overleaf paper checkout or `/Users/yaxinluo/Desktop/AutoDesign`.
 - Verify every modified behavior locally before pushing to `main`; do not claim deployment until the Cloudflare workflow succeeds.

@@ -989,7 +989,7 @@ html:not(.intro-active) .intro-controls {
   z-index: 1;
 }
 
-.hero-access__control--paper {
+.hero-access__control--unavailable {
   background: rgba(18, 24, 28, 0.92);
   color: rgba(237, 247, 244, 0.48);
   cursor: not-allowed;

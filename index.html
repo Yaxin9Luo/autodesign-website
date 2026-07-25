@@ -126,11 +126,11 @@
                   <span class="hero-access__glyph" aria-hidden="true">↗</span>
                   <span class="hero-access__copy"><span class="hero-access__label" data-i18n="hero.openSystem">Open System</span></span>
                 </a>
-                <a class="hero-access__control" data-hero-access="code" href="https://github.com/Yaxin9Luo/AutoDesign" target="_blank" rel="noreferrer">
+                <button class="hero-access__control hero-access__control--unavailable" type="button" data-hero-access="code" disabled>
                   <span class="hero-access__glyph" aria-hidden="true">&lt;&gt;</span>
-                  <span class="hero-access__copy"><span class="hero-access__label" data-i18n="hero.viewCode">View Code</span></span>
-                </a>
-                <button class="hero-access__control hero-access__control--paper" type="button" data-hero-access="paper" disabled>
+                  <span class="hero-access__copy"><span class="hero-access__label" data-i18n="hero.viewCode">View Code</span><span class="hero-access__status" data-i18n="hero.codeSoon">Code release planned</span></span>
+                </button>
+                <button class="hero-access__control hero-access__control--unavailable hero-access__control--paper" type="button" data-hero-access="paper" disabled>
                   <span class="hero-access__glyph" aria-hidden="true">P</span>
                   <span class="hero-access__copy"><span class="hero-access__label" data-i18n="hero.readPaper">Read Paper</span><span class="hero-access__status" data-i18n="hero.paperSoon">Coming soon</span></span>
                 </button>
@@ -372,7 +372,7 @@
         </div>
         <div class="resource-list">
           <span class="resource-link resource-link--pending"><b>P</b><span><strong data-i18n="resources.paper">Paper</strong><small data-i18n="resources.soon">Coming soon</small></span></span>
-          <a class="resource-link" href="https://github.com/Yaxin9Luo/AutoDesign" target="_blank" rel="noreferrer"><b>C</b><span><strong data-i18n="resources.code">Research code</strong><small data-i18n="resources.codeDetail">Open public repository ↗</small></span></a>
+          <span class="resource-link resource-link--pending"><b>C</b><span><strong data-i18n="resources.code">Research code</strong><small data-i18n="resources.soon">Coming soon</small></span></span>
           <a class="resource-link" href="#posters" data-scene-target="artifacts"><b>G</b><span><strong data-i18n="resources.gallery">Poster gallery</strong><small data-i18n="resources.galleryDetail">Inspect generated artifacts</small></span></a>
           <a class="resource-link" href="https://designanything.ai"><b>E</b><span><strong data-i18n="resources.editor">Live editor</strong><small data-i18n="resources.editorDetail">Open DesignAnything.ai ↗</small></span></a>
         </div>

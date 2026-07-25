@@ -56,7 +56,7 @@ expect(
 );
 
 const englishKeys = Object.keys(MESSAGES.en).sort();
-const heroAccessKeys = ["hero.accessLabel", "hero.openSystem", "hero.viewCode", "hero.readPaper", "hero.paperSoon"];
+const heroAccessKeys = ["hero.accessLabel", "hero.openSystem", "hero.viewCode", "hero.codeSoon", "hero.readPaper", "hero.paperSoon"];
 for (const locale of SUPPORTED_LOCALES) {
   const keys = Object.keys(MESSAGES[locale] ?? {}).sort();
   expect(JSON.stringify(keys) === JSON.stringify(englishKeys), `${locale} catalog must match English keys`);
@@ -67,9 +67,9 @@ for (const locale of SUPPORTED_LOCALES) {
 }
 
 for (const [locale, expected] of [
-  ["en", ["Research access", "Open System", "View Code", "Read Paper", "Coming soon"]],
-  ["zh-CN", ["研究入口", "进入系统", "进入代码库", "阅读论文", "即将推出"]],
-  ["ar", ["الوصول البحثي", "فتح النظام", "عرض الشفرة", "قراءة الورقة", "قريبًا"]],
+  ["en", ["Research access", "Open System", "View Code", "Code release planned", "Read Paper", "Coming soon"]],
+  ["zh-CN", ["研究入口", "进入系统", "进入代码库", "代码即将发布", "阅读论文", "即将推出"]],
+  ["ar", ["الوصول البحثي", "فتح النظام", "عرض الشفرة", "إصدار الشفرة قريبًا", "قراءة الورقة", "قريبًا"]],
 ]) {
   expect(
     JSON.stringify(heroAccessKeys.map((key) => MESSAGES[locale]?.[key])) === JSON.stringify(expected),

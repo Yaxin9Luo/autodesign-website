@@ -221,7 +221,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   expect(/aria-label="Research access"/.test(heroAccess), "hero research access navigation needs a semantic label");
   expect(heroAccess.includes('data-i18n-aria-label="hero.accessLabel"'), "hero research access label must localize");
   expect(heroAccessControls.length === 3, "hero research access navigation must contain exactly three controls");
-  for (const key of ["hero.accessLabel", "hero.openSystem", "hero.viewCode", "hero.readPaper", "hero.paperSoon"]) {
+  for (const key of ["hero.accessLabel", "hero.openSystem", "hero.viewCode", "hero.codeSoon", "hero.readPaper", "hero.paperSoon"]) {
     expect(heroAccess.includes(`data-i18n="${key}"`), `hero research access is missing localized ${key}`);
   }
   const openSystem = accessControl("system");
@@ -229,9 +229,9 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   expect(/href="https:\/\/designanything\.ai"/.test(openSystem?.[2] ?? ""), "Open System must use the live system URL");
   expect(/target="_blank"/.test(openSystem?.[2] ?? "") && /rel="noreferrer"/.test(openSystem?.[2] ?? ""), "Open System must open safely in a new tab");
   const viewCode = accessControl("code");
-  expect(viewCode?.[1] === "a", "View Code must be an anchor");
-  expect(/href="https:\/\/github\.com\/Yaxin9Luo\/AutoDesign"/.test(viewCode?.[2] ?? ""), "View Code must use the live GitHub URL");
-  expect(/target="_blank"/.test(viewCode?.[2] ?? "") && /rel="noreferrer"/.test(viewCode?.[2] ?? ""), "View Code must open safely in a new tab");
+  expect(viewCode?.[1] === "button", "View Code must be a native button until the repository is public");
+  expect(/\bdisabled\b/.test(viewCode?.[2] ?? ""), "View Code must remain disabled until the repository is public");
+  expect(!/\bhref=/.test(viewCode?.[2] ?? ""), "View Code must not expose a private repository URL");
   const readPaper = accessControl("paper");
   expect(readPaper?.[1] === "button", "Read Paper must be a native button");
   expect(/\bdisabled\b/.test(readPaper?.[2] ?? ""), "Read Paper must remain disabled");
@@ -346,11 +346,10 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   const resourceList = html.match(/<div class="resource-list">[\s\S]*?<\/div>/)?.[0] ?? "";
   expect(/<span class="resource-link resource-link--pending"/.test(resourceList), "paper resource must remain visibly pending");
   expect(resourceList.includes('data-i18n="resources.soon"'), "paper resource must retain its pending detail");
-  const codeResource = resourceList.match(/<a class="resource-link"[^>]*href="https:\/\/github\.com\/Yaxin9Luo\/AutoDesign"[^>]*>[\s\S]*?<\/a>/)?.[0] ?? "";
-  expect(Boolean(codeResource), "research code resource must use the live GitHub URL");
-  expect(/target="_blank"/.test(codeResource) && /rel="noreferrer"/.test(codeResource), "research code resource must open safely in a new tab");
-  expect(codeResource.includes('data-i18n="resources.codeDetail"'), "research code resource must expose a localized public-repository detail");
-  expect(!resourceList.includes("resources.codeSoon"), "research code resource must not remain pending");
+  const codeResource = resourceList.match(/<span class="resource-link resource-link--pending"><b>C<\/b><span><strong data-i18n="resources.code">[\s\S]*?<small data-i18n="resources.soon">[\s\S]*?<\/span><\/span>/)?.[0] ?? "";
+  expect(Boolean(codeResource), "research code resource must be visibly pending until the repository is public");
+  expect(codeResource.includes('data-i18n="resources.soon"'), "research code resource must retain a localized pending detail");
+  expect(!/github\.com\/Yaxin9Luo\/AutoDesign/.test(resourceList), "research code resource must not expose a private repository URL");
 
   try {
     const sandbox = { window: {} };
