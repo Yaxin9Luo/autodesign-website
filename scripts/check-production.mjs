@@ -21,7 +21,7 @@ const required = [
   "styles.css",
   "three-scene.js",
   "assets/posters/attention-1600.webp",
-  "assets/studies/ddpm-figure1-poster.webp",
+  "assets/studies/longcat-next-poster.webp",
   "assets/paper/figure1-evolution.webp",
   "assets/paper/figure1-benchmark.webp",
   "assets/paper/method-detail.webp",

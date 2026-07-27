@@ -116,7 +116,7 @@ for (const file of ["index.html", "styles.css", "site-data.js", "app.js", "artif
 if (existsSync(resolve(root, "scripts/prepare-promotional-assets.mjs"))) {
   const preparationScript = read("scripts/prepare-promotional-assets.mjs");
   const approvedSourceSha256 = [
-    "0ad5a0cdd04b15b4b6375b6810a78300cd898040957c2b41c0ec6022014a1775",
+    "0de98b0ad826517d82d902119f5a39f340047d95e44da9eae55059ffaf1309f2",
     "90d3ec2e27b470b2c9c5e208e26bd8b31e9e97effa896da9fb475c8ac750423c",
     "e7a37c2df61b6ab333b1f8b2b66437b094be5fd086ea92b8ac4f8aebbfb7cd59",
     "63b80b2bd025aab9e44ffd23e467c2fc985d81eb303ad3cdd1b4c3f2c68c8b50",
@@ -126,7 +126,7 @@ if (existsSync(resolve(root, "scripts/prepare-promotional-assets.mjs"))) {
   for (const hash of approvedSourceSha256) {
     if (!preparationScript.includes(hash)) failures.push("promotional asset preparation missing approved SHA-256 " + hash);
   }
-  for (const source of ["figure1PosterSource", "slideSource", "webSource", "webPreviewSource", "videoSource", "captionsSource"]) {
+  for (const source of ["posterSource", "slideSource", "webSource", "webPreviewSource", "videoSource", "captionsSource"]) {
     if (!preparationScript.includes(`approvedSourceContents.get(${source})`)) {
       failures.push("promotional asset generation must consume validated bytes for " + source);
     }
@@ -248,7 +248,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   );
   const tabOrder = [...html.matchAll(/data-artifact-tab="([^"]+)"/g)].map((match) => match[1]);
   expect(JSON.stringify(tabOrder) === JSON.stringify(["poster", "slides", "web", "video"]), "artifact tab order is invalid");
-  for (const token of ["artifact-viewer", "data-open-artifact", "data-artifact-src", "Representative Figure 1 DesignHarness artifact"]) {
+  for (const token of ["artifact-viewer", "data-open-artifact", "data-artifact-src", "Representative editable academic poster"]) {
     expect(html.includes(token), "artifact showcase missing " + token);
   }
   for (const phrase of [
@@ -270,7 +270,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   for (const token of ["data-slide-carousel", "data-slide-prev", "data-slide-next", 'data-artifact-kind="slides"']) {
     expect(html.includes(token), "interactive slide showcase missing " + token);
   }
-  expect(html.includes("ddpm-figure1-poster.webp?v=20260727b"), "Figure 1 poster source must bypass stale deployment fallbacks");
+  expect(html.includes("longcat-next-poster.webp?v=20260727c"), "LongCat-Next poster source must bypass stale deployment fallbacks");
   expect(html.includes("longcat-next-slide-{index}.webp?v=675b8b1"), "Slide sources must bypass stale deployment fallbacks");
   expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
   const paperFigureContracts = [
@@ -927,7 +927,7 @@ for (const asset of [
 }
 
 const promotionalAssets = [
-  "assets/studies/ddpm-figure1-poster.webp",
+  "assets/studies/longcat-next-poster.webp",
   ...Array.from({ length: 12 }, (_, index) => `assets/studies/longcat-next-slide-${String(index + 1).padStart(2, "0")}.webp`),
   "assets/studies/longcat-next-web.webp",
   "assets/studies/ddpm-conference-poster.webp",

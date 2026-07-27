@@ -9,9 +9,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 
 const sourceRoot = process.env.AUTODESIGN_PROMO_ROOT;
-const figure1PosterSource = process.env.AUTODESIGN_FIGURE1_POSTER_SOURCE;
-if (!sourceRoot || !figure1PosterSource) {
-  throw new Error("Set AUTODESIGN_PROMO_ROOT and AUTODESIGN_FIGURE1_POSTER_SOURCE");
+const posterSource = process.env.AUTODESIGN_POSTER_SOURCE;
+if (!sourceRoot || !posterSource) {
+  throw new Error("Set AUTODESIGN_PROMO_ROOT and AUTODESIGN_POSTER_SOURCE");
 }
 
 const run = promisify(execFile);
@@ -25,7 +25,7 @@ const webPreviewSource = resolve(sourceRoot, "landing-pages/longcat-next--202607
 const videoSource = resolve(sourceRoot, "videos/ddpm-conference-video/ddpm-conference-video-6min.mp4");
 const captionsSource = resolve(sourceRoot, "videos/ddpm-conference-video/subtitles.en.vtt");
 const approvedSources = [
-  ["Figure 1 DDPM poster", figure1PosterSource, "0ad5a0cdd04b15b4b6375b6810a78300cd898040957c2b41c0ec6022014a1775"],
+  ["LongCat-Next poster", posterSource, "0de98b0ad826517d82d902119f5a39f340047d95e44da9eae55059ffaf1309f2"],
   ["Slides HTML", slideSource, "90d3ec2e27b470b2c9c5e208e26bd8b31e9e97effa896da9fb475c8ac750423c"],
   ["Web HTML", webSource, "e7a37c2df61b6ab333b1f8b2b66437b094be5fd086ea92b8ac4f8aebbfb7cd59"],
   ["Web preview PNG", webPreviewSource, "63b80b2bd025aab9e44ffd23e467c2fc985d81eb303ad3cdd1b4c3f2c68c8b50"],
@@ -81,12 +81,12 @@ await mkdir(resolve(slidesOutput, ".."), { recursive: true });
 await mkdir(resolve(webOutput, ".."), { recursive: true });
 
 const temporaryDirectory = await mkdtemp(join(tmpdir(), "autodesign-promo-"));
-const approvedFigure1PosterInput = resolve(temporaryDirectory, "approved-figure1-poster.png");
+const approvedPosterInput = resolve(temporaryDirectory, "approved-poster.png");
 const approvedWebPreviewInput = resolve(temporaryDirectory, "approved-web-preview.png");
 const approvedVideoInput = resolve(temporaryDirectory, "approved-ddpm.mp4");
 let browser;
 try {
-  await writeFile(approvedFigure1PosterInput, approvedSourceContents.get(figure1PosterSource));
+  await writeFile(approvedPosterInput, approvedSourceContents.get(posterSource));
   await writeFile(approvedWebPreviewInput, approvedSourceContents.get(webPreviewSource));
   await writeFile(approvedVideoInput, approvedSourceContents.get(videoSource));
   await writeFile(slidesOutput, normalizeGeneratedHtml(approvedSourceContents.get(slideSource).toString("utf8")));
@@ -96,7 +96,7 @@ try {
   await writeFile(resolve(studiesOutput, "ddpm-conference.en.vtt"), approvedSourceContents.get(captionsSource));
   record(resolve(studiesOutput, "ddpm-conference.en.vtt"));
 
-  await transcodeWebp(approvedFigure1PosterInput, resolve(studiesOutput, "ddpm-figure1-poster.webp"));
+  await transcodeWebp(approvedPosterInput, resolve(studiesOutput, "longcat-next-poster.webp"));
   await transcodeWebp(approvedWebPreviewInput, resolve(studiesOutput, "longcat-next-web.webp"));
 
   browser = await chromium.launch({ headless: true });
