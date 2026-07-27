@@ -1,4 +1,4 @@
-import { LOCALES, MESSAGES, SUPPORTED_LOCALES } from "./locales.js?v=20260725b";
+import { LOCALES, MESSAGES, SUPPORTED_LOCALES } from "./locales.js?v=20260727b";
 
 const STORAGE_KEY = "autodesign.locale";
 let activeLocale = "en";

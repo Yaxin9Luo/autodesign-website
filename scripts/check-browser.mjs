@@ -80,6 +80,7 @@ async function waitForPhase(page, phase, timeout = 15_000) {
 
 async function openArmed(page, url) {
   await page.goto(url, { waitUntil: "networkidle" });
+  await page.locator("#scene-shell").scrollIntoViewIfNeeded();
   await waitForPhase(page, "armed");
 }
 
@@ -179,14 +180,14 @@ async function assertCacheChain(page) {
       return `${url.pathname}${url.search}`;
     }));
   for (const resource of [
-    "/styles.css?v=20260725b",
-    "/site-data.js?v=20260725b",
-    "/i18n.js?v=20260725b",
-    "/locales.js?v=20260725b",
-    "/language-menu.js?v=20260725b",
-    "/app.js?v=20260725b",
-    "/three-scene.js?v=20260725b",
-    "/artifact-showcase.js?v=20260725b",
+    "/styles.css?v=20260727b",
+    "/site-data.js?v=20260727b",
+    "/i18n.js?v=20260727b",
+    "/locales.js?v=20260727b",
+    "/language-menu.js?v=20260727b",
+    "/app.js?v=20260727b",
+    "/three-scene.js?v=20260727b",
+    "/artifact-showcase.js?v=20260727b",
   ]) {
     assert.ok(resources.includes(resource), `cache chain did not request ${resource}: ${JSON.stringify(resources)}`);
   }
@@ -254,6 +255,64 @@ async function assertMobileViewer(page) {
   assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
 }
 
+async function assertPaperFigures(page) {
+  const figures = [
+    ["figure1", 2],
+    ["method", 1],
+    ["benefit", 1],
+    ["future", 1],
+  ];
+  for (const [name, expectedPanels] of figures) {
+    const figure = page.locator(`[data-paper-figure="${name}"]`);
+    await figure.scrollIntoViewIfNeeded();
+    const panels = figure.locator("[data-open-artifact]");
+    assert.equal(await panels.count(), expectedPanels, `${name} paper figure panel count is incorrect`);
+    for (const image of await figure.locator("img").all()) {
+      assert.ok(await image.evaluate((element) => element.complete && element.naturalWidth > 0),
+        `${name} paper figure did not load`);
+    }
+    const trigger = panels.first();
+    await trigger.click();
+    const image = page.locator("#artifact-viewer-stage img");
+    await image.waitFor({ state: "visible" });
+    assert.ok(await image.evaluate((element) => element.complete && element.naturalWidth > 0),
+      `${name} paper figure inspector did not load`);
+    await page.keyboard.press("Escape");
+    await page.locator("#artifact-viewer").waitFor({ state: "hidden" });
+    assert.equal(await trigger.evaluate((element) => document.activeElement === element), true,
+      `${name} paper figure inspector did not restore focus`);
+  }
+}
+
+async function assertBrandArtwork(page) {
+  const heroMark = page.locator(".hero-title__agent");
+  assert.ok(await heroMark.evaluate((image) => image.complete && image.naturalWidth > 0),
+    "hero Design Agent mark did not load");
+
+  const viewport = page.viewportSize();
+  assert.ok(viewport, "brand artwork viewport is unavailable");
+  if (viewport.width <= 380) {
+    assert.equal(await heroMark.isHidden(), true, "hero Design Agent mark should hide on the narrowest screens");
+  } else {
+    await heroMark.waitFor({ state: "visible" });
+    const heroBounds = await heroMark.boundingBox();
+    assert.ok(heroBounds
+      && heroBounds.x >= -1
+      && heroBounds.x + heroBounds.width <= viewport.width + 1,
+    `hero Design Agent mark overflows the viewport: ${JSON.stringify(heroBounds)}`);
+  }
+
+  const evolutionStrip = page.locator(".evolution-mascot-strip img");
+  await evolutionStrip.scrollIntoViewIfNeeded();
+  assert.ok(await evolutionStrip.evaluate((image) => image.complete && image.naturalWidth > 0),
+    "Design Agent evolution strip did not load");
+  const stripBounds = await evolutionStrip.boundingBox();
+  assert.ok(stripBounds
+    && stripBounds.x >= -1
+    && stripBounds.x + stripBounds.width <= viewport.width + 1,
+  `Design Agent evolution strip overflows the viewport: ${JSON.stringify(stripBounds)}`);
+}
+
 async function assertDrawCalls(page, maximum) {
   await page.waitForFunction(() => Number(document.getElementById("scene-shell")?.dataset.drawCalls) > 0);
   const drawCalls = await page.locator("#scene-shell").getAttribute("data-draw-calls");
@@ -284,6 +343,7 @@ async function runLocales(browser, url) {
       paperSoon: "Coming soon",
     },
   });
+  await assertBrandArtwork(page);
 
   const switcher = page.locator("[data-language-switcher]");
   const trigger = page.locator("#language-menu-trigger");
@@ -301,7 +361,7 @@ async function runLocales(browser, url) {
   const localeCatalogResource = await page.evaluate(() => performance.getEntriesByType("resource")
     .map((entry) => entry.name)
     .find((name) => name.includes("/locales.js")));
-  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260725b$/, "locale catalog request must bypass stale browser caches");
+  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260727b$/, "locale catalog request must bypass stale browser caches");
   await assertCacheChain(page);
   assert.equal(await currentLabel.textContent(), "EN");
   assert.equal(await menu.isHidden(), true);
@@ -666,6 +726,8 @@ async function runDesktop(browser, url) {
     assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
   }
 
+  await assertPaperFigures(page);
+
   await page.locator("#scene-shell").scrollIntoViewIfNeeded();
   await page.waitForFunction(() => !document.querySelector(".site-header")?.classList.contains("site-header--paper"));
   await page.locator("#intro-replay").click();
@@ -699,6 +761,7 @@ async function runMobile(browser, url, viewport) {
       paperSoon: "Coming soon",
     },
   });
+  await assertBrandArtwork(page);
   await page.locator("#artifact-studies").scrollIntoViewIfNeeded();
   await page.waitForFunction(() => document.querySelector(".site-header")?.classList.contains("site-header--paper"));
   assert.equal(await page.locator(".intro-controls").isVisible(), false);

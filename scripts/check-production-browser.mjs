@@ -42,6 +42,15 @@ try {
   assert.equal(await page.locator("#artifact-viewer-type").textContent(), "Slide deck");
   await page.keyboard.press("Escape");
 
+  const methodFigure = page.locator('[data-paper-figure="method"] [data-open-artifact]');
+  await methodFigure.scrollIntoViewIfNeeded();
+  await methodFigure.click();
+  const methodImage = page.locator("#artifact-viewer-stage img");
+  await methodImage.waitFor({ state: "visible" });
+  assert.ok(await methodImage.evaluate((image) => image.complete && image.naturalWidth > 0),
+    "hosted method figure did not load");
+  await page.keyboard.press("Escape");
+
   await page.locator("#artifact-tab-web").click();
   const previewFrame = page.locator("#artifact-panel-web .browser-specimen__viewport iframe").contentFrame();
   await previewFrame.locator("footer").waitFor({ state: "attached" });

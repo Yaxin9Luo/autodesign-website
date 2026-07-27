@@ -5,9 +5,11 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { createIntroAudio } from "./intro-audio.js";
 import { createIntroScene } from "./intro-scene.js";
-import { t } from "./i18n.js?v=20260725b";
+import { t } from "./i18n.js?v=20260727b";
 import {
+  INTRO_ARRIVAL_SECONDS,
   INTRO_CHARGE_THRESHOLD,
+  INTRO_CINEMATIC_SECONDS,
   addIntroCharge,
   advanceIntroState,
   createIntroState,
@@ -357,6 +359,8 @@ function createArtifactSceneRuntime({
   let introState = createIntroState({ reducedMotion: reducedMotion.matches });
   if (reducedMotion.matches) introState = advanceIntroState(introState, 1.8);
   let introCompletionHandled = false;
+  let introArmTimer = null;
+  let introCompletionTimer = null;
   let touchY = null;
   const introCharge = document.getElementById("intro-charge");
   const introPrompt = document.getElementById("intro-prompt");
@@ -866,6 +870,40 @@ function createArtifactSceneRuntime({
     }
   }
 
+  function scheduleIntroArm() {
+    if (introArmTimer !== null) window.clearTimeout(introArmTimer);
+    if (introState.complete || introState.phase !== "arriving") return;
+    introArmTimer = window.setTimeout(() => {
+      introArmTimer = null;
+      if (destroyed || introState.complete || introState.phase !== "arriving") return;
+      introState = advanceIntroState(introState, INTRO_ARRIVAL_SECONDS);
+      syncIntroPresentation();
+      if (canDraw()) {
+        updateScene(targetProgress, performance.now());
+        draw();
+      }
+    }, Math.ceil(INTRO_ARRIVAL_SECONDS * 1_000) + 180);
+  }
+
+  function scheduleIntroCompletion() {
+    if (introCompletionTimer !== null) window.clearTimeout(introCompletionTimer);
+    if (introState.complete || !introState.ignited) return;
+    introCompletionTimer = window.setTimeout(() => {
+      introCompletionTimer = null;
+      if (destroyed || introState.complete || !introState.ignited) return;
+      introState = advanceIntroState(introState, INTRO_CINEMATIC_SECONDS);
+      finishIntro();
+      if (canDraw()) {
+        updateScene(targetProgress, performance.now());
+        draw();
+      }
+    }, Math.ceil(INTRO_CINEMATIC_SECONDS * 1_000) + 180);
+  }
+  registerRollback(() => {
+    if (introArmTimer !== null) window.clearTimeout(introArmTimer);
+    if (introCompletionTimer !== null) window.clearTimeout(introCompletionTimer);
+  });
+
   const syncIntroLocale = () => {
     announcedIntroPhase = null;
     syncIntroPresentation();
@@ -876,6 +914,10 @@ function createArtifactSceneRuntime({
   function finishIntro() {
     if (introCompletionHandled) return;
     introCompletionHandled = true;
+    if (introArmTimer !== null) window.clearTimeout(introArmTimer);
+    if (introCompletionTimer !== null) window.clearTimeout(introCompletionTimer);
+    introArmTimer = null;
+    introCompletionTimer = null;
     introState = { ...introState, phase: "complete", complete: true };
     introScene.setVisible(false);
     shell.dataset.introPhase = "complete";
@@ -892,7 +934,10 @@ function createArtifactSceneRuntime({
     introState = addIntroCharge(introState, delta);
     const view = getIntroView(introState);
     if (introState.charge !== previous.charge) introAudio.charge(view.charge);
-    if (!previous.ignited && introState.ignited) introAudio.ignite();
+    if (!previous.ignited && introState.ignited) {
+      introAudio.ignite();
+      scheduleIntroCompletion();
+    }
     if (introState.complete) {
       finishIntro();
       updateScene(targetProgress, performance.now());
@@ -912,6 +957,8 @@ function createArtifactSceneRuntime({
   }
 
   function replayIntro() {
+    if (introCompletionTimer !== null) window.clearTimeout(introCompletionTimer);
+    introCompletionTimer = null;
     introState = resetIntroState({ ...introState, reducedMotion: reducedMotion.matches });
     introCompletionHandled = false;
     introScene.setVisible(true);
@@ -922,6 +969,7 @@ function createArtifactSceneRuntime({
     renderedProgress = 0;
     resetIntroScroll(shell);
     syncIntroPresentation();
+    scheduleIntroArm();
     updateScene(0, performance.now());
     draw();
     updateRunState();
@@ -1461,6 +1509,7 @@ function createArtifactSceneRuntime({
       if (reducedMotion.matches) introState = advanceIntroState(introState, 1.8);
       introScene.setVisible(true);
       syncIntroPresentation();
+      scheduleIntroArm();
     }
     updateScrollTarget();
     updateRunState();
@@ -1502,6 +1551,7 @@ function createArtifactSceneRuntime({
   });
 
   syncIntroPresentation();
+  scheduleIntroArm();
   updateScrollTarget();
   resize();
   updateRunState();

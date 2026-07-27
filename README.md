@@ -35,17 +35,19 @@ The browser smoke check covers the primary automated release paths. Manual relea
 
 ## Curated Assets
 
-The checked-in assets are publication-ready derivatives of approved AutoDesign outputs. The showcase uses LongCat-Next for the poster, slide, and web specimens, and Denoising Diffusion Probabilistic Models (DDPM) for the conference-video specimen. The LongCat-Next poster is validated DesignHarness output; the slide deck, research page, and DDPM video remain exploratory generalization studies rather than validated product claims.
+The checked-in assets are publication-ready derivatives of approved AutoDesign outputs. The poster specimen is the high-resolution DDPM artifact shown in the paper's Figure 1 optimization trace; it is presented as a representative DesignHarness artifact. LongCat-Next remains the selected specimen for the slide deck and research webpage, and the DDPM conference video, slide deck, and research webpage remain exploratory Meta-Harness generalization studies rather than validated product claims.
 
-Source selection remains in the private AutoDesign development workspace. To regenerate the checked-in derivatives, set `AUTODESIGN_PROMO_ROOT` to the source bundle containing the standalone LongCat-Next slide/web exports and DDPM video/captions, and set `AUTODESIGN_POSTER_SOURCE` to the approved LongCat-Next poster image. The poster, slide HTML, web HTML and preview PNG, DDPM MP4, and captions are SHA-256 gated before any generated file is written:
+The images under `assets/paper/` are published render derivatives of the current paper's Figure 1, method, DesignHarness-benefit, and multimodal-in/multimodal-out figures. Source selection remains in the private AutoDesign development workspace. To regenerate the checked-in derivatives, set `AUTODESIGN_PROMO_ROOT` to the source bundle containing the standalone LongCat-Next slide/web exports and DDPM video/captions, and set `AUTODESIGN_FIGURE1_POSTER_SOURCE` to the approved DDPM poster used in Figure 1. The poster, slide HTML, web HTML and preview PNG, DDPM MP4, and captions are SHA-256 gated before any generated file is written:
 
 ```bash
 AUTODESIGN_PROMO_ROOT=/absolute/path/to/promotion-sources \
-AUTODESIGN_POSTER_SOURCE=/absolute/path/to/approved-longcat-next-poster.png \
+AUTODESIGN_FIGURE1_POSTER_SOURCE=/absolute/path/to/approved-figure1-ddpm-poster.png \
 node scripts/prepare-promotional-assets.mjs
 ```
 
 The deployment repository retains only the generated files required by the public site.
+
+`assets/brand/` contains small derivative crops of the public AutoDesign README character art. They are decorative identity elements for the hero and evolution narrative; all research claims remain in the corresponding site copy and paper figures.
 
 ## Production Deployment
 

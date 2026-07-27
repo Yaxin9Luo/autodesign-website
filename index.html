@@ -14,7 +14,7 @@
     <title>AutoDesign — The Artifact Engine</title>
     <link rel="canonical" href="https://autodesign.designanything.ai/">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23080b0e'/%3E%3Cpath d='M7 24 16 6l9 18h-4l-5-10-5 10Z' fill='%2300bfa5'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="./styles.css?v=20260725b">
+    <link rel="stylesheet" href="./styles.css?v=20260727b">
   </head>
   <body>
     <header class="site-header">
@@ -116,7 +116,7 @@
           <section class="scene-beat hero" id="hero" aria-labelledby="hero-title">
             <div class="hero-copy">
               <p class="eyebrow" data-i18n="hero.eyebrow">Meta-Harness Optimization / 2026</p>
-              <h1 id="hero-title">AutoDesign</h1>
+              <h1 id="hero-title"><span class="hero-title__word">AutoDesign</span><img class="hero-title__agent" src="./assets/brand/design-agent-mark.webp?v=20260727b" width="220" height="372" alt="" aria-hidden="true"></h1>
               <p class="hero-dek" data-i18n="hero.dek">A research system for improving the harness that turns source material into faithful, editable artifacts.</p>
               <p class="hero-suite" data-i18n="hero.suite">From one paper to a complete research communication suite: an editable poster, presentation slides, a research webpage, and a narrated conference video with synchronized subtitles.</p>
               <a class="text-link text-link--light" href="#optimization" data-scene-target="system"><span data-i18n="hero.enter">Enter the engine</span> <span aria-hidden="true">↓</span></a>
@@ -178,15 +178,15 @@
 
         <div class="artifact-study" id="artifact-panel-poster" role="tabpanel" aria-labelledby="artifact-tab-poster" data-artifact-panel="poster">
           <div class="artifact-study__stage artifact-study__stage--poster">
-            <img src="./assets/studies/longcat-next-poster.webp?v=413b9868" width="2048" height="1024" alt="Generated LongCat-Next academic research poster" data-i18n-alt="suite.posterAlt">
-            <p class="artifact-stage-label"><span>LongCat-Next</span><span data-i18n="suite.posterStage">Editable HTML poster</span></p>
+            <img src="./assets/studies/ddpm-figure1-poster.webp?v=20260727b" width="2200" height="1100" alt="DDPM research poster from the Figure 1 DesignHarness trace" data-i18n-alt="suite.posterAlt">
+            <p class="artifact-stage-label"><span>DDPM / Figure 1</span><span data-i18n="suite.posterStage">Editable HTML poster</span></p>
           </div>
           <div class="artifact-study__copy">
             <p class="artifact-study__index" data-i18n="suite.posterIndex">01 / Paper to poster</p>
-            <h3 data-i18n="suite.posterTitle">A source-grounded poster that remains editable.</h3>
-            <p data-i18n="suite.posterBody">LongCat-Next is rendered as a dense academic poster with paper figures, benchmark evidence, and native HTML text for continued revision.</p>
-            <button type="button" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/studies/longcat-next-poster.webp?v=413b9868" data-artifact-title="LongCat-Next research poster" data-artifact-title-key="suite.posterTitle" data-artifact-new-tab="./assets/studies/longcat-next-poster.webp?v=413b9868" data-i18n="suite.inspectPoster">Inspect poster</button>
-            <dl><div><dt data-i18n="suite.use">Use</dt><dd data-i18n="suite.conferencePresentation">Conference presentation</dd></div><div><dt data-i18n="suite.artifact">Artifact</dt><dd data-i18n="suite.posterStage">Editable HTML poster</dd></div><div><dt data-i18n="suite.status">Status</dt><dd data-i18n="suite.validated">Validated DesignHarness output</dd></div></dl>
+            <h3 data-i18n="suite.posterTitle">A Figure 1 poster that remains editable.</h3>
+            <p data-i18n="suite.posterBody">The high-resolution DDPM poster from the Figure 1 trace retains paper figures, benchmark evidence, and native HTML text for continued revision.</p>
+            <button type="button" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/studies/ddpm-figure1-poster.webp?v=20260727b" data-artifact-title="Figure 1 DDPM research poster" data-artifact-title-key="suite.posterTitle" data-artifact-new-tab="./assets/studies/ddpm-figure1-poster.webp?v=20260727b" data-i18n="suite.inspectPoster">Inspect poster</button>
+            <dl><div><dt data-i18n="suite.use">Use</dt><dd data-i18n="suite.conferencePresentation">Conference presentation</dd></div><div><dt data-i18n="suite.artifact">Artifact</dt><dd data-i18n="suite.posterStage">Editable HTML poster</dd></div><div><dt data-i18n="suite.status">Status</dt><dd data-i18n="suite.validated">Representative Figure 1 DesignHarness artifact</dd></div></dl>
           </div>
         </div>
 
@@ -255,6 +255,9 @@
           <p class="eyebrow" data-i18n="evolution.eyebrow">Representative optimization trace</p>
           <h2 id="evolution-title" data-i18n="evolution.title">The artifact changes once. The harness keeps learning.</h2>
           <p data-i18n="evolution.body">AutoDesign reads the evidence left by completed rollouts, finds failures that repeat, and turns them into bounded updates to the system behind future artifacts.</p>
+          <figure class="evolution-mascot-strip" aria-hidden="true">
+            <img src="./assets/brand/design-agent-evolution.webp?v=20260727b" width="800" height="300" alt="">
+          </figure>
         </div>
         <div class="evolution-workbench">
           <div class="evolution-visual">
@@ -277,6 +280,22 @@
             <p class="evolution-disclosure" data-i18n="evolution.disclosure">Representative sequence reconstructed from the AutoDesign workflow and artifact traces. It explains the mechanism; reported benchmark results appear below.</p>
           </div>
         </div>
+        <figure class="paper-figure paper-figure--evolution" data-paper-figure="figure1">
+          <figcaption class="paper-figure__caption">
+            <span data-i18n="paperFigures.figure">Published research figure</span>
+            <strong data-i18n="paperFigures.figure1">Figure 1 / Harness evolution and PosterBench</strong>
+          </figcaption>
+          <div class="paper-figure__grid">
+            <button type="button" class="paper-figure__panel" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/paper/figure1-evolution.webp?v=20260727b" data-artifact-title="Figure 1: DesignHarness evolution" data-artifact-new-tab="./assets/paper/figure1-evolution.webp?v=20260727b" data-i18n-title="paperFigures.inspect" title="Inspect figure" aria-label="Inspect Figure 1 DesignHarness evolution">
+              <img src="./assets/paper/figure1-evolution.webp?v=20260727b" width="2339" height="1653" alt="Figure 1: accepted DesignHarness evolution trajectory" data-i18n-alt="paperFigures.figure1EvolutionAlt">
+              <span aria-hidden="true">↗</span>
+            </button>
+            <button type="button" class="paper-figure__panel" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/paper/figure1-benchmark.webp?v=20260727b" data-artifact-title="Figure 1: PosterBench comparison" data-artifact-new-tab="./assets/paper/figure1-benchmark.webp?v=20260727b" data-i18n-title="paperFigures.inspect" title="Inspect figure" aria-label="Inspect Figure 1 PosterBench comparison">
+              <img src="./assets/paper/figure1-benchmark.webp?v=20260727b" width="2339" height="1653" alt="Figure 1: PosterBench performance comparison" data-i18n-alt="paperFigures.figure1BenchmarkAlt">
+              <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </figure>
       </section>
 
       <section class="harness" id="harness" aria-labelledby="harness-title">
@@ -311,6 +330,16 @@
             <div><dt data-i18n="harness.output">Output</dt><dd id="harness-detail-output"></dd></div>
           </dl>
         </div>
+        <figure class="paper-figure paper-figure--method" data-paper-figure="method">
+          <figcaption class="paper-figure__caption">
+            <span data-i18n="paperFigures.figure">Published research figure</span>
+            <strong data-i18n="paperFigures.method">Method / AutoDesign and DesignHarness</strong>
+          </figcaption>
+          <button type="button" class="paper-figure__panel" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/paper/method-detail.webp?v=20260727b" data-artifact-title="AutoDesign method and DesignHarness" data-artifact-new-tab="./assets/paper/method-detail.webp?v=20260727b" data-i18n-title="paperFigures.inspect" title="Inspect figure" aria-label="Inspect AutoDesign method and DesignHarness figure">
+            <img src="./assets/paper/method-detail.webp?v=20260727b" width="2779" height="1218" alt="AutoDesign method overview with the DesignHarness and Meta-Harness Optimization loop" data-i18n-alt="paperFigures.methodAlt">
+            <span aria-hidden="true">↗</span>
+          </button>
+        </figure>
       </section>
 
       <section class="evidence" id="evidence" aria-labelledby="evidence-title">
@@ -338,6 +367,16 @@
               <p data-i18n="results.transferBody">Every evaluated configuration improves when the optimized DesignHarness is attached.</p>
             </div>
             <div class="transfer-chart" id="transfer-chart" aria-label="Matched DesignHarness improvement across seven configurations" data-i18n-aria-label="results.transferAria"></div>
+            <figure class="paper-figure paper-figure--benefit" data-paper-figure="benefit">
+              <figcaption class="paper-figure__caption">
+                <span data-i18n="paperFigures.figure">Published research figure</span>
+                <strong data-i18n="paperFigures.benefit">Benefit / Paired DesignHarness gains</strong>
+              </figcaption>
+              <button type="button" class="paper-figure__panel" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/paper/harness-benefit.webp?v=20260727b" data-artifact-title="Paired DesignHarness gains" data-artifact-new-tab="./assets/paper/harness-benefit.webp?v=20260727b" data-i18n-title="paperFigures.inspect" title="Inspect figure" aria-label="Inspect paired DesignHarness gains figure">
+                <img src="./assets/paper/harness-benefit.webp?v=20260727b" width="1844" height="1433" alt="DesignHarness benefit across seven fixed configurations" data-i18n-alt="paperFigures.benefitAlt">
+                <span aria-hidden="true">↗</span>
+              </button>
+            </figure>
           </div>
           <div class="result-pair">
             <div class="result-block result-block--leaderboard">
@@ -363,6 +402,16 @@
         </section>
 
         <p class="future-work"><span data-i18n="results.futureLabel">Next research boundary</span> <span data-i18n="results.future">Generalize the learned harness update beyond posters without overstating evidence from the validated poster domain.</span></p>
+        <figure class="paper-figure paper-figure--future" data-paper-figure="future">
+          <figcaption class="paper-figure__caption">
+            <span data-i18n="paperFigures.figure">Published research figure</span>
+            <strong data-i18n="paperFigures.future">Future direction / Multimodal In, Multimodal Out</strong>
+          </figcaption>
+          <button type="button" class="paper-figure__panel" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/paper/future-mimo.webp?v=20260727b" data-artifact-title="Future direction: multimodal-in, multimodal-out design system" data-artifact-new-tab="./assets/paper/future-mimo.webp?v=20260727b" data-i18n-title="paperFigures.inspect" title="Inspect figure" aria-label="Inspect the multimodal-in, multimodal-out design system figure">
+            <img src="./assets/paper/future-mimo.webp?v=20260727b" width="2339" height="1653" alt="Future direction diagram for a multimodal-in, multimodal-out design system" data-i18n-alt="paperFigures.futureAlt">
+            <span aria-hidden="true">↗</span>
+          </button>
+        </figure>
       </section>
 
       <section class="resources" id="resources" aria-labelledby="resources-title">
@@ -409,7 +458,7 @@
       <a id="artifact-viewer-external" target="_blank" rel="noreferrer" data-i18n="viewer.newTab">Open in new tab</a>
     </dialog>
 
-    <script src="./site-data.js?v=20260725b"></script>
+    <script src="./site-data.js?v=20260727b"></script>
     <script type="importmap">
       {
         "imports": {
@@ -418,8 +467,8 @@
         }
       }
     </script>
-    <script type="module" src="./i18n.js?v=20260725b"></script>
-    <script type="module" src="./language-menu.js?v=20260725b"></script>
-    <script type="module" src="./app.js?v=20260725b"></script>
+    <script type="module" src="./i18n.js?v=20260727b"></script>
+    <script type="module" src="./language-menu.js?v=20260727b"></script>
+    <script type="module" src="./app.js?v=20260727b"></script>
   </body>
 </html>

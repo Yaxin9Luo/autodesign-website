@@ -116,7 +116,7 @@ for (const file of ["index.html", "styles.css", "site-data.js", "app.js", "artif
 if (existsSync(resolve(root, "scripts/prepare-promotional-assets.mjs"))) {
   const preparationScript = read("scripts/prepare-promotional-assets.mjs");
   const approvedSourceSha256 = [
-    "6290d4be1bc4a7b0432941f875415102c78099d8e2c837431c375480115a3cf9",
+    "0ad5a0cdd04b15b4b6375b6810a78300cd898040957c2b41c0ec6022014a1775",
     "90d3ec2e27b470b2c9c5e208e26bd8b31e9e97effa896da9fb475c8ac750423c",
     "e7a37c2df61b6ab333b1f8b2b66437b094be5fd086ea92b8ac4f8aebbfb7cd59",
     "63b80b2bd025aab9e44ffd23e467c2fc985d81eb303ad3cdd1b4c3f2c68c8b50",
@@ -126,7 +126,7 @@ if (existsSync(resolve(root, "scripts/prepare-promotional-assets.mjs"))) {
   for (const hash of approvedSourceSha256) {
     if (!preparationScript.includes(hash)) failures.push("promotional asset preparation missing approved SHA-256 " + hash);
   }
-  for (const source of ["slideSource", "webSource", "webPreviewSource", "videoSource", "captionsSource"]) {
+  for (const source of ["figure1PosterSource", "slideSource", "webSource", "webPreviewSource", "videoSource", "captionsSource"]) {
     if (!preparationScript.includes(`approvedSourceContents.get(${source})`)) {
       failures.push("promotional asset generation must consume validated bytes for " + source);
     }
@@ -209,7 +209,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   if (!html.includes('type="module"')) failures.push("missing ES module entrypoint");
   expect(html.includes('id="language-menu-trigger"'), "compact language menu trigger is missing");
   expect(html.includes('id="language-menu"'), "compact language menu panel is missing");
-  expect(html.includes('./language-menu.js?v=20260725b'), "language menu runtime is missing or stale");
+  expect(html.includes('./language-menu.js?v=20260727b'), "language menu runtime is missing or stale");
   if (!html.includes('type="importmap"')) failures.push("missing import map");
   if (!html.includes('"three": "./vendor/three/three.module.min.js"')) failures.push("missing local three import");
   if (!html.includes('"three/addons/": "./vendor/three/addons/"')) failures.push("missing local three addons import");
@@ -248,7 +248,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   );
   const tabOrder = [...html.matchAll(/data-artifact-tab="([^"]+)"/g)].map((match) => match[1]);
   expect(JSON.stringify(tabOrder) === JSON.stringify(["poster", "slides", "web", "video"]), "artifact tab order is invalid");
-  for (const token of ["artifact-viewer", "data-open-artifact", "data-artifact-src", "Validated DesignHarness output"]) {
+  for (const token of ["artifact-viewer", "data-open-artifact", "data-artifact-src", "Representative Figure 1 DesignHarness artifact"]) {
     expect(html.includes(token), "artifact showcase missing " + token);
   }
   for (const phrase of [
@@ -263,13 +263,28 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   }
   expect(html.includes('class="hero-suite"'), "Hero suite message is missing");
   expect(html.includes('class="artifact-suite-flow"'), "Artifact suite workflow is missing");
+  expect(html.includes('class="hero-title__agent"'), "hero Design Agent mark is missing");
+  expect(html.includes('assets/brand/design-agent-mark.webp?v=20260727b'), "hero Design Agent mark must bypass stale deployment fallbacks");
+  expect(html.includes('class="evolution-mascot-strip"'), "Design Agent evolution strip is missing");
+  expect(html.includes('assets/brand/design-agent-evolution.webp?v=20260727b'), "Design Agent evolution strip must bypass stale deployment fallbacks");
   for (const token of ["data-slide-carousel", "data-slide-prev", "data-slide-next", 'data-artifact-kind="slides"']) {
     expect(html.includes(token), "interactive slide showcase missing " + token);
   }
-  expect(html.includes("longcat-next-poster.webp?v=413b9868"), "Poster source must bypass stale deployment fallbacks");
+  expect(html.includes("ddpm-figure1-poster.webp?v=20260727b"), "Figure 1 poster source must bypass stale deployment fallbacks");
   expect(html.includes("longcat-next-slide-{index}.webp?v=675b8b1"), "Slide sources must bypass stale deployment fallbacks");
   expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
-  const cacheVersion = "20260725b";
+  const paperFigureContracts = [
+    ["figure1", "assets/paper/figure1-evolution.webp"],
+    ["figure1", "assets/paper/figure1-benchmark.webp"],
+    ["method", "assets/paper/method-detail.webp"],
+    ["benefit", "assets/paper/harness-benefit.webp"],
+    ["future", "assets/paper/future-mimo.webp"],
+  ];
+  for (const [figure, asset] of paperFigureContracts) {
+    expect(html.includes(`data-paper-figure="${figure}"`), `paper figure section is missing ${figure}`);
+    expect(html.includes(`${asset}?v=20260727b`), `paper figure asset is missing ${asset}`);
+  }
+  const cacheVersion = "20260727b";
   const cacheChain = [
     ["index.html", html, `styles.css?v=${cacheVersion}`],
     ["index.html", html, `site-data.js?v=${cacheVersion}`],
@@ -324,7 +339,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     if (!html.includes(symbol)) failures.push("index.html missing " + symbol);
   }
 
-  expect(html.includes("site-data.js?v=20260725b"), "Benchmark data source must bypass stale browser caches");
+  expect(html.includes("site-data.js?v=20260727b"), "Benchmark data source must bypass stale browser caches");
   for (const score of ["78.32", "70.87", "69.45"]) {
     expect(html.includes(score), "Leaderboard missing remeasured score " + score);
   }
@@ -624,6 +639,8 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     ".evidence::before",
     ".evolution-workbench",
     ".harness-stage-list",
+    ".paper-figure",
+    ".paper-figure__panel",
     ".transfer-chart",
     ".resource-list",
   ]) {
@@ -910,7 +927,7 @@ for (const asset of [
 }
 
 const promotionalAssets = [
-  "assets/studies/longcat-next-poster.webp",
+  "assets/studies/ddpm-figure1-poster.webp",
   ...Array.from({ length: 12 }, (_, index) => `assets/studies/longcat-next-slide-${String(index + 1).padStart(2, "0")}.webp`),
   "assets/studies/longcat-next-web.webp",
   "assets/studies/ddpm-conference-poster.webp",
@@ -942,6 +959,13 @@ const assets = [
   ]),
   ...["00", "01", "02", "03", "04"].map((id) => `assets/evolution/evolution-${id}.webp`),
   ...["slide-03", "webpage", "video-poster"].map((slug) => `assets/studies/${slug}.webp`),
+  ...[
+    "assets/paper/figure1-evolution.webp",
+    "assets/paper/figure1-benchmark.webp",
+    "assets/paper/method-detail.webp",
+    "assets/paper/harness-benefit.webp",
+    "assets/paper/future-mimo.webp",
+  ],
   ...promotionalAssets,
 ];
 

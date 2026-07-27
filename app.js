@@ -1,6 +1,6 @@
-import { createArtifactScene } from "./three-scene.js?v=20260725b";
-import { bindArtifactShowcase } from "./artifact-showcase.js?v=20260725b";
-import { t } from "./i18n.js?v=20260725b";
+import { createArtifactScene } from "./three-scene.js?v=20260727b";
+import { bindArtifactShowcase } from "./artifact-showcase.js?v=20260727b";
+import { t } from "./i18n.js?v=20260727b";
 import { bindPageLifecycle } from "./page-lifecycle.js";
 import { bindSceneFocus } from "./scene-focus.js";
 
