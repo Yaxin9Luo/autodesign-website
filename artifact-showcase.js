@@ -1,4 +1,4 @@
-import { t } from "./i18n.js?v=20260727d";
+import { t } from "./i18n.js?v=20260728a";
 
 const VIDEO_CAPTIONS_SRC = "./assets/studies/ddpm-conference.en.vtt";
 const ARTIFACT_ESCAPE_MESSAGE = "autodesign:artifact-viewer:escape";

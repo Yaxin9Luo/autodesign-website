@@ -42,7 +42,7 @@ try {
   assert.equal(await page.locator("#artifact-viewer-type").textContent(), "Slide deck");
   await page.keyboard.press("Escape");
 
-  const methodFigure = page.locator('[data-paper-figure="method"] [data-open-artifact]');
+  const methodFigure = page.locator('[data-method-figure] [data-open-artifact]');
   await methodFigure.scrollIntoViewIfNeeded();
   await methodFigure.click();
   const methodImage = page.locator("#artifact-viewer-stage img");

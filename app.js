@@ -1,12 +1,11 @@
-import { createArtifactScene } from "./three-scene.js?v=20260727d";
-import { bindArtifactShowcase } from "./artifact-showcase.js?v=20260727d";
-import { t } from "./i18n.js?v=20260727d";
+import { createArtifactScene } from "./three-scene.js?v=20260728a";
+import { bindArtifactShowcase } from "./artifact-showcase.js?v=20260728a";
+import { t } from "./i18n.js?v=20260728a";
 import { bindPageLifecycle } from "./page-lifecycle.js";
 import { bindSceneFocus } from "./scene-focus.js";
 
 const {
   evolution,
-  harnessStages,
   metrics,
   posters,
   researchRecord,
@@ -24,7 +23,6 @@ let nextPosterButton = null;
 let posterCaptionMeta = null;
 let posterCaptionTitle = null;
 let activeEvolutionIndex = 0;
-let activeHarnessIndex = 0;
 
 function dataMessage(group, id, field, fallback) {
   const key = `${group}.${id}.${field}`;
@@ -132,40 +130,6 @@ function renderEvolution() {
   });
 
   selectState(activeEvolutionIndex);
-}
-
-function renderHarness() {
-  const root = byId("harness-stage-list");
-  const buttons = [];
-  root.replaceChildren();
-
-  const selectStage = (index) => {
-    activeHarnessIndex = index;
-    const stage = harnessStages[index];
-    const name = dataMessage("harnessData", stage.id, "name", stage.name);
-    byId("harness-detail-index").textContent = `${stage.id} / ${name}`;
-    byId("harness-detail-title").textContent = dataMessage("harnessData", stage.id, "summary", stage.summary);
-    byId("harness-detail-input").textContent = dataMessage("harnessData", stage.id, "input", stage.input);
-    byId("harness-detail-output").textContent = dataMessage("harnessData", stage.id, "output", stage.output);
-    buttons.forEach((button, buttonIndex) => {
-      button.setAttribute("aria-pressed", buttonIndex === index ? "true" : "false");
-    });
-  };
-
-  harnessStages.forEach((stage, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "harness-stage";
-    const name = dataMessage("harnessData", stage.id, "name", stage.name);
-    const short = dataMessage("harnessData", stage.id, "short", stage.short);
-    button.innerHTML = `<span>${stage.id}</span><strong>${short}</strong><small>${name}</small>`;
-    button.setAttribute("aria-label", t("harness.inspect", { name }));
-    button.addEventListener("click", () => selectStage(index));
-    buttons.push(button);
-    root.append(button);
-  });
-
-  selectStage(activeHarnessIndex);
 }
 
 function renderTransferResults() {
@@ -476,7 +440,6 @@ function bindSemanticNavigation(focusController) {
 renderResearchRecord();
 renderMetrics();
 renderEvolution();
-renderHarness();
 renderTransferResults();
 const unbindArtifactShowcase = bindArtifactShowcase();
 renderPosterControls();
@@ -485,7 +448,6 @@ window.addEventListener("autodesign:localechange", () => {
   renderResearchRecord();
   renderMetrics();
   renderEvolution();
-  renderHarness();
   localizePosterControls();
   if (dialog.open) renderPosterDialog(posters[activePosterIndex]);
 });

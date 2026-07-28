@@ -14,7 +14,7 @@
     <title>AutoDesign — The Artifact Engine</title>
     <link rel="canonical" href="https://autodesign.designanything.ai/">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23080b0e'/%3E%3Cpath d='M7 24 16 6l9 18h-4l-5-10-5 10Z' fill='%2300bfa5'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="./styles.css?v=20260727d">
+    <link rel="stylesheet" href="./styles.css?v=20260728a">
   </head>
   <body>
     <header class="site-header">
@@ -116,7 +116,7 @@
           <section class="scene-beat hero" id="hero" aria-labelledby="hero-title">
             <div class="hero-copy">
               <p class="eyebrow" data-i18n="hero.eyebrow">Meta-Harness Optimization / 2026</p>
-              <h1 id="hero-title"><span class="hero-title__word">AutoDesign</span><img class="hero-title__agent" src="./assets/brand/design-agent-mark.webp?v=20260727d" width="220" height="372" alt="" aria-hidden="true"></h1>
+              <h1 id="hero-title"><span class="hero-title__word">AutoDesign</span><img class="hero-title__agent" src="./assets/brand/design-agent-mark.webp?v=20260728a" width="220" height="372" alt="" aria-hidden="true"></h1>
               <p class="hero-dek" data-i18n="hero.dek">A research system for improving the harness that turns source material into faithful, editable artifacts.</p>
               <p class="hero-suite" data-i18n="hero.suite">From one paper to a complete research communication suite: an editable poster, presentation slides, a research webpage, and a narrated conference video with synchronized subtitles.</p>
               <a class="text-link text-link--light" href="#optimization" data-scene-target="system"><span data-i18n="hero.enter">Enter the engine</span> <span aria-hidden="true">↓</span></a>
@@ -256,7 +256,7 @@
           <h2 id="evolution-title" data-i18n="evolution.title">The artifact changes once. The harness keeps learning.</h2>
           <p data-i18n="evolution.body">AutoDesign reads the evidence left by completed rollouts, finds failures that repeat, and turns them into bounded updates to the system behind future artifacts.</p>
           <figure class="evolution-mascot-strip" aria-hidden="true">
-            <img src="./assets/brand/design-agent-evolution.webp?v=20260727d" width="800" height="300" alt="">
+            <img src="./assets/brand/design-agent-evolution.webp?v=20260728a" width="800" height="300" alt="">
           </figure>
         </div>
         <div class="evolution-workbench">
@@ -280,22 +280,6 @@
             <p class="evolution-disclosure" data-i18n="evolution.disclosure">Representative sequence reconstructed from the AutoDesign workflow and artifact traces. It explains the mechanism; reported benchmark results appear below.</p>
           </div>
         </div>
-        <figure class="paper-figure paper-figure--evolution" data-paper-figure="figure1">
-          <figcaption class="paper-figure__caption">
-            <span data-i18n="paperFigures.figure">Published research figure</span>
-            <strong data-i18n="paperFigures.figure1">Figure 1 / Harness evolution and PosterBench</strong>
-          </figcaption>
-          <div class="paper-figure__grid">
-            <button type="button" class="paper-figure__panel" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/paper/figure1-evolution.webp?v=20260727d" data-artifact-title="Figure 1: DesignHarness evolution" data-artifact-new-tab="./assets/paper/figure1-evolution.webp?v=20260727d" data-i18n-title="paperFigures.inspect" title="Inspect figure" aria-label="Inspect Figure 1 DesignHarness evolution">
-              <img src="./assets/paper/figure1-evolution.webp?v=20260727d" width="2339" height="1653" alt="Figure 1: accepted DesignHarness evolution trajectory" data-i18n-alt="paperFigures.figure1EvolutionAlt">
-              <span aria-hidden="true">↗</span>
-            </button>
-            <button type="button" class="paper-figure__panel" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/paper/figure1-benchmark.webp?v=20260727d" data-artifact-title="Figure 1: PosterBench comparison" data-artifact-new-tab="./assets/paper/figure1-benchmark.webp?v=20260727d" data-i18n-title="paperFigures.inspect" title="Inspect figure" aria-label="Inspect Figure 1 PosterBench comparison">
-              <img src="./assets/paper/figure1-benchmark.webp?v=20260727d" width="2339" height="1653" alt="Figure 1: PosterBench performance comparison" data-i18n-alt="paperFigures.figure1BenchmarkAlt">
-              <span aria-hidden="true">↗</span>
-            </button>
-          </div>
-        </figure>
       </section>
 
       <section class="harness" id="harness" aria-labelledby="harness-title">
@@ -304,39 +288,12 @@
           <h2 id="harness-title" data-i18n="harness.title">A design system the model can operate.</h2>
           <p data-i18n="harness.body">DesignHarness is AutoDesign's optimized design system, evaluated for academic paper-to-poster generation. It grounds the Designer in the paper, executes an editable artifact, inspects the browser result, and routes localized repair.</p>
         </div>
-        <div class="harness-loop" aria-label="Meta-Harness Optimization Loop surrounding DesignHarness" data-i18n-aria-label="harness.loopAria">
-          <div class="meta-loop-heading"><span data-i18n="harness.outer">Outer system</span><strong data-i18n="harness.loop">Meta-Harness Optimization Loop</strong><small data-i18n="harness.oneComponent">Improve one reusable component at a time</small></div>
-          <div class="meta-loop-orbit" aria-hidden="true">
-            <div class="meta-loop-step meta-loop-step--observe"><span>01</span><strong data-i18n="harness.observe">Observe</strong><small data-i18n="harness.observeDetail">Rollouts & traces</small></div>
-            <div class="meta-loop-step meta-loop-step--diagnose"><span>02</span><strong data-i18n="harness.diagnose">Diagnose</strong><small data-i18n="harness.diagnoseDetail">Repeated failures</small></div>
-            <div class="meta-loop-step meta-loop-step--update"><span>03</span><strong data-i18n="harness.update">Update</strong><small data-i18n="harness.updateDetail">One component</small></div>
-            <div class="meta-loop-step meta-loop-step--validate"><span>04</span><strong data-i18n="harness.validate">Validate</strong><small data-i18n="harness.validateDetail">Development gate</small></div>
-          </div>
-          <div class="poster-harness-core">
-            <div class="poster-harness-core__label"><span data-i18n="harness.optimized">Optimized system</span><strong>DesignHarness</strong></div>
-            <div class="harness-stage-list" id="harness-stage-list"></div>
-            <p data-i18n="harness.flow">Designer → render → evaluate → localized repair</p>
-          </div>
-          <p class="meta-loop-return"><span data-i18n="harness.accepted">Accepted state</span> <span data-i18n="harness.return">Re-enters the next artifact rollout</span></p>
-        </div>
-        <p class="harness-protocol"><span data-i18n="harness.separation">Evaluation separation</span> <span data-i18n="harness.protocol">Training evidence → candidate update → independent development gate → 100-paper final benchmark</span></p>
-        <div class="harness-detail" id="harness-detail" aria-live="polite">
-          <div>
-            <p class="harness-detail__index" id="harness-detail-index">01 / Context & Memory</p>
-            <h3 id="harness-detail-title">Ground the design before composition begins.</h3>
-          </div>
-          <dl>
-            <div><dt data-i18n="harness.input">Input</dt><dd id="harness-detail-input"></dd></div>
-            <div><dt data-i18n="harness.output">Output</dt><dd id="harness-detail-output"></dd></div>
-          </dl>
-        </div>
-        <figure class="paper-figure paper-figure--method" data-paper-figure="method">
-          <figcaption class="paper-figure__caption">
-            <span data-i18n="paperFigures.figure">Published research figure</span>
+        <figure class="method-figure" data-method-figure>
+          <figcaption class="method-figure__caption">
             <strong data-i18n="paperFigures.method">Method / AutoDesign and DesignHarness</strong>
           </figcaption>
-          <button type="button" class="paper-figure__panel" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/paper/method-detail.webp?v=20260727d" data-artifact-title="AutoDesign method and DesignHarness" data-artifact-new-tab="./assets/paper/method-detail.webp?v=20260727d" data-i18n-title="paperFigures.inspect" title="Inspect figure" aria-label="Inspect AutoDesign method and DesignHarness figure">
-            <img src="./assets/paper/method-detail.webp?v=20260727d" width="2779" height="1218" alt="AutoDesign method overview with the DesignHarness and Meta-Harness Optimization loop" data-i18n-alt="paperFigures.methodAlt">
+          <button type="button" class="method-figure__panel" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/paper/method-detail.webp?v=20260728a" data-artifact-title="AutoDesign method and DesignHarness" data-artifact-new-tab="./assets/paper/method-detail.webp?v=20260728a" data-i18n-title="paperFigures.inspect" title="Inspect figure" aria-label="Inspect AutoDesign method and DesignHarness figure">
+            <img src="./assets/paper/method-detail.webp?v=20260728a" width="2779" height="1218" alt="AutoDesign method overview with the DesignHarness and Meta-Harness Optimization loop" data-i18n-alt="paperFigures.methodAlt">
             <span aria-hidden="true">↗</span>
           </button>
         </figure>
@@ -367,16 +324,6 @@
               <p data-i18n="results.transferBody">Every evaluated configuration improves when the optimized DesignHarness is attached.</p>
             </div>
             <div class="transfer-chart" id="transfer-chart" aria-label="Matched DesignHarness improvement across seven configurations" data-i18n-aria-label="results.transferAria"></div>
-            <figure class="paper-figure paper-figure--benefit" data-paper-figure="benefit">
-              <figcaption class="paper-figure__caption">
-                <span data-i18n="paperFigures.figure">Published research figure</span>
-                <strong data-i18n="paperFigures.benefit">Benefit / Paired DesignHarness gains</strong>
-              </figcaption>
-              <button type="button" class="paper-figure__panel" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/paper/harness-benefit.webp?v=20260727d" data-artifact-title="Paired DesignHarness gains" data-artifact-new-tab="./assets/paper/harness-benefit.webp?v=20260727d" data-i18n-title="paperFigures.inspect" title="Inspect figure" aria-label="Inspect paired DesignHarness gains figure">
-                <img src="./assets/paper/harness-benefit.webp?v=20260727d" width="1844" height="1433" alt="DesignHarness benefit across seven fixed configurations" data-i18n-alt="paperFigures.benefitAlt">
-                <span aria-hidden="true">↗</span>
-              </button>
-            </figure>
           </div>
           <div class="result-pair">
             <div class="result-block result-block--leaderboard">
@@ -401,17 +348,10 @@
           </div>
         </section>
 
-        <p class="future-work"><span data-i18n="results.futureLabel">Next research boundary</span> <span data-i18n="results.future">Generalize the learned harness update beyond posters without overstating evidence from the validated poster domain.</span></p>
-        <figure class="paper-figure paper-figure--future" data-paper-figure="future">
-          <figcaption class="paper-figure__caption">
-            <span data-i18n="paperFigures.figure">Published research figure</span>
-            <strong data-i18n="paperFigures.future">Future direction / Multimodal In, Multimodal Out</strong>
-          </figcaption>
-          <button type="button" class="paper-figure__panel" data-open-artifact data-artifact-kind="image" data-artifact-src="./assets/paper/future-mimo.webp?v=20260727d" data-artifact-title="Future direction: multimodal-in, multimodal-out design system" data-artifact-new-tab="./assets/paper/future-mimo.webp?v=20260727d" data-i18n-title="paperFigures.inspect" title="Inspect figure" aria-label="Inspect the multimodal-in, multimodal-out design system figure">
-            <img src="./assets/paper/future-mimo.webp?v=20260727d" width="2339" height="1653" alt="Future direction diagram for a multimodal-in, multimodal-out design system" data-i18n-alt="paperFigures.futureAlt">
-            <span aria-hidden="true">↗</span>
-          </button>
-        </figure>
+        <section class="future-work" aria-labelledby="future-work-title">
+          <p class="future-work__label" id="future-work-title" data-i18n="results.futureLabel">Future directions</p>
+          <p class="future-work__body" data-i18n="results.future">AutoDesign is currently validated for academic-poster DesignHarnesses. We are extending the same Meta-Harness Optimization process to slides, research webpages, and narrated video, each with its own artifact contract and evaluation protocol.</p>
+        </section>
       </section>
 
       <section class="resources" id="resources" aria-labelledby="resources-title">
@@ -458,7 +398,7 @@
       <a id="artifact-viewer-external" target="_blank" rel="noreferrer" data-i18n="viewer.newTab">Open in new tab</a>
     </dialog>
 
-    <script src="./site-data.js?v=20260727d"></script>
+    <script src="./site-data.js?v=20260728a"></script>
     <script type="importmap">
       {
         "imports": {
@@ -467,8 +407,8 @@
         }
       }
     </script>
-    <script type="module" src="./i18n.js?v=20260727d"></script>
-    <script type="module" src="./language-menu.js?v=20260727d"></script>
-    <script type="module" src="./app.js?v=20260727d"></script>
+    <script type="module" src="./i18n.js?v=20260728a"></script>
+    <script type="module" src="./language-menu.js?v=20260728a"></script>
+    <script type="module" src="./app.js?v=20260728a"></script>
   </body>
 </html>

@@ -47,8 +47,8 @@ expect(
   "stored locale must take priority over browser language",
 );
 expect(
-  resolveLocale({ search: "", stored: null, languages: ["pt-BR", "ko-KR", "ar-AE"] }) === "ko",
-  "browser language fallback must scan all preferred languages",
+  resolveLocale({ search: "", stored: null, languages: ["pt-BR", "ko-KR", "ar-AE"] }) === "en",
+  "fresh visits must default to English instead of browser language",
 );
 expect(
   resolveLocale({ search: "?lang=xx", stored: null, languages: ["pt-BR"] }) === "en",
@@ -126,10 +126,12 @@ expect(index.includes("data-language-switcher"), "page must include a language s
 for (const locale of SUPPORTED_LOCALES) {
   expect(index.includes(`data-locale=\"${locale}\"`), `language switcher must include ${locale}`);
 }
-expect(index.includes("./i18n.js?v=20260727d"), "page must load the current versioned i18n runtime");
-expect(readFileSync(resolve(root, "i18n.js"), "utf8").includes("./locales.js?v=20260727d"), "i18n runtime must version its locale catalog import");
-expect(readFileSync(resolve(root, "language-menu.js"), "utf8").includes("./i18n.js?v=20260727d"), "language menu must version its i18n runtime import");
-expect(readFileSync(resolve(root, "language-menu.js"), "utf8").includes("./locales.js?v=20260727d"), "language menu must version its locale metadata import");
+expect(index.includes("./i18n.js?v=20260728a"), "page must load the current versioned i18n runtime");
+expect(readFileSync(resolve(root, "i18n.js"), "utf8").includes("./locales.js?v=20260728a"), "i18n runtime must version its locale catalog import");
+expect(readFileSync(resolve(root, "language-menu.js"), "utf8").includes("./i18n.js?v=20260728a"), "language menu must version its i18n runtime import");
+expect(readFileSync(resolve(root, "language-menu.js"), "utf8").includes("./locales.js?v=20260728a"), "language menu must version its locale metadata import");
+expect(!readFileSync(resolve(root, "i18n.js"), "utf8").includes("navigator.languages"), "i18n must not infer the default language from the browser");
+expect(readFileSync(resolve(root, "i18n.js"), "utf8").includes('const STORAGE_KEY = "autodesign.locale.v2"'), "i18n must isolate new manual language preferences from legacy auto-detected values");
 
 if (failures.length) {
   console.error(`i18n checks failed (${failures.length}):`);

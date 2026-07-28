@@ -1,6 +1,6 @@
-import { LOCALES, MESSAGES, SUPPORTED_LOCALES } from "./locales.js?v=20260727d";
+import { LOCALES, MESSAGES, SUPPORTED_LOCALES } from "./locales.js?v=20260728a";
 
-const STORAGE_KEY = "autodesign.locale";
+const STORAGE_KEY = "autodesign.locale.v2";
 let activeLocale = "en";
 
 export function normalizeLocale(value) {
@@ -19,11 +19,10 @@ export function normalizeLocale(value) {
   return null;
 }
 
-export function resolveLocale({ search = "", stored = null, languages = [] } = {}) {
+export function resolveLocale({ search = "", stored = null } = {}) {
   const requested = new URLSearchParams(search).get("lang");
   return normalizeLocale(requested)
     ?? normalizeLocale(stored)
-    ?? languages.map(normalizeLocale).find(Boolean)
     ?? "en";
 }
 
@@ -88,12 +87,17 @@ export function setLocale(locale, { persist = true, updateUrl = true, announce =
 
 export function initI18n() {
   if (typeof window === "undefined" || typeof document === "undefined") return activeLocale;
+  const storedLocale = normalizeLocale(window.localStorage?.getItem(STORAGE_KEY));
+  window.localStorage?.removeItem("autodesign.locale");
   const locale = resolveLocale({
     search: window.location.search,
-    stored: window.localStorage?.getItem(STORAGE_KEY),
-    languages: navigator.languages ?? [navigator.language],
+    stored: storedLocale,
   });
-  return setLocale(locale, { persist: true, updateUrl: false, announce: false });
+  return setLocale(locale, {
+    persist: Boolean(storedLocale),
+    updateUrl: false,
+    announce: false,
+  });
 }
 
 if (typeof window !== "undefined" && typeof document !== "undefined") initI18n();

@@ -22,7 +22,6 @@ const requiredIds = [
   "evolution",
   "evolution-rail",
   "harness",
-  "harness-stage-list",
   "results",
   "transfer-chart",
   "resources",
@@ -209,7 +208,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   if (!html.includes('type="module"')) failures.push("missing ES module entrypoint");
   expect(html.includes('id="language-menu-trigger"'), "compact language menu trigger is missing");
   expect(html.includes('id="language-menu"'), "compact language menu panel is missing");
-  expect(html.includes('./language-menu.js?v=20260727d'), "language menu runtime is missing or stale");
+  expect(html.includes('./language-menu.js?v=20260728a'), "language menu runtime is missing or stale");
   if (!html.includes('type="importmap"')) failures.push("missing import map");
   if (!html.includes('"three": "./vendor/three/three.module.min.js"')) failures.push("missing local three import");
   if (!html.includes('"three/addons/": "./vendor/three/addons/"')) failures.push("missing local three addons import");
@@ -264,27 +263,26 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   expect(html.includes('class="hero-suite"'), "Hero suite message is missing");
   expect(html.includes('class="artifact-suite-flow"'), "Artifact suite workflow is missing");
   expect(html.includes('class="hero-title__agent"'), "hero Design Agent mark is missing");
-  expect(html.includes('assets/brand/design-agent-mark.webp?v=20260727d'), "hero Design Agent mark must bypass stale deployment fallbacks");
+  expect(html.includes('assets/brand/design-agent-mark.webp?v=20260728a'), "hero Design Agent mark must bypass stale deployment fallbacks");
   expect(html.includes('class="evolution-mascot-strip"'), "Design Agent evolution strip is missing");
-  expect(html.includes('assets/brand/design-agent-evolution.webp?v=20260727d'), "Design Agent evolution strip must bypass stale deployment fallbacks");
+  expect(html.includes('assets/brand/design-agent-evolution.webp?v=20260728a'), "Design Agent evolution strip must bypass stale deployment fallbacks");
   for (const token of ["data-slide-carousel", "data-slide-prev", "data-slide-next", 'data-artifact-kind="slides"']) {
     expect(html.includes(token), "interactive slide showcase missing " + token);
   }
   expect(html.includes("longcat-next-poster.webp?v=20260727c"), "LongCat-Next poster source must bypass stale deployment fallbacks");
   expect(html.includes("longcat-next-slide-{index}.webp?v=675b8b1"), "Slide sources must bypass stale deployment fallbacks");
   expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
-  const paperFigureContracts = [
-    ["figure1", "assets/paper/figure1-evolution.webp"],
-    ["figure1", "assets/paper/figure1-benchmark.webp"],
-    ["method", "assets/paper/method-detail.webp"],
-    ["benefit", "assets/paper/harness-benefit.webp"],
-    ["future", "assets/paper/future-mimo.webp"],
-  ];
-  for (const [figure, asset] of paperFigureContracts) {
-    expect(html.includes(`data-paper-figure="${figure}"`), `paper figure section is missing ${figure}`);
-    expect(html.includes(`${asset}?v=20260727d`), `paper figure asset is missing ${asset}`);
+  expect(html.includes("data-method-figure"), "detailed method figure is missing");
+  expect(html.includes("assets/paper/method-detail.webp?v=20260728a"), "detailed method asset is missing");
+  for (const asset of [
+    "assets/paper/figure1-evolution.webp",
+    "assets/paper/figure1-benchmark.webp",
+    "assets/paper/harness-benefit.webp",
+    "assets/paper/future-mimo.webp",
+  ]) {
+    expect(!html.includes(asset), `removed paper figure remains in the public page: ${asset}`);
   }
-  const cacheVersion = "20260727d";
+  const cacheVersion = "20260728a";
   const cacheChain = [
     ["index.html", html, `styles.css?v=${cacheVersion}`],
     ["index.html", html, `site-data.js?v=${cacheVersion}`],
@@ -312,10 +310,8 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   expect(html.includes("twelve editable frames"), "Slides narrative must describe twelve editable frames");
   expect(!/\b(?:10 slides|ten editable frames)\b/i.test(html), "stale ten-slide copy remains");
   for (const symbol of [
-    "Meta-Harness Optimization Loop",
-    "meta-loop-orbit",
-    "poster-harness-core",
-    "Accepted state",
+    "data-method-figure",
+    "Method / AutoDesign and DesignHarness",
     "Paper communication suite / research generalization",
     "10-paper controlled subset",
     "100-paper PosterBench main track",
@@ -339,7 +335,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     if (!html.includes(symbol)) failures.push("index.html missing " + symbol);
   }
 
-  expect(html.includes("site-data.js?v=20260727d"), "Benchmark data source must bypass stale browser caches");
+  expect(html.includes("site-data.js?v=20260728a"), "Benchmark data source must bypass stale browser caches");
   for (const score of ["78.32", "70.87", "69.45"]) {
     expect(html.includes(score), "Leaderboard missing remeasured score " + score);
   }
@@ -434,7 +430,6 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     "bindSceneFocus",
     "bindSemanticNavigation",
     "renderEvolution",
-    "renderHarness",
     "renderTransferResults",
     "bindArtifactShowcase",
     'controller?.goToState("system")',
@@ -591,12 +586,12 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
       .map((match) => [match[1], match[2].toLowerCase()]),
   );
   for (const [name, foregroundToken, background, minimum] of [
-    ["light-surface focus ring", "focus-ring-dark", "#efece3", 3],
+    ["light-surface focus ring", "focus-ring-dark", "#ffffff", 3],
     ["dark-surface focus ring", "focus-ring-light", "#07090c", 3],
     ["unselected artifact tab", "artifact-tab-text", "#edf1ed", 4.5],
     ["artifact tab number", "artifact-tab-number", "#edf1ed", 4.5],
     ["artifact metadata", "artifact-metadata", "#edf1ed", 4.5],
-    ["poster dialog metadata", "dialog-metadata", "#efece3", 4.5],
+    ["poster dialog metadata", "dialog-metadata", "#ffffff", 4.5],
     ["dark-stage metadata", "stage-metadata", "#101719", 4.5],
   ]) {
     const foreground = colorTokens.get(foregroundToken);
@@ -638,9 +633,8 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     ".fallback-output",
     ".evidence::before",
     ".evolution-workbench",
-    ".harness-stage-list",
-    ".paper-figure",
-    ".paper-figure__panel",
+    ".method-figure",
+    ".method-figure__panel",
     ".transfer-chart",
     ".resource-list",
   ]) {
@@ -951,7 +945,6 @@ for (const artifact of [
 }
 
 const assets = [
-  "assets/fonts/fraunces-latin.woff2",
   "assets/fonts/inter-tight-latin.woff2",
   ...posterSlugs.flatMap((slug) => [
     "assets/posters/" + slug + "-640.webp",
@@ -959,13 +952,7 @@ const assets = [
   ]),
   ...["00", "01", "02", "03", "04"].map((id) => `assets/evolution/evolution-${id}.webp`),
   ...["slide-03", "webpage", "video-poster"].map((slug) => `assets/studies/${slug}.webp`),
-  ...[
-    "assets/paper/figure1-evolution.webp",
-    "assets/paper/figure1-benchmark.webp",
-    "assets/paper/method-detail.webp",
-    "assets/paper/harness-benefit.webp",
-    "assets/paper/future-mimo.webp",
-  ],
+  "assets/paper/method-detail.webp",
   ...promotionalAssets,
 ];
 

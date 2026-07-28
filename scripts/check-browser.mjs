@@ -180,14 +180,14 @@ async function assertCacheChain(page) {
       return `${url.pathname}${url.search}`;
     }));
   for (const resource of [
-    "/styles.css?v=20260727d",
-    "/site-data.js?v=20260727d",
-    "/i18n.js?v=20260727d",
-    "/locales.js?v=20260727d",
-    "/language-menu.js?v=20260727d",
-    "/app.js?v=20260727d",
-    "/three-scene.js?v=20260727d",
-    "/artifact-showcase.js?v=20260727d",
+    "/styles.css?v=20260728a",
+    "/site-data.js?v=20260728a",
+    "/i18n.js?v=20260728a",
+    "/locales.js?v=20260728a",
+    "/language-menu.js?v=20260728a",
+    "/app.js?v=20260728a",
+    "/three-scene.js?v=20260728a",
+    "/artifact-showcase.js?v=20260728a",
   ]) {
     assert.ok(resources.includes(resource), `cache chain did not request ${resource}: ${JSON.stringify(resources)}`);
   }
@@ -255,33 +255,44 @@ async function assertMobileViewer(page) {
   assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
 }
 
-async function assertPaperFigures(page) {
-  const figures = [
-    ["figure1", 2],
-    ["method", 1],
-    ["benefit", 1],
-    ["future", 1],
-  ];
-  for (const [name, expectedPanels] of figures) {
-    const figure = page.locator(`[data-paper-figure="${name}"]`);
-    await figure.scrollIntoViewIfNeeded();
-    const panels = figure.locator("[data-open-artifact]");
-    assert.equal(await panels.count(), expectedPanels, `${name} paper figure panel count is incorrect`);
-    for (const image of await figure.locator("img").all()) {
-      assert.ok(await image.evaluate((element) => element.complete && element.naturalWidth > 0),
-        `${name} paper figure did not load`);
-    }
-    const trigger = panels.first();
-    await trigger.click();
-    const image = page.locator("#artifact-viewer-stage img");
-    await image.waitFor({ state: "visible" });
-    assert.ok(await image.evaluate((element) => element.complete && element.naturalWidth > 0),
-      `${name} paper figure inspector did not load`);
-    await page.keyboard.press("Escape");
-    await page.locator("#artifact-viewer").waitFor({ state: "hidden" });
-    assert.equal(await trigger.evaluate((element) => document.activeElement === element), true,
-      `${name} paper figure inspector did not restore focus`);
-  }
+async function assertMethodFigure(page) {
+  const figure = page.locator("[data-method-figure]");
+  assert.equal(await figure.count(), 1, "the public page must expose one detailed method figure");
+  await figure.scrollIntoViewIfNeeded();
+  const trigger = figure.locator("[data-open-artifact]");
+  assert.equal(await trigger.count(), 1, "detailed method figure must have one inspector trigger");
+  const source = await figure.locator("img");
+  assert.ok(await source.evaluate((element) => element.complete && element.naturalWidth > 0),
+    "detailed method figure did not load");
+  await trigger.click();
+  const image = page.locator("#artifact-viewer-stage img");
+  await image.waitFor({ state: "visible" });
+  assert.ok(await image.evaluate((element) => element.complete && element.naturalWidth > 0),
+    "detailed method figure inspector did not load");
+  await page.keyboard.press("Escape");
+  await page.locator("#artifact-viewer").waitFor({ state: "hidden" });
+  assert.equal(await trigger.evaluate((element) => document.activeElement === element), true,
+    "detailed method figure inspector did not restore focus");
+}
+
+async function runDefaultLocale(browser, url) {
+  const context = await browser.newContext({ locale: "zh-CN", viewport: { width: 1280, height: 800 } });
+  const page = await context.newPage();
+  await page.addInitScript(() => localStorage.setItem("autodesign.locale", "zh-CN"));
+  await page.goto(url, { waitUntil: "networkidle" });
+  assert.equal(await page.locator("html").getAttribute("lang"), "en",
+    "a fresh visit must default to English instead of browser or legacy stored language");
+  assert.equal(await page.locator("[data-language-current]").textContent(), "EN");
+  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), null,
+    "legacy auto-detected language preference must be cleared");
+
+  await page.locator("#language-menu-trigger").click();
+  await page.locator('#language-menu [data-locale="zh-CN"]').click();
+  assert.equal(await page.locator("html").getAttribute("lang"), "zh-CN");
+  await page.goto(url, { waitUntil: "networkidle" });
+  assert.equal(await page.locator("html").getAttribute("lang"), "zh-CN",
+    "a manually selected language must persist after an English-default visit");
+  await context.close();
 }
 
 async function assertBrandArtwork(page) {
@@ -361,7 +372,7 @@ async function runLocales(browser, url) {
   const localeCatalogResource = await page.evaluate(() => performance.getEntriesByType("resource")
     .map((entry) => entry.name)
     .find((name) => name.includes("/locales.js")));
-  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260727d$/, "locale catalog request must bypass stale browser caches");
+  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260728a$/, "locale catalog request must bypass stale browser caches");
   await assertCacheChain(page);
   assert.equal(await currentLabel.textContent(), "EN");
   assert.equal(await menu.isHidden(), true);
@@ -382,7 +393,7 @@ async function runLocales(browser, url) {
   assert.equal(await menu.locator('[data-locale="ko"]').getAttribute("aria-checked"), "true");
   assert.equal(await currentLabel.textContent(), "한국어");
   assert.equal(await menu.isHidden(), true);
-  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), "ko");
+  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale.v2")), "ko");
   await assertNoOverflow(page);
 
   await page.reload({ waitUntil: "networkidle" });
@@ -411,7 +422,7 @@ async function runLocales(browser, url) {
   await assertPaperTerminology(page);
   assert.equal(await menu.locator('[data-locale="zh-CN"]').getAttribute("aria-checked"), "true");
   assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
-  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), "zh-CN");
+  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale.v2")), "zh-CN");
   await assertResearchAccess(page, {
     layout: "desktop",
     labels: {
@@ -442,7 +453,7 @@ async function runLocales(browser, url) {
   assert.match(await page.locator("#evolution-state-detail").textContent(), /Optimizer Code Agent/);
   assert.equal(await menu.locator('[data-locale="ar"]').getAttribute("aria-checked"), "true");
   assert.equal(await currentLabel.textContent(), "العربية");
-  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), "ar");
+  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale.v2")), "ar");
   assert.equal(await page.locator(".language-switcher").evaluate((element) => getComputedStyle(element).direction), "ltr");
   await assertResearchAccess(page, {
     direction: "rtl",
@@ -726,7 +737,7 @@ async function runDesktop(browser, url) {
     assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
   }
 
-  await assertPaperFigures(page);
+  await assertMethodFigure(page);
 
   await page.locator("#scene-shell").scrollIntoViewIfNeeded();
   await page.waitForFunction(() => !document.querySelector(".site-header")?.classList.contains("site-header--paper"));
@@ -875,6 +886,7 @@ try {
     ...(browserName === "chromium" && browserChannel !== "chromium" ? { channel: browserChannel } : {}),
     headless: true,
   });
+  await runDefaultLocale(browser, url);
   await runLocales(browser, url);
   await runDesktop(browser, url);
   await runMobile(browser, url, { width: 430, height: 932 });
