@@ -2512,6 +2512,18 @@ html.dialog-open body {
   background: rgba(8, 11, 14, 0.58);
   color: #fff;
   font-size: 0.72rem;
+  line-height: 1;
+  cursor: pointer;
+  appearance: none;
+  padding: 0;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+  z-index: 1;
+}
+
+.video-specimen__play:hover {
+  transform: scale(1.08);
+  border-color: #7be0c3;
+  background: rgba(8, 11, 14, 0.82);
 }
 
 .artifact-study__copy {

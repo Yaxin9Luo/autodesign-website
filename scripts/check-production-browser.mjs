@@ -42,6 +42,28 @@ try {
   assert.equal(await page.locator("#artifact-viewer-type").textContent(), "Slide deck");
   await page.keyboard.press("Escape");
 
+  await page.locator("#artifact-tab-video").click();
+  const previewPlay = page.locator("#artifact-panel-video .video-specimen__play[data-open-artifact]");
+  assert.equal(await previewPlay.count(), 1, "video preview must expose one playable viewer control");
+  await previewPlay.click();
+  const fullVideo = page.locator("#artifact-viewer-stage video");
+  await fullVideo.waitFor({ state: "visible" });
+  await fullVideo.evaluate((video) => new Promise((resolveReady, reject) => {
+    if (video.readyState >= HTMLMediaElement.HAVE_METADATA) resolveReady();
+    else {
+      video.addEventListener("loadedmetadata", resolveReady, { once: true });
+      video.addEventListener("error", () => reject(new Error("Hosted conference video failed to load")), { once: true });
+    }
+  }));
+  assert.equal(await fullVideo.getAttribute("controls"), "");
+  assert.equal(await fullVideo.locator('track[kind="captions"][srclang="en"]').count(), 1);
+  await fullVideo.evaluate((video) => video.play());
+  await page.waitForFunction(() => !document.querySelector("#artifact-viewer-stage video")?.paused);
+  await fullVideo.evaluate((video) => video.pause());
+  await page.keyboard.press("Escape");
+  assert.equal(await previewPlay.evaluate((element) => document.activeElement === element), true,
+    "video viewer did not restore focus to its preview play control");
+
   const methodFigure = page.locator('[data-method-figure] [data-open-artifact]');
   await methodFigure.scrollIntoViewIfNeeded();
   await methodFigure.click();

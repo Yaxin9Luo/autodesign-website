@@ -180,14 +180,14 @@ async function assertCacheChain(page) {
       return `${url.pathname}${url.search}`;
     }));
   for (const resource of [
-    "/styles.css?v=20260728b",
-    "/site-data.js?v=20260728b",
-    "/i18n.js?v=20260728b",
-    "/locales.js?v=20260728b",
-    "/language-menu.js?v=20260728b",
-    "/app.js?v=20260728b",
-    "/three-scene.js?v=20260728b",
-    "/artifact-showcase.js?v=20260728b",
+    "/styles.css?v=20260728c",
+    "/site-data.js?v=20260728c",
+    "/i18n.js?v=20260728c",
+    "/locales.js?v=20260728c",
+    "/language-menu.js?v=20260728c",
+    "/app.js?v=20260728c",
+    "/three-scene.js?v=20260728c",
+    "/artifact-showcase.js?v=20260728c",
   ]) {
     assert.ok(resources.includes(resource), `cache chain did not request ${resource}: ${JSON.stringify(resources)}`);
   }
@@ -372,7 +372,7 @@ async function runLocales(browser, url) {
   const localeCatalogResource = await page.evaluate(() => performance.getEntriesByType("resource")
     .map((entry) => entry.name)
     .find((name) => name.includes("/locales.js")));
-  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260728b$/, "locale catalog request must bypass stale browser caches");
+  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260728c$/, "locale catalog request must bypass stale browser caches");
   await assertCacheChain(page);
   assert.equal(await currentLabel.textContent(), "EN");
   assert.equal(await menu.isHidden(), true);
@@ -645,7 +645,10 @@ async function runDesktop(browser, url) {
 
   for (const name of ["poster", "slides", "web", "video"]) {
     await page.locator(`#artifact-tab-${name}`).click();
-    const trigger = page.locator(`#artifact-panel-${name} [data-open-artifact]`);
+    const triggerSelector = name === "video"
+      ? ".video-specimen__play[data-open-artifact]"
+      : "[data-open-artifact]";
+    const trigger = page.locator(`#artifact-panel-${name} ${triggerSelector}`);
     const kind = await trigger.getAttribute("data-artifact-kind");
     const source = await trigger.getAttribute("data-artifact-src");
     await trigger.click();
