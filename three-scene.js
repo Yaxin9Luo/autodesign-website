@@ -5,7 +5,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { createIntroAudio } from "./intro-audio.js";
 import { createIntroScene } from "./intro-scene.js";
-import { t } from "./i18n.js?v=20260728a";
+import { t } from "./i18n.js?v=20260728b";
 import {
   INTRO_ARRIVAL_SECONDS,
   INTRO_CHARGE_THRESHOLD,
@@ -28,9 +28,9 @@ import {
 
 const COLORS = Object.freeze({
   graphite: 0x07090c,
-  frame: 0x252a31,
-  edge: 0x69736f,
-  paper: 0xefece3,
+  frame: 0x1b2728,
+  edge: 0x405250,
+  paper: 0xf7f9f5,
   ink: 0x13191c,
   teal: 0x63d6b3,
   yellow: 0xf2c14e,
@@ -38,7 +38,9 @@ const COLORS = Object.freeze({
   blue: 0x4777ff,
 });
 const POSTER_ASPECT = 2048 / 1025;
-const POSTER_TEXTURE_LOAD_PROGRESS = 0.64;
+const POSTER_TEXTURE_LOAD_PROGRESS = 0;
+const CANVAS_TEXTURE_SCALE = 2;
+const MAX_TEXTURE_ANISOTROPY = 8;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const mix = (from, to, amount) => from + (to - from) * amount;
@@ -62,7 +64,9 @@ function makeCanvasTexture(width, height, draw) {
   draw(context, width, height);
   const texture = new THREE.CanvasTexture(surface);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
+  texture.anisotropy = MAX_TEXTURE_ANISOTROPY;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
   return texture;
 }
 
@@ -75,7 +79,10 @@ function drawDocumentLines(context, x, y, width, count, gap) {
 }
 
 function makeSourceTexture(kind, accent) {
-  return makeCanvasTexture(640, 400, (context, width, height) => {
+  const width = 640;
+  const height = 400;
+  return makeCanvasTexture(width * CANVAS_TEXTURE_SCALE, height * CANVAS_TEXTURE_SCALE, (context) => {
+    context.scale(CANVAS_TEXTURE_SCALE, CANVAS_TEXTURE_SCALE);
     context.fillStyle = "#eef0ea";
     context.fillRect(0, 0, width, height);
     context.fillStyle = accent;
@@ -140,7 +147,10 @@ function makeSourceTexture(kind, accent) {
 }
 
 function makeModuleTexture(index, name) {
-  return makeCanvasTexture(640, 180, (context, width, height) => {
+  const width = 640;
+  const height = 180;
+  return makeCanvasTexture(width * CANVAS_TEXTURE_SCALE, height * CANVAS_TEXTURE_SCALE, (context) => {
+    context.scale(CANVAS_TEXTURE_SCALE, CANVAS_TEXTURE_SCALE);
     context.fillStyle = "#e9ebe5";
     context.fillRect(0, 0, width, height);
     context.fillStyle = index === 4 ? "#20c9b1" : "#263134";
@@ -159,7 +169,10 @@ function makeModuleTexture(index, name) {
 }
 
 function makeFallbackPosterTexture(title) {
-  return makeCanvasTexture(1024, 512, (context, width, height) => {
+  const width = 1024;
+  const height = 512;
+  return makeCanvasTexture(width * CANVAS_TEXTURE_SCALE, height * CANVAS_TEXTURE_SCALE, (context) => {
+    context.scale(CANVAS_TEXTURE_SCALE, CANVAS_TEXTURE_SCALE);
     context.fillStyle = "#f4f5f1";
     context.fillRect(0, 0, width, height);
     context.fillStyle = "#08679b";
@@ -328,17 +341,17 @@ function createArtifactSceneRuntime({
     renderer.forceContextLoss?.();
   });
 
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.03;
+  renderer.toneMapping = THREE.AgXToneMapping;
+  renderer.toneMappingExposure = 1;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setClearColor(COLORS.graphite, 1);
   renderer.shadowMap.enabled = !saveData && window.innerWidth > 760;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.info.autoReset = false;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(COLORS.graphite);
-  scene.fog = new THREE.Fog(COLORS.graphite, 14, 32);
+  scene.fog = new THREE.Fog(COLORS.graphite, 20, 38);
   registerRollback(() => {
     const geometries = new Set();
     const materials = new Set();
@@ -394,45 +407,46 @@ function createArtifactSceneRuntime({
     wide: new THREE.Vector3(0, 0.05, -1.25),
   });
 
-  const ambient = new THREE.HemisphereLight(0xddeae4, 0x07090c, 0.62);
-  const key = new THREE.DirectionalLight(0xfff0d1, 3.4);
+  const ambient = new THREE.HemisphereLight(0xe8f1ee, 0x07090c, 0.72);
+  const key = new THREE.DirectionalLight(0xf3f7f5, 2.85);
   key.position.set(-5.5, 7.5, 8.5);
   key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.normalBias = 0.012;
   key.shadow.camera.left = -10;
   key.shadow.camera.right = 10;
   key.shadow.camera.top = 9;
   key.shadow.camera.bottom = -9;
-  const sideLight = new THREE.DirectionalLight(0x6e86ff, 1.85);
+  const sideLight = new THREE.DirectionalLight(0x73d8c3, 0.92);
   sideLight.position.set(8, 1.5, -4);
-  const rimLight = new THREE.PointLight(COLORS.teal, 13, 16, 1.65);
+  const rimLight = new THREE.PointLight(COLORS.teal, 8.4, 16, 1.65);
   rimLight.position.set(2.4, -2.35, 4.4);
-  const outputLight = new THREE.SpotLight(0xffdba8, 10, 18, 0.48, 0.7, 1.5);
+  const outputLight = new THREE.SpotLight(0xe2fff5, 5.2, 18, 0.48, 0.7, 1.5);
   outputLight.position.set(7, 4.2, 7);
   outputLight.target.position.set(3.7, 0, 0);
   scene.add(ambient, key, sideLight, rimLight, outputLight, outputLight.target);
 
   const frameMaterial = new THREE.MeshStandardMaterial({
     color: COLORS.frame,
-    metalness: 0.82,
-    roughness: 0.28,
+    metalness: 0.54,
+    roughness: 0.48,
   });
   const edgeMaterial = new THREE.MeshStandardMaterial({
     color: COLORS.edge,
-    metalness: 0.72,
-    roughness: 0.34,
+    metalness: 0.48,
+    roughness: 0.52,
   });
   const porcelainMaterial = new THREE.MeshStandardMaterial({
     color: COLORS.paper,
     metalness: 0.04,
-    roughness: 0.46,
+    roughness: 0.6,
   });
   const glassMaterial = new THREE.MeshPhysicalMaterial({
     color: COLORS.teal,
     transparent: true,
-    opacity: 0.14,
+    opacity: 0.075,
     metalness: 0.08,
-    roughness: 0.16,
+    roughness: 0.28,
     transmission: 0.08,
     side: THREE.DoubleSide,
     depthWrite: false,
@@ -463,61 +477,36 @@ function createArtifactSceneRuntime({
   scene.add(engineRoot);
 
   const machine = new THREE.Group();
-  machine.rotation.z = -0.055;
+  machine.rotation.z = -0.018;
   engineRoot.add(machine);
 
-  const backing = box(3.18, 4.5, 0.38, frameMaterial);
+  const backing = box(3.26, 4.72, 0.18, frameMaterial);
   backing.position.set(0.12, 0, -0.76);
   machine.add(backing);
 
   const frameParts = [
-    [-1.62, 0.08, -0.38, 0.18, 4.92, 0.42],
-    [1.78, -0.22, -0.3, 0.2, 4.28, 0.4],
-    [0.08, 2.39, -0.36, 4.58, 0.17, 0.38],
-    [0.65, -2.29, -0.32, 3.38, 0.18, 0.4],
-    [-2.94, 0.9, -0.22, 2.82, 0.13, 0.28],
-    [3.04, -0.92, -0.15, 2.86, 0.14, 0.3],
+    [-1.66, 0, -0.38, 0.09, 4.96, 0.18],
+    [1.9, 0, -0.38, 0.09, 4.96, 0.18],
+    [0.12, 2.43, -0.36, 3.66, 0.08, 0.18],
+    [0.12, -2.43, -0.36, 3.66, 0.08, 0.18],
   ];
   frameParts.forEach(([x, y, z, width, height, depth], index) => {
-    const rail = box(width, height, depth, index > 3 ? edgeMaterial : frameMaterial);
+    const rail = box(width, height, depth, index > 1 ? edgeMaterial : frameMaterial);
     rail.position.set(x, y, z);
     machine.add(rail);
   });
 
-  for (let index = 0; index < 2; index += 1) {
-    const layer = box(3.45, 4.62, 0.035, glassMaterial.clone());
-    layer.position.set(-0.04 + index * 0.18, 0.03 - index * 0.1, -0.48 + index * 0.16);
-    layer.rotation.z = -0.02 + index * 0.035;
-    machine.add(layer);
-  }
+  const machineGlow = box(3.14, 4.54, 0.025, glassMaterial.clone());
+  machineGlow.position.set(0.12, 0, -0.62);
+  machine.add(machineGlow);
 
   const moduleNames = ["Context", "Designer", "Render", "Evaluate", "Repair"];
   const moduleBases = [
-    [-0.54, 1.52, 0.12, -0.055],
-    [0.32, 0.77, 0.39, 0.025],
-    [-0.18, 0.02, 0.66, -0.02],
-    [0.47, -0.75, 0.93, 0.045],
-    [-0.2, -1.53, 1.2, -0.035],
-  ];
-  const translucentModuleMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x9fb6b0,
-    transparent: true,
-    opacity: 0.72,
-    metalness: 0.08,
-    roughness: 0.2,
-    transmission: 0.08,
-  });
-  const evaluateModuleMaterial = new THREE.MeshStandardMaterial({
-    color: 0x353b42,
-    metalness: 0.72,
-    roughness: 0.3,
-  });
-  const moduleBodyMaterials = [
-    porcelainMaterial,
-    translucentModuleMaterial,
-    porcelainMaterial,
-    evaluateModuleMaterial,
-    porcelainMaterial,
+    [0.04, 1.55, 0.08, -0.016],
+    [0.08, 0.78, 0.16, 0.008],
+    [0.02, 0.01, 0.24, -0.006],
+    [0.09, -0.76, 0.32, 0.012],
+    [0.04, -1.53, 0.4, -0.01],
   ];
   const moduleGroups = moduleNames.map((name, index) => {
     const module = new THREE.Group();
@@ -527,19 +516,19 @@ function createArtifactSceneRuntime({
     module.rotation.z = rotation;
     module.userData.base = new THREE.Vector3(x, y, z);
 
-    const shell = box(2.18, 0.7, 0.48, index === 3 ? edgeMaterial : frameMaterial);
+    const shell = box(2.42, 0.72, 0.16, frameMaterial);
     shell.position.z = -0.04;
-    const plateMaterial = moduleBodyMaterials[index].clone();
-    const plate = box(1.96, 0.56, 0.42, plateMaterial);
+    const plateMaterial = new THREE.MeshBasicMaterial({ color: COLORS.paper, toneMapped: false });
+    const plate = box(2.26, 0.58, 0.08, plateMaterial);
     plate.position.z = 0.09;
     module.add(shell, plate);
 
     const labelTexture = registerTexture(makeModuleTexture(index, name));
     const label = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.84, 0.5),
+      new THREE.PlaneGeometry(2.14, 0.52),
       new THREE.MeshBasicMaterial({ map: labelTexture, transparent: true }),
     );
-    label.position.z = 0.31;
+    label.position.z = 0.145;
     module.add(label);
     module.userData.plate = plate;
     machine.add(module);
@@ -558,36 +547,34 @@ function createArtifactSceneRuntime({
     transparent: true,
     opacity: 0,
   });
-  const acceptedInsert = box(1.64, 0.07, 0.5, acceptedMaterial);
-  acceptedInsert.position.set(0, -0.38, 0.02);
+  const acceptedInsert = box(1.94, 0.045, 0.1, acceptedMaterial);
+  acceptedInsert.position.set(0, -0.345, 0.12);
   moduleGroups[4].add(acceptedInsert);
 
   const repairLock = new THREE.Group();
   repairLock.name = "Repair accepted-state lock";
-  const lockLeft = box(0.14, 0.86, 0.62, acceptedMaterial.clone());
-  const lockRight = box(0.14, 0.86, 0.62, acceptedMaterial.clone());
-  lockLeft.position.x = -1.32;
-  lockRight.position.x = 1.32;
+  const lockLeft = box(0.055, 0.78, 0.14, acceptedMaterial.clone());
+  const lockRight = box(0.055, 0.78, 0.14, acceptedMaterial.clone());
+  lockLeft.position.x = -1.27;
+  lockRight.position.x = 1.27;
   repairLock.add(lockLeft, lockRight);
   moduleGroups[4].add(repairLock);
 
   const sourceSpecs = [
-    ["paper", "#e86a52", -3.16, 1.78, 0.18, -0.13],
-    ["figure", "#63d6b3", -3.64, 0.7, -0.16, 0.08],
-    ["table", "#f2c14e", -3.12, -0.4, 0.26, -0.05],
-    ["equation", "#4777ff", -3.58, -1.48, -0.08, 0.11],
+    ["paper", "#e86a52", -3.08, 1.78, 0.18, -0.04],
+    ["figure", "#63d6b3", -3.14, 0.7, -0.1, 0.025],
+    ["table", "#f2c14e", -3.08, -0.4, 0.2, -0.02],
+    ["equation", "#4777ff", -3.12, -1.48, -0.05, 0.03],
   ];
   const activeSourceSpecs = saveData ? sourceSpecs.slice(0, 2) : sourceSpecs;
   const sourcePlanes = activeSourceSpecs.map(([kind, accent, x, y, z, rotation], index) => {
     const sourceTexture = saveData ? null : registerTexture(makeSourceTexture(kind, accent));
-    const material = new THREE.MeshStandardMaterial({
-      color: COLORS.paper,
+    const material = new THREE.MeshBasicMaterial({
       map: sourceTexture,
       transparent: true,
       opacity: 0.96,
-      roughness: 0.66,
-      metalness: 0.02,
       side: THREE.DoubleSide,
+      toneMapped: false,
     });
     const plane = new THREE.Mesh(new THREE.PlaneGeometry(1.72, 1.075), material);
     plane.position.set(x, y, z);
@@ -604,20 +591,20 @@ function createArtifactSceneRuntime({
   const outputRailGroup = new THREE.Group();
   outputRailGroup.name = "Shared accepted-output rail";
   [1.14, -1.14].forEach((y) => {
-    const outputRail = box(7.3, 0.11, 0.24, edgeMaterial);
+    const outputRail = box(7.3, 0.045, 0.1, edgeMaterial);
     outputRail.position.set(4.65, y, -0.08);
     outputRailGroup.add(outputRail);
   });
-  for (let index = 0; index < 7; index += 1) {
-    const tie = box(0.08, 2.36, 0.18, frameMaterial);
-    tie.position.set(1.65 + index * 1.02, 0, -0.11);
+  [1.55, 8.2].forEach((x) => {
+    const tie = box(0.045, 2.36, 0.1, frameMaterial);
+    tie.position.set(x, 0, -0.11);
     outputRailGroup.add(tie);
-  }
+  });
   const outputPortal = new THREE.Group();
-  const portalTop = box(0.18, 2.74, 0.5, frameMaterial);
+  const portalTop = box(0.07, 2.74, 0.16, frameMaterial);
   portalTop.position.set(1.55, 0, 0.04);
-  const portalCap = box(0.42, 0.16, 0.52, edgeMaterial);
-  portalCap.position.set(1.72, 1.28, 0.04);
+  const portalCap = box(0.3, 0.07, 0.18, edgeMaterial);
+  portalCap.position.set(1.66, 1.28, 0.04);
   outputPortal.add(portalTop, portalCap);
   outputRailGroup.add(outputPortal);
   engineRoot.add(outputRailGroup);
@@ -632,7 +619,7 @@ function createArtifactSceneRuntime({
       () => disposeTexture(texture),
     );
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    texture.anisotropy = Math.min(MAX_TEXTURE_ANISOTROPY, renderer.capabilities.getMaxAnisotropy());
     return registerTexture(texture);
   };
   const introTextures = {
@@ -652,16 +639,15 @@ function createArtifactSceneRuntime({
   registerRollback(() => introScene.dispose());
   const posterTextures = posters.map((poster) => registerTexture(makeFallbackPosterTexture(poster.title)));
 
-  const outputMaterial = new THREE.MeshStandardMaterial({
+  const outputMaterial = new THREE.MeshBasicMaterial({
     map: posterTextures[0],
     transparent: true,
-    opacity: 0.8,
-    roughness: 0.68,
-    metalness: 0.01,
+    opacity: 1,
+    toneMapped: false,
   });
   const posterACarriage = new THREE.Group();
   posterACarriage.name = "Poster A output carriage";
-  const outputBacking = box(4.28, 2.3, 0.18, edgeMaterial);
+  const outputBacking = box(4.3, 2.32, 0.1, edgeMaterial);
   outputBacking.position.z = -0.12;
   const outputPosterWidth = 4.12;
   const outputPoster = new THREE.Mesh(
@@ -685,14 +671,13 @@ function createArtifactSceneRuntime({
     transparent: true,
     opacity: 0,
   });
-  const futurePosterMaterial = new THREE.MeshStandardMaterial({
+  const futurePosterMaterial = new THREE.MeshBasicMaterial({
     map: posterTextures[Math.min(1, posterTextures.length - 1)],
     transparent: true,
     opacity: 0,
-    roughness: 0.66,
-    metalness: 0.01,
+    toneMapped: false,
   });
-  const futureBacking = box(4.28, 2.3, 0.18, futureBackingMaterial);
+  const futureBacking = box(4.3, 2.32, 0.1, futureBackingMaterial);
   futureBacking.position.z = -0.12;
   const futurePosterWidth = 4.12;
   const futurePoster = new THREE.Mesh(
@@ -759,13 +744,12 @@ function createArtifactSceneRuntime({
       transparent: true,
       opacity: 0,
     });
-    const posterMaterial = new THREE.MeshStandardMaterial({
+    const posterMaterial = new THREE.MeshBasicMaterial({
       map: posterTextures[index],
-      roughness: 0.64,
-      metalness: 0.01,
       transparent: true,
       opacity: 0,
       side: THREE.DoubleSide,
+      toneMapped: false,
     });
     const posterWidth = 4.08;
     const posterHeight = posterWidth / POSTER_ASPECT;
@@ -787,12 +771,14 @@ function createArtifactSceneRuntime({
     && !saveData
     && renderer.capabilities.maxTextures >= 16;
   if (bloomCapable) {
-    composer = new EffectComposer(renderer);
+    const renderTarget = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
+    renderTarget.samples = Math.min(4, renderer.capabilities.maxSamples ?? 0);
+    composer = new EffectComposer(renderer, renderTarget);
     registerRollback(() => {
       postprocessingPasses.forEach((pass) => pass.dispose?.());
       composer?.dispose();
     });
-    bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.52, 0.28, 0.76);
+    bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.18, 0.2, 0.88);
     postprocessingPasses.push(
       new RenderPass(scene, camera),
       bloomPass,
@@ -981,8 +967,9 @@ function createArtifactSceneRuntime({
 
     posters.forEach((poster, index) => {
       let texture;
+      const textureSize = compact.matches || saveData ? 640 : 1600;
       texture = textureLoader.load(
-        `./assets/posters/${poster.slug}-640.webp`,
+        `./assets/posters/${poster.slug}-${textureSize}.webp`,
         () => {
           if (destroyed) {
             disposeTexture(texture);
@@ -1012,7 +999,7 @@ function createArtifactSceneRuntime({
         },
       );
       texture.colorSpace = THREE.SRGBColorSpace;
-      texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+      texture.anisotropy = Math.min(MAX_TEXTURE_ANISOTROPY, renderer.capabilities.getMaxAnisotropy());
       registerTexture(texture);
     });
   }
@@ -1072,6 +1059,10 @@ function createArtifactSceneRuntime({
       cameraLookTarget.x = Math.min(cameraLookTarget.x, compactTargetCap);
       cameraPosition.x = Math.min(cameraPosition.x, compactTargetCap + 0.45);
     }
+    if (width < 761 && state.phase !== "universe") {
+      cameraPosition.x += 0.78;
+      cameraLookTarget.x += 0.78;
+    }
     cameraPosition.x += pointerX * 0.14;
     cameraPosition.y += pointerY * 0.08;
     cameraLookTarget.x += pointerX * 0.05;
@@ -1122,7 +1113,7 @@ function createArtifactSceneRuntime({
     });
     syncIntroPresentation(introView);
 
-    if (state.progress >= POSTER_TEXTURE_LOAD_PROGRESS) ensurePosterTextures();
+    if (engineAvailable && state.progress >= POSTER_TEXTURE_LOAD_PROGRESS) ensurePosterTextures();
     if (state.phase === "universe") updateSelectedPoster(state.activePoster);
 
     const universe = smooth(clamp((state.progress - 0.68) / 0.04, 0, 1));
@@ -1141,7 +1132,7 @@ function createArtifactSceneRuntime({
     engineRoot.position.y = desktopY - phoneHeroDrop + float
       + mix(0, width < 761 ? -0.4 : -0.12, universe);
     engineRoot.position.z = mix(0, -2.1, universe);
-    const engineScale = (width < 761 ? 0.74 : width <= POSTER_COMPACT_MAX_WIDTH ? 0.8 : 0.88)
+    const engineScale = (width < 761 ? 0.6 : width <= POSTER_COMPACT_MAX_WIDTH ? 0.8 : 0.88)
       * mix(1, 0.76, universe);
     engineRoot.scale.setScalar(engineScale);
     engineRoot.rotation.y = -0.32 + interior * 0.26 + pointerX * 0.034;
@@ -1173,8 +1164,8 @@ function createArtifactSceneRuntime({
     repairPlate.material.color.copy(repairBaseColor).lerp(repairAcceptedColor, accepted * 0.58);
     acceptedInsert.material.opacity = accepted;
     acceptedInsert.scale.x = Math.max(0.001, accepted);
-    lockLeft.position.x = mix(-1.32, -1.08, accepted);
-    lockRight.position.x = mix(1.32, 1.08, accepted);
+    lockLeft.position.x = mix(-1.27, -1.08, accepted);
+    lockRight.position.x = mix(1.27, 1.08, accepted);
     lockLeft.material.opacity = accepted;
     lockRight.material.opacity = accepted;
 
@@ -1186,7 +1177,7 @@ function createArtifactSceneRuntime({
     posterACarriage.position.set(mix(outputBaseX, outputExitX, outputAExit), 0.02, 0.12);
     posterACarriage.rotation.y = mix(-0.12, 0.04, interior);
     const outputAFade = 1 - smooth(clamp((outputAExit - 0.76) / 0.24, 0, 1));
-    outputMaterial.opacity = (0.78 + interior * 0.22) * outputAFade * (1 - universe);
+    outputMaterial.opacity = outputAFade * (1 - universe);
     outputBacking.visible = outputAFade > 0.01;
 
     const futureEnter = smooth(state.outputBEnter);
@@ -1344,11 +1335,11 @@ function createArtifactSceneRuntime({
     const bounds = canvas.getBoundingClientRect();
     width = Math.max(1, Math.round(bounds.width));
     height = Math.max(1, Math.round(bounds.height));
-    const dprCap = compact.matches ? 1.35 : 1.8;
+    const dprCap = compact.matches ? 1.5 : 2;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
-    camera.fov = compact.matches ? 45 : 37;
+    camera.fov = width < 761 ? 51 : compact.matches ? 45 : 37;
     camera.updateProjectionMatrix();
     composer?.setPixelRatio(renderer.getPixelRatio());
     composer?.setSize(width, height);

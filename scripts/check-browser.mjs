@@ -180,14 +180,14 @@ async function assertCacheChain(page) {
       return `${url.pathname}${url.search}`;
     }));
   for (const resource of [
-    "/styles.css?v=20260728a",
-    "/site-data.js?v=20260728a",
-    "/i18n.js?v=20260728a",
-    "/locales.js?v=20260728a",
-    "/language-menu.js?v=20260728a",
-    "/app.js?v=20260728a",
-    "/three-scene.js?v=20260728a",
-    "/artifact-showcase.js?v=20260728a",
+    "/styles.css?v=20260728b",
+    "/site-data.js?v=20260728b",
+    "/i18n.js?v=20260728b",
+    "/locales.js?v=20260728b",
+    "/language-menu.js?v=20260728b",
+    "/app.js?v=20260728b",
+    "/three-scene.js?v=20260728b",
+    "/artifact-showcase.js?v=20260728b",
   ]) {
     assert.ok(resources.includes(resource), `cache chain did not request ${resource}: ${JSON.stringify(resources)}`);
   }
@@ -372,7 +372,7 @@ async function runLocales(browser, url) {
   const localeCatalogResource = await page.evaluate(() => performance.getEntriesByType("resource")
     .map((entry) => entry.name)
     .find((name) => name.includes("/locales.js")));
-  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260728a$/, "locale catalog request must bypass stale browser caches");
+  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260728b$/, "locale catalog request must bypass stale browser caches");
   await assertCacheChain(page);
   assert.equal(await currentLabel.textContent(), "EN");
   assert.equal(await menu.isHidden(), true);

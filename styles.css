@@ -1997,6 +1997,10 @@ html.dialog-open body {
 }
 
 @media (max-width: 760px) {
+  #engine-labels {
+    display: none;
+  }
+
   .engine-label {
     padding: 4px 5px;
     font-size: 0.65rem;
