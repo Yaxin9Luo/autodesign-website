@@ -86,8 +86,9 @@ try {
   await mainResponse.body?.cancel();
 
   for (const path of [
-    "artifacts/slides/longcat-next/index.html",
-    "artifacts/web/longcat-next/index.html",
+    "artifacts/posters/autodesign/index.html",
+    "artifacts/slides/autodesign/index.html",
+    "artifacts/web/autodesign/index.html",
   ]) {
     const response = await fetch(new URL(path, url), { signal: AbortSignal.timeout(5_000) });
     assert.equal(response.status, 200, `${path} did not return 200`);

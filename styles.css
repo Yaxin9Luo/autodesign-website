@@ -2340,16 +2340,18 @@ html.dialog-open body {
 }
 
 .artifact-study__stage--poster {
-  padding: 48px 40px 70px;
+  height: 680px;
+  min-height: 680px;
+  padding: 48px 28px 70px;
   background: #101719;
 }
 
 .poster-specimen,
 .artifact-study__stage--poster > img {
   display: block;
-  width: min(94%, 920px);
+  width: min(100%, 960px);
   height: auto;
-  max-height: 470px;
+  max-height: 560px;
   object-fit: contain;
   border: 1px solid rgba(255, 255, 255, 0.32);
   background: #fff;
@@ -2696,7 +2698,7 @@ html.dialog-open body {
   width: auto;
   max-width: 100%;
   height: auto;
-  max-height: 100%;
+  max-height: min(640px, calc(100dvh - 260px));
   object-fit: contain;
   border: 1px solid #84968f;
   background: #fff;
@@ -3995,6 +3997,15 @@ a.resource-link:hover {
     min-height: 560px;
     border-right: 0;
     border-bottom: 1px solid #84968f;
+  }
+
+  .artifact-study__stage--poster {
+    height: 620px;
+    min-height: 620px;
+  }
+
+  .artifact-study__stage--poster > img {
+    max-height: 470px;
   }
 
   .artifact-study__copy {

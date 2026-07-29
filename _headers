@@ -14,8 +14,17 @@
 /artifacts/slides/longcat-next/*
   Content-Security-Policy: default-src 'none'; script-src 'sha256-hGyrkkkydKQj04z5+jgoYzwkCIdMDKumFMxwJrRSrWU=' 'sha256-yPyJV5v2JnYxgDy8GjN9sRRu0T3cncpvbi6c1CmC1RM=' https://static.cloudflareinsights.com; style-src 'sha256-rCIxb6ZV9dgL/lOSJQIWdIGLbrS0rgHJ0XpALjBPTEY='; img-src data:; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'
 
+/artifacts/slides/autodesign/*
+  Content-Security-Policy: default-src 'none'; script-src 'sha256-d1sT4wwBiqrYbTXWBczHUoSnKX+Jx/+5E9Lt/P9UzO8=' 'sha256-yPyJV5v2JnYxgDy8GjN9sRRu0T3cncpvbi6c1CmC1RM=' https://static.cloudflareinsights.com; style-src 'sha256-13XZhAHnzo4ytbkmTuHQ+EOaKaw952j6BGBB0TUf8z4='; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'
+
+/artifacts/posters/autodesign/*
+  Content-Security-Policy: default-src 'none'; script-src 'sha256-3ISyluw+iE3gkxWPdg/Z1Ftser5YtTgVV/ThOPRqWK4=' 'sha256-nLjaz8CGwpZsnsS6VPSi3EO3y+KzPOwaJ0PYhsf7R6c=' 'sha256-u01lwZZKPdnw7P/uC5VFumBD4gEiRElrRYjvlFZ+X2o=' 'sha256-uTxIoJsi7ppMVpZrTEgr4Ny3+dOg3d06rFbUVU75iMk=' 'sha256-9gqBfRaFIEi1/QSdoFPZD+VXbsdYf9gcqfjwp49tiBI=' 'sha256-ha/zQZFwtMHiPDwSVkRuawPWZKYX8rRkpoAMxyrObnA=' 'sha256-YH0zN3XHWtY5umuaSIc1jBXWqpVfJ6HUUvTth+mNDPc=' 'sha256-xdmM+1NJU4QwMhJcEgLN1S7OCW7MarWxFgR7SEiWmlk=' 'sha256-i8WV/BzdQ99VR+Ir6cWBm5nj7TfBVpX1nsa5Nn8AQyE=' 'sha256-yPyJV5v2JnYxgDy8GjN9sRRu0T3cncpvbi6c1CmC1RM=' https://static.cloudflareinsights.com; style-src 'sha256-RJj1HSmyoLn8kNu0EQdgIF2XpUZnhELYR7b/47JpS1o=' 'sha256-Y904aAdsXIeWEgNpB29Pcw/tgbvM8vRdU5YeABVTFh8=' 'sha256-vM5rLP/i48ty3LkQy3vrJvz/ROanaBUMFiP1LaHW9Jg=' 'sha256-gGxNxvP+O0920vCd1jktOuVshGqWcDIb9mJpbEX9yYw=' 'sha256-tg4nZHkGA8K2MUPRXIrMLfF7dP3Bd7Nm+qHrwYWyoBQ=' 'sha256-D79eDS+qS810YcU3CoLUFkr/toZqfHVZtNMdbLmm7NY=' 'sha256-3kxKWoEwxhy2CVlZDzB4vze3QIJMmtPBrcKIpxoGdS0=' 'sha256-w40XP5l2gaWtoNRfeT9XOHqoeeqcgno9ro6Zc8YU97M=' 'sha256-D9iRTVKdT3xuuC9Mjh4Sk0l71K0dkpDtRjc+ePKJWCc='; img-src 'self' data:; font-src data:; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'
+
 /artifacts/web/longcat-next/*
   Content-Security-Policy: default-src 'none'; script-src 'sha256-4IMN4Wt7SZpITBmDw9iR+aZNFdgTXAVWcQk/PuWIk/8=' 'sha256-yPyJV5v2JnYxgDy8GjN9sRRu0T3cncpvbi6c1CmC1RM=' https://static.cloudflareinsights.com; style-src 'sha256-TGoDTkU0Uq9wah+R6vJNj69MU4jq58iir957IdMx+TI='; img-src data:; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'
+
+/artifacts/web/autodesign/*
+  Content-Security-Policy: default-src 'none'; script-src 'sha256-JX7y+UxtgrdYTQbmyQUs98tfq1dDD6m2TEgXp+94Ew4=' 'sha256-yPyJV5v2JnYxgDy8GjN9sRRu0T3cncpvbi6c1CmC1RM=' https://static.cloudflareinsights.com; style-src 'sha256-ed7axlTb1M87mqlPIo60Dwg1xbRvYSrCA0KJA8jMyMc='; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'
 
 /assets/*
   Cache-Control: public, max-age=86400

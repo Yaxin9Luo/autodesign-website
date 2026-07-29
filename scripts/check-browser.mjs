@@ -286,6 +286,8 @@ async function runDefaultLocale(browser, url) {
   assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), null,
     "legacy auto-detected language preference must be cleared");
 
+  await page.keyboard.press("ArrowDown");
+  await waitForPhase(page, "complete");
   await page.locator("#language-menu-trigger").click();
   await page.locator('#language-menu [data-locale="zh-CN"]').click();
   assert.equal(await page.locator("html").getAttribute("lang"), "zh-CN");
@@ -572,10 +574,21 @@ async function runDesktop(browser, url) {
     return video?.paused && !source?.hasAttribute("src") && video.networkState === video.NETWORK_NO_SOURCE;
   });
 
+  const posterFit = await page.locator("#artifact-panel-poster").evaluate((panel) => {
+    const stage = panel.querySelector(".artifact-study__stage").getBoundingClientRect();
+    const image = panel.querySelector("img").getBoundingClientRect();
+    const label = panel.querySelector(".artifact-stage-label").getBoundingClientRect();
+    return { image: { bottom: image.bottom, height: image.height, top: image.top, width: image.width }, label: { top: label.top }, stage: { bottom: stage.bottom, top: stage.top } };
+  });
+  assert.ok(posterFit.image.top >= posterFit.stage.top && posterFit.image.bottom < posterFit.label.top - 12,
+    `Poster preview is clipped or collides with its stage metadata: ${JSON.stringify(posterFit)}`);
+  assert.ok(Math.abs(posterFit.image.width / posterFit.image.height - (3072 / 2140)) <= 0.01,
+    `Poster preview does not preserve its source aspect ratio: ${JSON.stringify(posterFit)}`);
+
   await page.locator("#artifact-tab-slides").click();
   const embeddedSlide = page.locator("#artifact-panel-slides [data-slide-current-image]");
   await embeddedSlide.waitFor({ state: "visible" });
-  assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-01\.webp\?v=675b8b1$/);
+  assert.match(await embeddedSlide.getAttribute("src"), /autodesign-slide-01\.webp\?v=20260729a$/);
   const slideFit = await page.locator("#artifact-panel-slides").evaluate((panel) => {
     const stage = panel.querySelector(".artifact-study__stage").getBoundingClientRect();
     const frame = panel.querySelector(".slide-carousel__frame").getBoundingClientRect();
@@ -595,7 +608,7 @@ async function runDesktop(browser, url) {
   `Embedded slide does not fit its frame: ${JSON.stringify(slideFit)}`);
   assert.equal(await page.locator("#artifact-panel-slides [data-slide-current]").textContent(), "01");
   await page.locator("#artifact-panel-slides [data-slide-next]").click();
-  assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-02\.webp\?v=675b8b1$/);
+  assert.match(await embeddedSlide.getAttribute("src"), /autodesign-slide-02\.webp\?v=20260729a$/);
   assert.equal(await page.locator("#artifact-panel-slides [data-slide-current]").textContent(), "02");
   const nextSlideSize = await embeddedSlide.boundingBox();
   assert.ok(nextSlideSize
@@ -603,7 +616,7 @@ async function runDesktop(browser, url) {
     && Math.abs(nextSlideSize.height - slideFit.image.height) <= 1,
   `Slide navigation changed the page geometry: ${JSON.stringify({ before: slideFit.image, after: nextSlideSize })}`);
   await page.locator("#artifact-panel-slides [data-slide-prev]").click();
-  assert.match(await embeddedSlide.getAttribute("src"), /longcat-next-slide-01\.webp\?v=675b8b1$/);
+  assert.match(await embeddedSlide.getAttribute("src"), /autodesign-slide-01\.webp\?v=20260729a$/);
 
   await page.locator("#artifact-tab-web").click();
   const webPreview = page.locator("#artifact-panel-web .browser-specimen__viewport iframe");
@@ -675,9 +688,9 @@ async function runDesktop(browser, url) {
       await slideImage.waitFor({ state: "visible" });
       assert.ok(await slideImage.evaluate((image) => image.complete && image.naturalWidth > 0),
         "Slide viewer image did not decode");
-      assert.match(await slideImage.getAttribute("src"), /longcat-next-slide-01\.webp\?v=675b8b1$/);
+      assert.match(await slideImage.getAttribute("src"), /autodesign-slide-01\.webp\?v=20260729a$/);
       await artifact.locator("[data-viewer-slide-next]").click();
-      assert.match(await slideImage.getAttribute("src"), /longcat-next-slide-02\.webp\?v=675b8b1$/);
+      assert.match(await slideImage.getAttribute("src"), /autodesign-slide-02\.webp\?v=20260729a$/);
       const fitWidth = (await slideImage.boundingBox())?.width ?? 0;
       await artifact.locator("[data-viewer-slide-zoom-in]").click();
       const zoomedWidth = (await slideImage.boundingBox())?.width ?? 0;
@@ -692,11 +705,11 @@ async function runDesktop(browser, url) {
         if (document.readyState !== "loading") resolveReady();
         else document.addEventListener("DOMContentLoaded", resolveReady, { once: true });
       }));
-      await frame.locator("#figure-dialog").waitFor({ state: "attached" });
-      await frame.locator(".figure-trigger").first().click();
-      await frame.locator("#figure-dialog").waitFor({ state: "visible" });
-      await frame.locator("#dialog-close").click();
-      await frame.locator("#figure-dialog").waitFor({ state: "hidden" });
+      await frame.locator("#evidence-lightbox").waitFor({ state: "attached" });
+      await frame.locator(".lightbox-launch").first().click();
+      await frame.locator("#evidence-lightbox").waitFor({ state: "visible" });
+      await frame.locator("#close-lightbox").click();
+      await frame.locator("#evidence-lightbox").waitFor({ state: "hidden" });
       await frame.locator("body").press("Escape");
       await page.locator("#artifact-viewer").waitFor({ state: "hidden", timeout: 3_000 });
       assert.equal(await page.locator("#artifact-viewer-stage").evaluate((stage) => stage.childElementCount), 0);

@@ -24,6 +24,18 @@ try {
   await page.keyboard.press("ArrowDown");
   await page.waitForFunction(() => document.getElementById("scene-shell")?.dataset.introPhase === "complete");
 
+  await page.locator("#artifact-tab-poster").click();
+  const hostedPosterFit = await page.locator("#artifact-panel-poster").evaluate((panel) => {
+    const stage = panel.querySelector(".artifact-study__stage").getBoundingClientRect();
+    const image = panel.querySelector("img").getBoundingClientRect();
+    const label = panel.querySelector(".artifact-stage-label").getBoundingClientRect();
+    return { image: { bottom: image.bottom, height: image.height, top: image.top, width: image.width }, label: { top: label.top }, stage: { bottom: stage.bottom, top: stage.top } };
+  });
+  assert.ok(hostedPosterFit.image.top >= hostedPosterFit.stage.top && hostedPosterFit.image.bottom < hostedPosterFit.label.top - 12,
+    `hosted Poster preview is clipped or collides with its stage metadata: ${JSON.stringify(hostedPosterFit)}`);
+  assert.ok(Math.abs(hostedPosterFit.image.width / hostedPosterFit.image.height - (3072 / 2140)) <= 0.01,
+    `hosted Poster preview does not preserve its source aspect ratio: ${JSON.stringify(hostedPosterFit)}`);
+
   await page.locator("#artifact-tab-slides").click();
   const hostedSlideFit = await page.locator("#artifact-panel-slides").evaluate((panel) => {
     const stage = panel.querySelector(".artifact-study__stage").getBoundingClientRect();
@@ -106,10 +118,10 @@ try {
       else document.addEventListener("DOMContentLoaded", resolveReady, { once: true });
     }));
 
-    await frame.locator(".figure-trigger").first().click();
-    await frame.locator("#figure-dialog").waitFor({ state: "visible" });
-    await frame.locator("#dialog-close").click();
-    await frame.locator("#figure-dialog").waitFor({ state: "hidden" });
+    await frame.locator(".lightbox-launch").first().click();
+    await frame.locator("#evidence-lightbox").waitFor({ state: "visible" });
+    await frame.locator("#close-lightbox").click();
+    await frame.locator("#evidence-lightbox").waitFor({ state: "hidden" });
 
     await frame.locator("body").press("Escape");
     await page.locator("#artifact-viewer").waitFor({ state: "hidden" });
@@ -122,19 +134,61 @@ try {
     if (message.type() === "error") errors.push(message.text());
   });
   slidePage.on("pageerror", (error) => errors.push(error.message));
-  await slidePage.goto(new URL("artifacts/slides/longcat-next/", url).href, { waitUntil: "networkidle" });
-  assert.equal(await slidePage.locator(".deck-slide").count(), 12);
+  await slidePage.goto(new URL("artifacts/slides/autodesign/", url).href, { waitUntil: "networkidle" });
+  assert.equal(await slidePage.locator(".deck-slide").count(), 18);
   assert.notEqual(
     await slidePage.locator(".deck-slide").first().evaluate((slide) => getComputedStyle(slide).backgroundColor),
     "rgba(0, 0, 0, 0)",
     "slide deck inline styles did not run under the hosted CSP",
   );
-  await slidePage.locator("body").evaluate((body) => {
-    body.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "ArrowRight" }));
-  });
-  assert.equal(await slidePage.locator('.deck-slide[aria-current="page"]').count(), 1,
-    `slide deck inline navigation did not run under the hosted CSP: ${errors.join(" | ")}`);
+  const initialScroll = await slidePage.evaluate(() => window.scrollY);
+  await slidePage.locator("body").press("ArrowRight");
+  await slidePage.waitForFunction((before) => window.scrollY > before + 20, initialScroll);
   await slidePage.close();
+
+  const posterPage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  posterPage.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  posterPage.on("pageerror", (error) => errors.push(error.message));
+  await posterPage.goto(new URL("artifacts/posters/autodesign/", url).href, { waitUntil: "networkidle" });
+  const authors = await posterPage.locator(".poster-authors").textContent();
+  assert.match(authors ?? "", /Zhiqian Shen/, "AutoDesign poster must include Zhiqian Shen in the author line");
+  assert.match(authors ?? "", /Xiaotong Li/, "AutoDesign poster must include Xiaotong Li in the author line");
+  const affiliations = await posterPage.locator(".poster-affiliations").textContent();
+  assert.match(affiliations ?? "", /Peking University, Tsinghua University/,
+    "AutoDesign poster affiliation line must retain Tsinghua University");
+  assert.notEqual(
+    await posterPage.locator(".poster-affiliations").evaluate((element) => getComputedStyle(element).display),
+    "none",
+    "poster affiliation line is hidden under the hosted CSP",
+  );
+  const posterImages = await posterPage.locator('img[src]:not([src^="data:"])').evaluateAll((images) => images
+    .filter((image) => image.getAttribute("src"))
+    .filter((image) => !image.complete || image.naturalWidth === 0)
+    .map((image) => image.getAttribute("src")));
+  assert.deepEqual(posterImages, [], `AutoDesign poster image assets failed to load: ${posterImages.join(", ")}`);
+  await posterPage.close();
+
+  const landingPage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  landingPage.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  landingPage.on("pageerror", (error) => errors.push(error.message));
+  await landingPage.goto(new URL("artifacts/web/autodesign/", url).href, { waitUntil: "networkidle" });
+  await landingPage.evaluate(async () => {
+    const pause = (milliseconds) => new Promise((resolvePause) => setTimeout(resolvePause, milliseconds));
+    for (let top = 0; top < document.documentElement.scrollHeight; top += Math.max(1, Math.floor(window.innerHeight * 0.7))) {
+      window.scrollTo(0, top);
+      await pause(120);
+    }
+    await pause(400);
+  });
+  const landingImages = await landingPage.locator('img[src]:not([src=""])').evaluateAll((images) => images
+    .filter((image) => !image.complete || image.naturalWidth === 0)
+    .map((image) => image.getAttribute("src")));
+  assert.deepEqual(landingImages, [], `AutoDesign Landing Page image assets failed to load: ${landingImages.join(", ")}`);
+  await landingPage.close();
 
   assert.deepEqual(errors, [], `production browser console errors: ${errors.join(" | ")}`);
   console.log("research-site production browser probe: OK");

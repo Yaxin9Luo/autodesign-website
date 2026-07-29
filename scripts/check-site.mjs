@@ -269,8 +269,8 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   for (const token of ["data-slide-carousel", "data-slide-prev", "data-slide-next", 'data-artifact-kind="slides"']) {
     expect(html.includes(token), "interactive slide showcase missing " + token);
   }
-  expect(html.includes("longcat-next-poster.webp?v=20260727c"), "LongCat-Next poster source must bypass stale deployment fallbacks");
-  expect(html.includes("longcat-next-slide-{index}.webp?v=675b8b1"), "Slide sources must bypass stale deployment fallbacks");
+  expect(html.includes("autodesign-poster.webp?v=20260729a"), "AutoDesign poster source must bypass stale deployment fallbacks");
+  expect(html.includes("autodesign-slide-{index}.webp?v=20260729a"), "Slide sources must bypass stale deployment fallbacks");
   expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
   expect(html.includes("data-method-figure"), "detailed method figure is missing");
   expect(html.includes("assets/paper/method-detail.webp?v=20260728c"), "detailed method asset is missing");
@@ -306,9 +306,13 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   }
   expect(html.includes('class="browser-specimen__viewport">\n                <iframe'), "Web specimen must embed the real research webpage");
   expect(!html.includes('src="./assets/studies/longcat-next-web.webp"'), "Web specimen must not use the blank-ended screenshot");
-  expect(html.includes('data-i18n="suite.slidesStage">12 slides</span>'), "Slides stage must report the source's 12 slides");
-  expect(html.includes("twelve editable frames"), "Slides narrative must describe twelve editable frames");
-  expect(!/\b(?:10 slides|ten editable frames)\b/i.test(html), "stale ten-slide copy remains");
+  expect(html.includes('data-artifact-new-tab="./artifacts/posters/autodesign/index.html"'),
+    "Poster inspector must preserve the editable AutoDesign artifact");
+  expect(html.includes('src="./artifacts/web/autodesign/index.html"'),
+    "Web specimen must use the AutoDesign research webpage");
+  expect(html.includes('data-i18n="suite.slidesStage">18 slides</span>'), "Slides stage must report the source's 18 slides");
+  expect(html.includes("eighteen editable frames"), "Slides narrative must describe eighteen editable frames");
+  expect(!/\b(?:12 slides|twelve editable frames)\b/i.test(html), "stale twelve-slide copy remains");
   for (const symbol of [
     "data-method-figure",
     "Method / AutoDesign and DesignHarness",
@@ -921,20 +925,21 @@ for (const asset of [
 }
 
 const promotionalAssets = [
-  "assets/studies/longcat-next-poster.webp",
-  ...Array.from({ length: 12 }, (_, index) => `assets/studies/longcat-next-slide-${String(index + 1).padStart(2, "0")}.webp`),
-  "assets/studies/longcat-next-web.webp",
+  "assets/studies/autodesign-poster.webp",
+  ...Array.from({ length: 18 }, (_, index) => `assets/studies/autodesign-slide-${String(index + 1).padStart(2, "0")}.webp`),
   "assets/studies/ddpm-conference-poster.webp",
   "assets/studies/ddpm-conference-teaser.mp4",
   "assets/studies/ddpm-conference-video-6min.mp4",
   "assets/studies/ddpm-conference.en.vtt",
-  "artifacts/slides/longcat-next/index.html",
-  "artifacts/web/longcat-next/index.html",
+  "artifacts/posters/autodesign/index.html",
+  "artifacts/slides/autodesign/index.html",
+  "artifacts/web/autodesign/index.html",
 ];
 
 for (const artifact of [
-  "artifacts/slides/longcat-next/index.html",
-  "artifacts/web/longcat-next/index.html",
+  "artifacts/posters/autodesign/index.html",
+  "artifacts/slides/autodesign/index.html",
+  "artifacts/web/autodesign/index.html",
 ]) {
   if (!existsSync(resolve(root, artifact))) continue;
   const source = read(artifact);

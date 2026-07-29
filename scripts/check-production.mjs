@@ -21,17 +21,34 @@ const required = [
   "styles.css",
   "three-scene.js",
   "assets/posters/attention-1600.webp",
-  "assets/studies/longcat-next-poster.webp",
+  "assets/studies/autodesign-poster.webp",
   "assets/paper/method-detail.webp",
-  ...Array.from({ length: 12 }, (_, index) => `assets/studies/longcat-next-slide-${String(index + 1).padStart(2, "0")}.webp`),
+  ...Array.from({ length: 18 }, (_, index) => `assets/studies/autodesign-slide-${String(index + 1).padStart(2, "0")}.webp`),
   "assets/studies/ddpm-conference-teaser.mp4",
   "assets/studies/ddpm-conference-video-6min.mp4",
   "assets/studies/ddpm-conference.en.vtt",
   "assets/studies/slide-03.webp",
   "assets/studies/video-poster.webp",
   "assets/studies/webpage.webp",
-  "artifacts/slides/longcat-next/index.html",
-  "artifacts/web/longcat-next/index.html",
+  "artifacts/posters/autodesign/index.html",
+  "artifacts/posters/autodesign/AutoDesign-Poster-assets/autodesign-poster-self-demo.png",
+  "artifacts/posters/autodesign/AutoDesign-Poster-assets/cuhk-crest.png",
+  "artifacts/posters/autodesign/AutoDesign-Poster-assets/figure2-showcase.png",
+  "artifacts/posters/autodesign/AutoDesign-Poster-assets/hust-seal.png",
+  "artifacts/posters/autodesign/AutoDesign-Poster-assets/mbzuai-mark.png",
+  "artifacts/slides/autodesign/index.html",
+  ...Array.from({ length: 13 }, (_, index) => `artifacts/slides/autodesign/assets/figure-${String(index + 1).padStart(2, "0")}.png`),
+  "artifacts/web/autodesign/index.html",
+  "artifacts/web/autodesign/layers/img_ingest_fig_02.png",
+  "artifacts/web/autodesign/layers/img_ingest_fig_04.png",
+  "artifacts/web/autodesign/layers/img_ingest_fig_05.png",
+  "artifacts/web/autodesign/layers/img_ingest_fig_09.png",
+  "artifacts/web/autodesign/layers/img_ingest_fig_12.png",
+  "artifacts/web/autodesign/layers/img_ingest_fig_13.png",
+  "artifacts/web/autodesign/layers/img_ingest_fig_14.png",
+  "artifacts/web/autodesign/layers/img_ingest_fig_15.png",
+  "artifacts/web/autodesign/layers/img_ingest_fig_16.png",
+  "artifacts/web/autodesign/layers/img_ingest_fig_18.png",
   "vendor/three/three.module.min.js",
 ];
 const forbidden = ["node_modules", "scripts", "package.json", "package-lock.json", "README.md"];
@@ -94,14 +111,16 @@ const inlineHashes = (file, tag) => {
     .map((match) => `sha256-${createHash("sha256").update(match[1]).digest("base64")}`);
 };
 for (const [route, file] of [
-  ["/artifacts/slides/longcat-next/*", "artifacts/slides/longcat-next/index.html"],
-  ["/artifacts/web/longcat-next/*", "artifacts/web/longcat-next/index.html"],
+  ["/artifacts/posters/autodesign/*", "artifacts/posters/autodesign/index.html"],
+  ["/artifacts/slides/autodesign/*", "artifacts/slides/autodesign/index.html"],
+  ["/artifacts/web/autodesign/*", "artifacts/web/autodesign/index.html"],
 ]) {
   const artifactHeaders = headerBlock(route);
   assert.match(artifactHeaders, /default-src 'none'/, `${route} CSP must deny unspecified sources`);
   assert.match(artifactHeaders, /connect-src 'self' https:\/\/cloudflareinsights\.com/,
     `${route} CSP must allow Cloudflare same-origin RUM reporting`);
   assert.match(artifactHeaders, /frame-ancestors 'self'/, `${route} CSP must allow only same-origin framing`);
+  assert.match(artifactHeaders, /img-src 'self' data:/, `${route} CSP must allow the artifact's same-origin image assets`);
   assert.doesNotMatch(artifactHeaders, /'unsafe-inline'/, `${route} CSP must hash inline code`);
   for (const hash of [...inlineHashes(file, "script"), ...inlineHashes(file, "style")]) {
     assert.ok(artifactHeaders.includes(`'${hash}'`), `${route} CSP is missing inline hash ${hash}`);
