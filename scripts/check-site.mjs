@@ -208,7 +208,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   if (!html.includes('type="module"')) failures.push("missing ES module entrypoint");
   expect(html.includes('id="language-menu-trigger"'), "compact language menu trigger is missing");
   expect(html.includes('id="language-menu"'), "compact language menu panel is missing");
-  expect(html.includes('./language-menu.js?v=20260728c'), "language menu runtime is missing or stale");
+  expect(html.includes('./language-menu.js?v=20260730a'), "language menu runtime is missing or stale");
   if (!html.includes('type="importmap"')) failures.push("missing import map");
   if (!html.includes('"three": "./vendor/three/three.module.min.js"')) failures.push("missing local three import");
   if (!html.includes('"three/addons/": "./vendor/three/addons/"')) failures.push("missing local three addons import");
@@ -263,17 +263,17 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   expect(html.includes('class="hero-suite"'), "Hero suite message is missing");
   expect(html.includes('class="artifact-suite-flow"'), "Artifact suite workflow is missing");
   expect(html.includes('class="hero-title__agent"'), "hero Design Agent mark is missing");
-  expect(html.includes('assets/brand/design-agent-mark.webp?v=20260728c'), "hero Design Agent mark must bypass stale deployment fallbacks");
+  expect(html.includes('assets/brand/design-agent-mark.webp?v=20260730a'), "hero Design Agent mark must bypass stale deployment fallbacks");
   expect(html.includes('class="evolution-mascot-strip"'), "Design Agent evolution strip is missing");
-  expect(html.includes('assets/brand/design-agent-evolution.webp?v=20260728c'), "Design Agent evolution strip must bypass stale deployment fallbacks");
+  expect(html.includes('assets/brand/design-agent-evolution.webp?v=20260730a'), "Design Agent evolution strip must bypass stale deployment fallbacks");
   for (const token of ["data-slide-carousel", "data-slide-prev", "data-slide-next", 'data-artifact-kind="slides"']) {
     expect(html.includes(token), "interactive slide showcase missing " + token);
   }
   expect(html.includes("autodesign-poster.webp?v=20260729a"), "AutoDesign poster source must bypass stale deployment fallbacks");
-  expect(html.includes("autodesign-slide-{index}.webp?v=20260729a"), "Slide sources must bypass stale deployment fallbacks");
+  expect(html.includes("autodesign-formal-slide-{index}.webp?v=20260730a"), "Slide sources must bypass stale deployment fallbacks");
   expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
   expect(html.includes("data-method-figure"), "detailed method figure is missing");
-  expect(html.includes("assets/paper/method-detail.webp?v=20260728c"), "detailed method asset is missing");
+  expect(html.includes("assets/paper/method-detail.webp?v=20260730a"), "detailed method asset is missing");
   for (const asset of [
     "assets/paper/figure1-evolution.webp",
     "assets/paper/figure1-benchmark.webp",
@@ -282,7 +282,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   ]) {
     expect(!html.includes(asset), `removed paper figure remains in the public page: ${asset}`);
   }
-  const cacheVersion = "20260728c";
+  const cacheVersion = "20260730a";
   const cacheChain = [
     ["index.html", html, `styles.css?v=${cacheVersion}`],
     ["index.html", html, `site-data.js?v=${cacheVersion}`],
@@ -310,9 +310,9 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     "Poster inspector must preserve the editable AutoDesign artifact");
   expect(html.includes('src="./artifacts/web/autodesign/index.html"'),
     "Web specimen must use the AutoDesign research webpage");
-  expect(html.includes('data-i18n="suite.slidesStage">18 slides</span>'), "Slides stage must report the source's 18 slides");
-  expect(html.includes("eighteen editable frames"), "Slides narrative must describe eighteen editable frames");
-  expect(!/\b(?:12 slides|twelve editable frames)\b/i.test(html), "stale twelve-slide copy remains");
+  expect(html.includes('data-i18n="suite.slidesStage">24 slides</span>'), "Slides stage must report the formal deck's 24 slides");
+  expect(html.includes("twenty-four slides"), "Slides narrative must describe the formal 24-slide deck");
+  expect(!/\b(?:12 slides|18 slides|twelve editable frames|eighteen editable frames)\b/i.test(html), "stale slide-count copy remains");
   for (const symbol of [
     "data-method-figure",
     "Method / AutoDesign and DesignHarness",
@@ -339,7 +339,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     if (!html.includes(symbol)) failures.push("index.html missing " + symbol);
   }
 
-  expect(html.includes("site-data.js?v=20260728c"), "Benchmark data source must bypass stale browser caches");
+  expect(html.includes("site-data.js?v=20260730a"), "Benchmark data source must bypass stale browser caches");
   for (const score of ["78.32", "70.87", "69.45"]) {
     expect(html.includes(score), "Leaderboard missing remeasured score " + score);
   }
@@ -926,19 +926,19 @@ for (const asset of [
 
 const promotionalAssets = [
   "assets/studies/autodesign-poster.webp",
-  ...Array.from({ length: 18 }, (_, index) => `assets/studies/autodesign-slide-${String(index + 1).padStart(2, "0")}.webp`),
+  ...Array.from({ length: 24 }, (_, index) => `assets/studies/autodesign-formal-slide-${String(index + 1).padStart(2, "0")}.webp`),
   "assets/studies/ddpm-conference-poster.webp",
   "assets/studies/ddpm-conference-teaser.mp4",
   "assets/studies/ddpm-conference-video-6min.mp4",
   "assets/studies/ddpm-conference.en.vtt",
   "artifacts/posters/autodesign/index.html",
   "artifacts/slides/autodesign/index.html",
+  "artifacts/slides/autodesign/AutoDesign-slides-formal-academic.pdf",
   "artifacts/web/autodesign/index.html",
 ];
 
 for (const artifact of [
   "artifacts/posters/autodesign/index.html",
-  "artifacts/slides/autodesign/index.html",
   "artifacts/web/autodesign/index.html",
 ]) {
   if (!existsSync(resolve(root, artifact))) continue;

@@ -180,14 +180,14 @@ async function assertCacheChain(page) {
       return `${url.pathname}${url.search}`;
     }));
   for (const resource of [
-    "/styles.css?v=20260728c",
-    "/site-data.js?v=20260728c",
-    "/i18n.js?v=20260728c",
-    "/locales.js?v=20260728c",
-    "/language-menu.js?v=20260728c",
-    "/app.js?v=20260728c",
-    "/three-scene.js?v=20260728c",
-    "/artifact-showcase.js?v=20260728c",
+    "/styles.css?v=20260730a",
+    "/site-data.js?v=20260730a",
+    "/i18n.js?v=20260730a",
+    "/locales.js?v=20260730a",
+    "/language-menu.js?v=20260730a",
+    "/app.js?v=20260730a",
+    "/three-scene.js?v=20260730a",
+    "/artifact-showcase.js?v=20260730a",
   ]) {
     assert.ok(resources.includes(resource), `cache chain did not request ${resource}: ${JSON.stringify(resources)}`);
   }
@@ -374,7 +374,7 @@ async function runLocales(browser, url) {
   const localeCatalogResource = await page.evaluate(() => performance.getEntriesByType("resource")
     .map((entry) => entry.name)
     .find((name) => name.includes("/locales.js")));
-  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260728c$/, "locale catalog request must bypass stale browser caches");
+  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260730a$/, "locale catalog request must bypass stale browser caches");
   await assertCacheChain(page);
   assert.equal(await currentLabel.textContent(), "EN");
   assert.equal(await menu.isHidden(), true);
@@ -588,7 +588,8 @@ async function runDesktop(browser, url) {
   await page.locator("#artifact-tab-slides").click();
   const embeddedSlide = page.locator("#artifact-panel-slides [data-slide-current-image]");
   await embeddedSlide.waitFor({ state: "visible" });
-  assert.match(await embeddedSlide.getAttribute("src"), /autodesign-slide-01\.webp\?v=20260729a$/);
+  assert.equal(await page.locator("#artifact-panel-slides [data-slide-carousel]").getAttribute("data-slide-count"), "24");
+  assert.match(await embeddedSlide.getAttribute("src"), /autodesign-formal-slide-01\.webp\?v=20260730a$/);
   const slideFit = await page.locator("#artifact-panel-slides").evaluate((panel) => {
     const stage = panel.querySelector(".artifact-study__stage").getBoundingClientRect();
     const frame = panel.querySelector(".slide-carousel__frame").getBoundingClientRect();
@@ -608,7 +609,7 @@ async function runDesktop(browser, url) {
   `Embedded slide does not fit its frame: ${JSON.stringify(slideFit)}`);
   assert.equal(await page.locator("#artifact-panel-slides [data-slide-current]").textContent(), "01");
   await page.locator("#artifact-panel-slides [data-slide-next]").click();
-  assert.match(await embeddedSlide.getAttribute("src"), /autodesign-slide-02\.webp\?v=20260729a$/);
+  assert.match(await embeddedSlide.getAttribute("src"), /autodesign-formal-slide-02\.webp\?v=20260730a$/);
   assert.equal(await page.locator("#artifact-panel-slides [data-slide-current]").textContent(), "02");
   const nextSlideSize = await embeddedSlide.boundingBox();
   assert.ok(nextSlideSize
@@ -616,7 +617,7 @@ async function runDesktop(browser, url) {
     && Math.abs(nextSlideSize.height - slideFit.image.height) <= 1,
   `Slide navigation changed the page geometry: ${JSON.stringify({ before: slideFit.image, after: nextSlideSize })}`);
   await page.locator("#artifact-panel-slides [data-slide-prev]").click();
-  assert.match(await embeddedSlide.getAttribute("src"), /autodesign-slide-01\.webp\?v=20260729a$/);
+  assert.match(await embeddedSlide.getAttribute("src"), /autodesign-formal-slide-01\.webp\?v=20260730a$/);
 
   await page.locator("#artifact-tab-web").click();
   const webPreview = page.locator("#artifact-panel-web .browser-specimen__viewport iframe");
@@ -688,9 +689,9 @@ async function runDesktop(browser, url) {
       await slideImage.waitFor({ state: "visible" });
       assert.ok(await slideImage.evaluate((image) => image.complete && image.naturalWidth > 0),
         "Slide viewer image did not decode");
-      assert.match(await slideImage.getAttribute("src"), /autodesign-slide-01\.webp\?v=20260729a$/);
+      assert.match(await slideImage.getAttribute("src"), /autodesign-formal-slide-01\.webp\?v=20260730a$/);
       await artifact.locator("[data-viewer-slide-next]").click();
-      assert.match(await slideImage.getAttribute("src"), /autodesign-slide-02\.webp\?v=20260729a$/);
+      assert.match(await slideImage.getAttribute("src"), /autodesign-formal-slide-02\.webp\?v=20260730a$/);
       const fitWidth = (await slideImage.boundingBox())?.width ?? 0;
       await artifact.locator("[data-viewer-slide-zoom-in]").click();
       const zoomedWidth = (await slideImage.boundingBox())?.width ?? 0;

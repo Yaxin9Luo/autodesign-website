@@ -129,22 +129,18 @@ try {
       `${name} viewer did not restore focus after iframe Escape`);
   }
 
-  const slidePage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  slidePage.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
-  });
-  slidePage.on("pageerror", (error) => errors.push(error.message));
-  await slidePage.goto(new URL("artifacts/slides/autodesign/", url).href, { waitUntil: "networkidle" });
-  assert.equal(await slidePage.locator(".deck-slide").count(), 18);
-  assert.notEqual(
-    await slidePage.locator(".deck-slide").first().evaluate((slide) => getComputedStyle(slide).backgroundColor),
-    "rgba(0, 0, 0, 0)",
-    "slide deck inline styles did not run under the hosted CSP",
+  const slideTrigger = page.locator("#artifact-panel-slides [data-open-artifact]");
+  assert.equal(
+    await slideTrigger.getAttribute("data-artifact-new-tab"),
+    "./artifacts/slides/autodesign/AutoDesign-slides-formal-academic.pdf?v=20260730a",
+    "Open slide deck must target the formal academic PDF",
   );
-  const initialScroll = await slidePage.evaluate(() => window.scrollY);
-  await slidePage.locator("body").press("ArrowRight");
-  await slidePage.waitForFunction((before) => window.scrollY > before + 20, initialScroll);
-  await slidePage.close();
+  const formalDeckResponse = await page.evaluate(async () => {
+    const response = await fetch("./artifacts/slides/autodesign/AutoDesign-slides-formal-academic.pdf");
+    return { contentType: response.headers.get("content-type"), ok: response.ok };
+  });
+  assert.equal(formalDeckResponse.ok, true, "formal academic PDF did not load from the hosted site");
+  assert.match(formalDeckResponse.contentType ?? "", /application\/pdf/, "formal academic deck must retain its PDF content type");
 
   const posterPage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   posterPage.on("console", (message) => {
