@@ -132,7 +132,7 @@ try {
   const slideTrigger = page.locator("#artifact-panel-slides [data-open-artifact]");
   assert.equal(
     await slideTrigger.getAttribute("data-artifact-new-tab"),
-    "./artifacts/slides/autodesign/AutoDesign-slides-formal-academic.pdf?v=20260730a",
+    "./artifacts/slides/autodesign/AutoDesign-slides-formal-academic.pdf?v=20260730b",
     "Open slide deck must target the formal academic PDF",
   );
   const formalDeckResponse = await page.evaluate(async () => {

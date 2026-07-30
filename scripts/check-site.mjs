@@ -208,7 +208,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   if (!html.includes('type="module"')) failures.push("missing ES module entrypoint");
   expect(html.includes('id="language-menu-trigger"'), "compact language menu trigger is missing");
   expect(html.includes('id="language-menu"'), "compact language menu panel is missing");
-  expect(html.includes('./language-menu.js?v=20260730a'), "language menu runtime is missing or stale");
+  expect(html.includes('./language-menu.js?v=20260730b'), "language menu runtime is missing or stale");
   if (!html.includes('type="importmap"')) failures.push("missing import map");
   if (!html.includes('"three": "./vendor/three/three.module.min.js"')) failures.push("missing local three import");
   if (!html.includes('"three/addons/": "./vendor/three/addons/"')) failures.push("missing local three addons import");
@@ -263,17 +263,17 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   expect(html.includes('class="hero-suite"'), "Hero suite message is missing");
   expect(html.includes('class="artifact-suite-flow"'), "Artifact suite workflow is missing");
   expect(html.includes('class="hero-title__agent"'), "hero Design Agent mark is missing");
-  expect(html.includes('assets/brand/design-agent-mark.webp?v=20260730a'), "hero Design Agent mark must bypass stale deployment fallbacks");
+  expect(html.includes('assets/brand/design-agent-mark.webp?v=20260730b'), "hero Design Agent mark must bypass stale deployment fallbacks");
   expect(html.includes('class="evolution-mascot-strip"'), "Design Agent evolution strip is missing");
-  expect(html.includes('assets/brand/design-agent-evolution.webp?v=20260730a'), "Design Agent evolution strip must bypass stale deployment fallbacks");
+  expect(html.includes('assets/brand/design-agent-evolution.webp?v=20260730b'), "Design Agent evolution strip must bypass stale deployment fallbacks");
   for (const token of ["data-slide-carousel", "data-slide-prev", "data-slide-next", 'data-artifact-kind="slides"']) {
     expect(html.includes(token), "interactive slide showcase missing " + token);
   }
   expect(html.includes("autodesign-poster.webp?v=20260729a"), "AutoDesign poster source must bypass stale deployment fallbacks");
-  expect(html.includes("autodesign-formal-slide-{index}.webp?v=20260730a"), "Slide sources must bypass stale deployment fallbacks");
+  expect(html.includes("autodesign-formal-slide-{index}.webp?v=20260730b"), "Slide sources must bypass stale deployment fallbacks");
   expect(html.includes("ddpm-conference-video-6min.mp4?v=98e94d39"), "Video source must bypass stale deployment fallbacks");
   expect(html.includes("data-method-figure"), "detailed method figure is missing");
-  expect(html.includes("assets/paper/method-detail.webp?v=20260730a"), "detailed method asset is missing");
+  expect(html.includes("assets/paper/method-detail.webp?v=20260730b"), "detailed method asset is missing");
   for (const asset of [
     "assets/paper/figure1-evolution.webp",
     "assets/paper/figure1-benchmark.webp",
@@ -282,7 +282,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
   ]) {
     expect(!html.includes(asset), `removed paper figure remains in the public page: ${asset}`);
   }
-  const cacheVersion = "20260730a";
+  const cacheVersion = "20260730b";
   const cacheChain = [
     ["index.html", html, `styles.css?v=${cacheVersion}`],
     ["index.html", html, `site-data.js?v=${cacheVersion}`],
@@ -339,7 +339,7 @@ if (["index.html", "styles.css", "site-data.js", "app.js", "scene-state.js"].eve
     if (!html.includes(symbol)) failures.push("index.html missing " + symbol);
   }
 
-  expect(html.includes("site-data.js?v=20260730a"), "Benchmark data source must bypass stale browser caches");
+  expect(html.includes("site-data.js?v=20260730b"), "Benchmark data source must bypass stale browser caches");
   for (const score of ["78.32", "70.87", "69.45"]) {
     expect(html.includes(score), "Leaderboard missing remeasured score " + score);
   }

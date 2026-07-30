@@ -5,7 +5,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { createIntroAudio } from "./intro-audio.js";
 import { createIntroScene } from "./intro-scene.js";
-import { t } from "./i18n.js?v=20260730a";
+import { t } from "./i18n.js?v=20260730b";
 import {
   INTRO_ARRIVAL_SECONDS,
   INTRO_CHARGE_THRESHOLD,
