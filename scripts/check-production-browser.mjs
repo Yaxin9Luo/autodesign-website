@@ -20,9 +20,9 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
 
   await page.goto(url, { waitUntil: "networkidle" });
-  await page.waitForFunction(() => document.getElementById("scene-shell")?.dataset.introPhase === "armed");
-  await page.keyboard.press("ArrowDown");
-  await page.waitForFunction(() => document.getElementById("scene-shell")?.dataset.introPhase === "complete");
+  assert.equal(await page.locator("canvas").count(), 0, "hosted page must not retain the retired WebGL canvas");
+  assert.ok(await page.locator(".static-hero-art").evaluate((image) => image.complete && image.naturalWidth >= 1600),
+    "hosted static editorial hero did not load");
 
   await page.locator("#artifact-tab-poster").click();
   const hostedPosterFit = await page.locator("#artifact-panel-poster").evaluate((panel) => {

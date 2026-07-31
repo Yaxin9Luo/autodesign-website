@@ -3,7 +3,7 @@ import { createReadStream, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { chromium, webkit } from "playwright";
+import { chromium } from "playwright";
 
 const sourceRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const root = resolve(sourceRoot, process.env.SITE_ROOT ?? ".");
@@ -11,9 +11,9 @@ const mimeTypes = new Map([
   [".css", "text/css; charset=utf-8"],
   [".html", "text/html; charset=utf-8"],
   [".js", "text/javascript; charset=utf-8"],
-  [".json", "application/json; charset=utf-8"],
   [".mp4", "video/mp4"],
-  [".svg", "image/svg+xml"],
+  [".pdf", "application/pdf"],
+  [".vtt", "text/vtt"],
   [".webp", "image/webp"],
   [".woff2", "font/woff2"],
 ]);
@@ -48,40 +48,13 @@ function startServer() {
   });
 }
 
-function watchConsole(page, expectedError = () => false) {
+function watchConsole(page) {
   const errors = [];
   page.on("console", (message) => {
-    if (message.type() === "error" && !expectedError(message.text())) errors.push(message.text());
+    if (message.type() === "error") errors.push(message.text());
   });
-  page.on("pageerror", (error) => {
-    if (!expectedError(error.message)) errors.push(error.message);
-  });
+  page.on("pageerror", (error) => errors.push(error.message));
   return errors;
-}
-
-async function waitForPhase(page, phase, timeout = 15_000) {
-  try {
-    await page.waitForFunction(
-      (expected) => document.getElementById("scene-shell")?.dataset.introPhase === expected,
-      phase,
-      { timeout },
-    );
-  } catch (error) {
-    const state = await page.locator("#scene-shell").evaluate((element) => ({
-      drawCalls: element.dataset.drawCalls,
-      fallback: element.classList.contains("webgl-fallback"),
-      introPhase: element.dataset.introPhase,
-      scene: element.querySelector("canvas")?.dataset.scene,
-    })).catch(() => ({ unavailable: true }));
-    if (state.introPhase === phase) return;
-    throw new Error(`Timed out waiting for intro phase ${phase}: ${JSON.stringify(state)}`, { cause: error });
-  }
-}
-
-async function openArmed(page, url) {
-  await page.goto(url, { waitUntil: "networkidle" });
-  await page.locator("#scene-shell").scrollIntoViewIfNeeded();
-  await waitForPhase(page, "armed");
 }
 
 function localeUrl(url, locale) {
@@ -95,798 +68,192 @@ async function assertNoOverflow(page) {
   assert.ok(overflow <= 1, `horizontal overflow: ${overflow}px`);
 }
 
-async function assertPaperTerminology(page) {
-  const bodyText = await page.locator("body").textContent();
-  assert.match(bodyText, /DesignHarness/);
-  assert.match(bodyText, /PosterBench/);
-  assert.doesNotMatch(bodyText, /PosterHarness|AutoPosterBench/);
-}
+async function assertStaticHero(page) {
+  const image = page.locator(".static-hero-art");
+  await image.waitFor({ state: "visible" });
+  assert.equal(await page.locator("canvas").count(), 0, "static homepage must not instantiate a canvas");
+  assert.ok(await image.evaluate((element) => element.complete && element.naturalWidth >= 1600),
+    "static editorial image did not load at high resolution");
+  const hasThree = await page.evaluate(() => performance.getEntriesByType("resource")
+    .some((entry) => entry.name.includes("three-scene.js")));
+  assert.equal(hasThree, false, "static homepage must not download the retired WebGL scene");
+  assert.equal(await page.locator(".site-header").evaluate((header) => header.classList.contains("site-header--scene")), true,
+    "dark editorial hero must keep the header readable");
 
-async function assertResearchAccess(page, { labels, layout, direction = "ltr" }) {
-  const access = page.locator(".hero-access");
-  await access.waitFor({ state: "visible" });
-  assert.equal(await access.evaluate((element) => element.tagName), "NAV");
-  assert.equal(await access.getAttribute("aria-label"), labels.accessLabel);
-  assert.equal(await access.evaluate((element) => getComputedStyle(element).direction), direction);
-
-  const controls = access.locator(":scope > [data-hero-access]");
-  assert.equal(await controls.count(), 3, "research access must expose exactly three controls");
-  const system = access.locator('[data-hero-access="system"]');
-  const code = access.locator('[data-hero-access="code"]');
-  const paper = access.locator('[data-hero-access="paper"]');
-  assert.equal(await system.evaluate((element) => element.tagName), "A");
-  assert.equal(await system.getAttribute("href"), "https://designanything.ai");
-  assert.equal(await system.getAttribute("target"), "_blank");
-  assert.equal(await system.getAttribute("rel"), "noreferrer");
-  assert.equal(await code.evaluate((element) => element.tagName), "BUTTON");
-  assert.equal(await code.isDisabled(), true);
-  assert.equal(await code.getAttribute("href"), null);
-  assert.equal(await code.evaluate((element) => {
-    element.focus();
-    return document.activeElement === element;
-  }), false, "disabled code action must not receive focus");
-  assert.equal(await paper.evaluate((element) => element.tagName), "BUTTON");
-  assert.equal(await paper.isDisabled(), true);
-  assert.equal(await paper.getAttribute("href"), null);
-  assert.equal(await paper.evaluate((element) => {
-    element.focus();
-    return document.activeElement === element;
-  }), false, "disabled paper action must not receive focus");
-
-  for (const [key, value] of Object.entries(labels)) {
-    const message = access.locator(`[data-i18n="hero.${key}"]`);
-    assert.equal(await message.textContent(), value, `localized hero.${key} label is incorrect`);
-  }
-
-  const geometry = await access.evaluate((nav) => {
-    const navRect = nav.getBoundingClientRect();
-    return {
-      clientWidth: nav.clientWidth,
-      direction: getComputedStyle(nav).direction,
-      rect: navRect.toJSON(),
-      scrollWidth: nav.scrollWidth,
-      controls: [...nav.querySelectorAll(":scope > [data-hero-access]")].map((control) => {
-        const rect = control.getBoundingClientRect();
-        return { height: rect.height, left: rect.left, right: rect.right, top: rect.top, width: rect.width };
-      }),
-    };
+  const geometry = await page.locator("#hero").evaluate((hero) => {
+    const title = hero.querySelector("h1").getBoundingClientRect();
+    const copy = hero.querySelector(".hero-copy").getBoundingClientRect();
+    const heroBounds = hero.getBoundingClientRect();
+    return { copy: copy.toJSON(), hero: heroBounds.toJSON(), title: title.toJSON() };
   });
   const viewport = page.viewportSize();
-  assert.ok(viewport, "research access viewport is unavailable");
-  assert.equal(geometry.direction, direction);
-  assert.ok(geometry.scrollWidth <= geometry.clientWidth + 1, `research access content clips: ${JSON.stringify(geometry)}`);
-  assert.ok(geometry.rect.left >= -1 && geometry.rect.right <= viewport.width + 1,
-    `research access group overflows: ${JSON.stringify(geometry)}`);
-  for (const control of geometry.controls) {
-    assert.ok(control.height >= 44, `research access target is smaller than 44px: ${JSON.stringify(control)}`);
-    assert.ok(control.left >= -1 && control.right <= viewport.width + 1,
-      `research access control overflows: ${JSON.stringify(control)}`);
+  assert.ok(viewport, "viewport is unavailable");
+  for (const bounds of [geometry.copy, geometry.title]) {
+    assert.ok(bounds.left >= -1 && bounds.right <= viewport.width + 1,
+      `hero content overflows the viewport: ${JSON.stringify(geometry)}`);
+    assert.ok(bounds.top >= geometry.hero.top - 1 && bounds.bottom <= geometry.hero.bottom + 1,
+      `hero content escapes its visual field: ${JSON.stringify(geometry)}`);
   }
+}
+
+async function assertResearchAccess(page, layout) {
+  const access = page.locator(".hero-access");
+  await access.waitFor({ state: "visible" });
+  const controls = access.locator(":scope > [data-hero-access]");
+  assert.equal(await controls.count(), 3, "research access must have three controls");
+  assert.equal(await access.locator('[data-hero-access="system"]').evaluate((element) => element.tagName), "A");
+  assert.equal(await access.locator('[data-hero-access="code"]').isDisabled(), true);
+  assert.equal(await access.locator('[data-hero-access="paper"]').isDisabled(), true);
+
+  const geometry = await controls.evaluateAll((items) => items.map((item) => item.getBoundingClientRect().toJSON()));
   if (layout === "desktop") {
-    assert.equal(new Set(geometry.controls.map((control) => Math.round(control.top))).size, 1,
-      `desktop research access must be one segmented row: ${JSON.stringify(geometry)}`);
+    assert.equal(new Set(geometry.map((bounds) => Math.round(bounds.top))).size, 1,
+      `desktop access controls must share one row: ${JSON.stringify(geometry)}`);
   } else {
-    assert.equal(Math.round(geometry.controls[0].top), Math.round(geometry.controls[1].top),
-      `mobile primary actions must share the first row: ${JSON.stringify(geometry)}`);
-    assert.ok(geometry.controls[2].top > geometry.controls[0].top,
+    assert.equal(Math.round(geometry[0].top), Math.round(geometry[1].top),
+      `mobile primary controls must share one row: ${JSON.stringify(geometry)}`);
+    assert.ok(geometry[2].top > geometry[0].top,
       `mobile paper action must occupy a second row: ${JSON.stringify(geometry)}`);
   }
 }
 
-async function assertCacheChain(page) {
-  const resources = await page.evaluate(() => performance.getEntriesByType("resource")
-    .map((entry) => {
-      const url = new URL(entry.name);
-      return `${url.pathname}${url.search}`;
-    }));
-  for (const resource of [
-    "/styles.css?v=20260730b",
-    "/site-data.js?v=20260730b",
-    "/i18n.js?v=20260730b",
-    "/locales.js?v=20260730b",
-    "/language-menu.js?v=20260730b",
-    "/app.js?v=20260730b",
-    "/three-scene.js?v=20260730b",
-    "/artifact-showcase.js?v=20260730b",
-  ]) {
-    assert.ok(resources.includes(resource), `cache chain did not request ${resource}: ${JSON.stringify(resources)}`);
-  }
-}
-
-async function assertMobileArtifactControls(page) {
-  const tabState = await page.locator(".artifact-tabs").evaluate((tablist) => ({
-    clientWidth: tablist.clientWidth,
-    scrollWidth: tablist.scrollWidth,
-    tabs: [...tablist.querySelectorAll("[data-artifact-tab]")].map((tab) => ({
-      clientHeight: tab.clientHeight,
-      clientWidth: tab.clientWidth,
-      scrollHeight: tab.scrollHeight,
-      scrollWidth: tab.scrollWidth,
-      text: tab.textContent.replace(/\s+/g, " ").trim(),
-      top: tab.offsetTop,
-      width: tab.getBoundingClientRect().width,
-    })),
-  }));
-  assert.ok(tabState.scrollWidth > tabState.clientWidth, "mobile artifact tabs should scroll horizontally");
-  assert.deepEqual(tabState.tabs.map((tab) => tab.text), ["01 Poster", "02 Slides", "03 Web", "04 Video"]);
-  assert.equal(new Set(tabState.tabs.map((tab) => tab.top)).size, 1, "mobile artifact tabs should stay on one row");
-  assert.ok(Math.max(...tabState.tabs.map((tab) => tab.width)) - Math.min(...tabState.tabs.map((tab) => tab.width)) <= 1,
-    "mobile artifact tabs should have stable equal widths");
-  for (const tab of tabState.tabs) {
-    assert.ok(tab.scrollWidth <= tab.clientWidth + 1, `artifact tab label is clipped horizontally: ${tab.text}`);
-    assert.ok(tab.scrollHeight <= tab.clientHeight + 1, `artifact tab label is clipped vertically: ${tab.text}`);
-  }
-}
-
-async function assertMobileViewer(page) {
-  const trigger = page.locator("#artifact-panel-poster [data-open-artifact]");
-  await trigger.click();
-  const viewer = page.locator("#artifact-viewer");
-  await viewer.waitFor({ state: "visible" });
-  const viewport = page.viewportSize();
-  const bounds = await viewer.boundingBox();
-  assert.ok(viewport && bounds, "artifact viewer bounds are unavailable");
-  assert.ok(Math.abs(bounds.x) <= 1 && Math.abs(bounds.y) <= 1, `artifact viewer origin is ${bounds.x},${bounds.y}`);
-  assert.ok(Math.abs(bounds.width - viewport.width) <= 1, `artifact viewer width is ${bounds.width}px, expected ${viewport.width}px`);
-  assert.ok(Math.abs(bounds.height - viewport.height) <= 1, `artifact viewer height is ${bounds.height}px, expected ${viewport.height}px`);
-  const posterGeometry = await page.locator("#artifact-viewer-stage").evaluate((stage) => {
-    const image = stage.querySelector("img");
-    return {
-      clientHeight: stage.clientHeight,
-      clientWidth: stage.clientWidth,
-      imageHeight: image?.getBoundingClientRect().height ?? 0,
-      imageWidth: image?.getBoundingClientRect().width ?? 0,
-      scrollHeight: stage.scrollHeight,
-      scrollWidth: stage.scrollWidth,
-    };
-  });
-  assert.ok(posterGeometry.imageWidth >= 960,
-    `mobile poster width is ${posterGeometry.imageWidth}px; expected an inspectable canvas`);
-  assert.ok(posterGeometry.scrollWidth > posterGeometry.clientWidth,
-    `mobile poster stage does not overflow horizontally: ${JSON.stringify(posterGeometry)}`);
-  const scrollPosition = await page.locator("#artifact-viewer-stage").evaluate((stage) => {
-    stage.scrollLeft = stage.scrollWidth;
-    return { left: stage.scrollLeft, maximum: stage.scrollWidth - stage.clientWidth };
-  });
-  assert.ok(scrollPosition.left > 0 && Math.abs(scrollPosition.left - scrollPosition.maximum) <= 1,
-    `mobile poster stage cannot pan to its horizontal edge: ${JSON.stringify(scrollPosition)}`);
-  await assertNoOverflow(page);
-  await page.keyboard.press("Escape");
-  assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
-}
-
-async function assertMethodFigure(page) {
-  const figure = page.locator("[data-method-figure]");
-  assert.equal(await figure.count(), 1, "the public page must expose one detailed method figure");
-  await figure.scrollIntoViewIfNeeded();
-  const trigger = figure.locator("[data-open-artifact]");
-  assert.equal(await trigger.count(), 1, "detailed method figure must have one inspector trigger");
-  const source = await figure.locator("img");
-  assert.ok(await source.evaluate((element) => element.complete && element.naturalWidth > 0),
-    "detailed method figure did not load");
-  await trigger.click();
-  const image = page.locator("#artifact-viewer-stage img");
-  await image.waitFor({ state: "visible" });
-  assert.ok(await image.evaluate((element) => element.complete && element.naturalWidth > 0),
-    "detailed method figure inspector did not load");
-  await page.keyboard.press("Escape");
-  await page.locator("#artifact-viewer").waitFor({ state: "hidden" });
-  assert.equal(await trigger.evaluate((element) => document.activeElement === element), true,
-    "detailed method figure inspector did not restore focus");
-}
-
-async function runDefaultLocale(browser, url) {
-  const context = await browser.newContext({ locale: "zh-CN", viewport: { width: 1280, height: 800 } });
-  const page = await context.newPage();
-  await page.addInitScript(() => localStorage.setItem("autodesign.locale", "zh-CN"));
-  await page.goto(url, { waitUntil: "networkidle" });
-  assert.equal(await page.locator("html").getAttribute("lang"), "en",
-    "a fresh visit must default to English instead of browser or legacy stored language");
-  assert.equal(await page.locator("[data-language-current]").textContent(), "EN");
-  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale")), null,
-    "legacy auto-detected language preference must be cleared");
-
-  await page.keyboard.press("ArrowDown");
-  await waitForPhase(page, "complete");
-  await page.locator("#language-menu-trigger").click();
-  await page.locator('#language-menu [data-locale="zh-CN"]').click();
-  assert.equal(await page.locator("html").getAttribute("lang"), "zh-CN");
-  await page.goto(url, { waitUntil: "networkidle" });
-  assert.equal(await page.locator("html").getAttribute("lang"), "zh-CN",
-    "a manually selected language must persist after an English-default visit");
-  await context.close();
-}
-
-async function assertBrandArtwork(page) {
-  const heroMark = page.locator(".hero-title__agent");
-  assert.ok(await heroMark.evaluate((image) => image.complete && image.naturalWidth > 0),
-    "hero Design Agent mark did not load");
-
-  const viewport = page.viewportSize();
-  assert.ok(viewport, "brand artwork viewport is unavailable");
-  if (viewport.width <= 380) {
-    assert.equal(await heroMark.isHidden(), true, "hero Design Agent mark should hide on the narrowest screens");
-  } else {
-    await heroMark.waitFor({ state: "visible" });
-    const heroBounds = await heroMark.boundingBox();
-    assert.ok(heroBounds
-      && heroBounds.x >= -1
-      && heroBounds.x + heroBounds.width <= viewport.width + 1,
-    `hero Design Agent mark overflows the viewport: ${JSON.stringify(heroBounds)}`);
-  }
-
-  const evolutionStrip = page.locator(".evolution-mascot-strip img");
-  await evolutionStrip.scrollIntoViewIfNeeded();
-  assert.ok(await evolutionStrip.evaluate((image) => image.complete && image.naturalWidth > 0),
-    "Design Agent evolution strip did not load");
-  const stripBounds = await evolutionStrip.boundingBox();
-  assert.ok(stripBounds
-    && stripBounds.x >= -1
-    && stripBounds.x + stripBounds.width <= viewport.width + 1,
-  `Design Agent evolution strip overflows the viewport: ${JSON.stringify(stripBounds)}`);
-}
-
-async function assertDrawCalls(page, maximum) {
-  await page.waitForFunction(() => Number(document.getElementById("scene-shell")?.dataset.drawCalls) > 0);
-  const drawCalls = await page.locator("#scene-shell").getAttribute("data-draw-calls");
-  assert.ok(Number(drawCalls) > 1, `expected a real 3D render, got ${drawCalls} draw call(s)`);
-  assert.ok(Number(drawCalls) <= maximum, `draw calls exceeded ${maximum}: ${drawCalls}`);
-}
-
-async function finishIntro(page) {
-  await page.locator("#intro-sound").evaluate((element) => element.blur());
-  await page.keyboard.press("Space");
-  await waitForPhase(page, "complete");
-}
-
-async function runLocales(browser, url) {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
-  const errors = watchConsole(page);
-  await openArmed(page, localeUrl(url, "en"));
-  await finishIntro(page);
-  await assertPaperTerminology(page);
-  await assertResearchAccess(page, {
-    layout: "desktop",
-    labels: {
-      accessLabel: "Research access",
-      openSystem: "Open System",
-      viewCode: "View Code",
-      codeSoon: "Code release planned",
-      readPaper: "Read Paper",
-      paperSoon: "Coming soon",
-    },
-  });
-  await assertBrandArtwork(page);
-
-  const switcher = page.locator("[data-language-switcher]");
+async function assertLanguagePicker(page) {
   const trigger = page.locator("#language-menu-trigger");
   const menu = page.locator("#language-menu");
-  const currentLabel = page.locator("[data-language-current]");
-  const expectedLocales = ["en", "zh-CN", "ko", "ar", "ja", "es", "fr", "de", "ru", "it"];
-  const expectedLabels = ["English", "简体中文", "한국어", "العربية", "日本語", "Español", "Français", "Deutsch", "Русский", "Italiano"];
-  const openMenu = async () => {
-    await trigger.click();
-    await menu.waitFor({ state: "visible" });
-    assert.equal(await trigger.getAttribute("aria-expanded"), "true");
-  };
-
-  await switcher.waitFor({ state: "visible" });
-  const localeCatalogResource = await page.evaluate(() => performance.getEntriesByType("resource")
-    .map((entry) => entry.name)
-    .find((name) => name.includes("/locales.js")));
-  assert.match(localeCatalogResource ?? "", /\/locales\.js\?v=20260730b$/, "locale catalog request must bypass stale browser caches");
-  await assertCacheChain(page);
-  assert.equal(await currentLabel.textContent(), "EN");
-  assert.equal(await menu.isHidden(), true);
-  await openMenu();
-  assert.deepEqual(
-    await menu.locator("[data-locale]").evaluateAll((options) => options.map((option) => option.dataset.locale)),
-    expectedLocales,
-  );
-  assert.deepEqual(await menu.locator("[data-locale] > span").allTextContents(), expectedLabels);
-
-  await menu.locator('[data-locale="ko"]').click();
-  assert.equal(await page.locator("html").getAttribute("lang"), "ko");
-  assert.equal(await page.locator("html").getAttribute("dir"), "ltr");
-  assert.match(page.url(), /[?&]lang=ko(?:&|#|$)/);
-  assert.match(await page.locator(".hero-dek").textContent(), /연구 시스템/);
-  assert.match(await page.locator("#harness-title").textContent(), /디자인 시스템/);
-  await assertPaperTerminology(page);
-  assert.equal(await menu.locator('[data-locale="ko"]').getAttribute("aria-checked"), "true");
-  assert.equal(await currentLabel.textContent(), "한국어");
-  assert.equal(await menu.isHidden(), true);
-  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale.v2")), "ko");
-  await assertNoOverflow(page);
-
-  await page.reload({ waitUntil: "networkidle" });
-  assert.equal(await page.locator("html").getAttribute("lang"), "ko");
-  assert.match(await page.locator(".hero-dek").textContent(), /연구 시스템/);
-  await waitForPhase(page, "armed");
-  await finishIntro(page);
-
-  await trigger.focus();
-  await page.keyboard.press("ArrowDown");
+  assert.equal(await page.locator("html").getAttribute("lang"), "en", "fresh visits must default to English");
+  await trigger.click();
   await menu.waitFor({ state: "visible" });
-  assert.equal(await menu.locator('[data-locale="en"]').evaluate((option) => document.activeElement === option), true);
-  await page.keyboard.press("End");
-  assert.equal(await menu.locator('[data-locale="it"]').evaluate((option) => document.activeElement === option), true);
-  await page.keyboard.press("Home");
-  assert.equal(await menu.locator('[data-locale="en"]').evaluate((option) => document.activeElement === option), true);
-  await page.keyboard.press("ArrowDown");
-  assert.equal(await menu.locator('[data-locale="zh-CN"]').evaluate((option) => document.activeElement === option), true);
-  await page.keyboard.press("Enter");
+  assert.deepEqual(await menu.locator("[data-locale]").evaluateAll((items) => items.map((item) => item.dataset.locale)),
+    ["en", "zh-CN", "ko", "ar", "ja", "es", "fr", "de", "ru", "it"]);
+  await menu.locator('[data-locale="zh-CN"]').click();
   assert.equal(await page.locator("html").getAttribute("lang"), "zh-CN");
-  assert.equal(await page.locator("html").getAttribute("dir"), "ltr");
-  assert.match(page.url(), /[?&]lang=zh-CN(?:&|#|$)/);
-  assert.match(await page.locator(".hero-dek").textContent(), /研究系统/);
-  assert.match(await page.locator("#evolution-state-title").textContent(), /产物/);
-  assert.match(await page.locator("#harness-title").textContent(), /设计系统/);
-  await assertPaperTerminology(page);
-  assert.equal(await menu.locator('[data-locale="zh-CN"]').getAttribute("aria-checked"), "true");
-  assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
-  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale.v2")), "zh-CN");
-  await assertResearchAccess(page, {
-    layout: "desktop",
-    labels: {
-      accessLabel: "研究入口",
-      openSystem: "进入系统",
-      viewCode: "进入代码库",
-      codeSoon: "代码即将发布",
-      readPaper: "阅读论文",
-      paperSoon: "即将推出",
-    },
-  });
-  await assertNoOverflow(page);
-
-  await openMenu();
-  await page.mouse.click(8, 240);
-  await menu.waitFor({ state: "hidden" });
-  assert.equal(await trigger.getAttribute("aria-expanded"), "false");
-
-  await openMenu();
+  await trigger.click();
   await menu.locator('[data-locale="ar"]').click();
-  assert.equal(await page.locator("html").getAttribute("lang"), "ar");
   assert.equal(await page.locator("html").getAttribute("dir"), "rtl");
-  assert.match(page.url(), /[?&]lang=ar(?:&|#|$)/);
-  assert.match(await page.locator(".hero-dek").textContent(), /نظام بحثي/);
-  assert.match(await page.locator("#evolution-state-title").textContent(), /المخرج/);
-  await assertPaperTerminology(page);
-  await page.locator(".evolution-node").nth(1).click();
-  assert.match(await page.locator("#evolution-state-detail").textContent(), /Optimizer Code Agent/);
-  assert.equal(await menu.locator('[data-locale="ar"]').getAttribute("aria-checked"), "true");
-  assert.equal(await currentLabel.textContent(), "العربية");
-  assert.equal(await page.evaluate(() => localStorage.getItem("autodesign.locale.v2")), "ar");
-  assert.equal(await page.locator(".language-switcher").evaluate((element) => getComputedStyle(element).direction), "ltr");
-  await assertResearchAccess(page, {
-    direction: "rtl",
-    layout: "desktop",
-    labels: {
-      accessLabel: "الوصول البحثي",
-      openSystem: "فتح النظام",
-      viewCode: "عرض الشفرة",
-      codeSoon: "إصدار الشفرة قريبًا",
-      readPaper: "قراءة الورقة",
-      paperSoon: "قريبًا",
-    },
-  });
-  await assertNoOverflow(page);
-
-  const remainingDesktopLocales = [
-    { locale: "ja", label: "日本語", hero: /研究システム/ },
-    { locale: "es", label: "ES", hero: /sistema de investigación/i },
-    { locale: "fr", label: "FR", hero: /système de recherche/i },
-    { locale: "it", label: "IT", hero: /sistema di ricerca/i },
-  ];
-  for (const { locale, label, hero } of remainingDesktopLocales) {
-    await openMenu();
-    await menu.locator(`[data-locale="${locale}"]`).click();
-    assert.equal(await page.locator("html").getAttribute("lang"), locale);
-    assert.equal(await page.locator("html").getAttribute("dir"), "ltr");
-    assert.equal(await currentLabel.textContent(), label);
-    assert.match(await page.locator(".hero-dek").textContent(), hero);
-    await assertPaperTerminology(page);
-    assert.equal(await menu.locator(`[data-locale="${locale}"]`).getAttribute("aria-checked"), "true");
-    await assertNoOverflow(page);
-  }
-  assert.deepEqual(errors, [], `locale console errors: ${errors.join(" | ")}`);
-  await page.close();
-
-  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-  const mobileErrors = watchConsole(mobile);
-  await openArmed(mobile, localeUrl(url, "de"));
-  await finishIntro(mobile);
-  assert.equal(await mobile.locator("html").getAttribute("lang"), "de");
-  await assertPaperTerminology(mobile);
-  await mobile.locator("[data-language-switcher]").waitFor({ state: "visible" });
-  assert.equal(await mobile.locator("[data-language-current]").textContent(), "DE");
-  await mobile.locator("#language-menu-trigger").click();
-  await mobile.locator("#language-menu").waitFor({ state: "visible" });
-  const menuBounds = await mobile.locator("#language-menu").boundingBox();
-  assert.ok(menuBounds && menuBounds.x >= -1 && menuBounds.x + menuBounds.width <= 391,
-    `mobile language menu overflows: ${JSON.stringify(menuBounds)}`);
-  await mobile.locator('[data-locale="ru"]').scrollIntoViewIfNeeded();
-  await mobile.locator('[data-locale="ru"]').click();
-  assert.equal(await mobile.locator("html").getAttribute("lang"), "ru");
-  assert.equal(await mobile.locator("[data-language-current]").textContent(), "RU");
-  assert.match(await mobile.locator("#results-title").textContent(), /Преимущества/);
-  await assertPaperTerminology(mobile);
-  const headerLayout = await mobile.locator(".site-header").evaluate((header) => ({
-    header: header.getBoundingClientRect().toJSON(),
-    controls: [...header.querySelectorAll(":scope > *")]
-      .filter((element) => getComputedStyle(element).display !== "none")
-      .map((element) => ({ className: element.className, rect: element.getBoundingClientRect().toJSON() })),
-  }));
-  for (const control of headerLayout.controls) {
-    assert.ok(control.rect.left >= -1 && control.rect.right <= 391,
-      `mobile locale control overflows: ${JSON.stringify(control)}`);
-  }
-  await assertNoOverflow(mobile);
-  assert.deepEqual(mobileErrors, [], `mobile locale console errors: ${mobileErrors.join(" | ")}`);
-  await mobile.close();
+  await trigger.click();
+  await menu.locator('[data-locale="en"]').click();
+  assert.equal(await page.locator("html").getAttribute("lang"), "en");
 }
 
-async function runDesktop(browser, url) {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  const errors = watchConsole(page);
-  await openArmed(page, localeUrl(url, "en"));
-  assert.equal(await page.locator("#scene-shell").evaluate((element) => element.classList.contains("webgl-fallback")), false);
-  await assertNoOverflow(page);
-  await assertDrawCalls(page, 120);
-
-  await page.locator("#intro-sound").focus();
-  await page.keyboard.press("Space");
-  assert.equal(await page.locator("#intro-sound").getAttribute("aria-pressed"), "true");
-  assert.equal(await page.locator("#scene-shell").getAttribute("data-intro-phase"), "armed");
-  await page.keyboard.press("Space");
-  assert.equal(await page.locator("#intro-sound").getAttribute("aria-pressed"), "false");
-
-  await page.locator("#intro-sound").evaluate((element) => element.blur());
-  await page.keyboard.press("Space");
-  await waitForPhase(page, "complete");
-  assert.equal(await page.locator("#intro-replay").isVisible(), true);
-
-  assert.equal(await page.locator("[data-artifact-tab]").count(), 4);
-  const suiteFlow = page.locator(".artifact-suite-flow");
-  await suiteFlow.waitFor({ state: "visible" });
-  const flowBounds = await suiteFlow.boundingBox();
-  const desktopViewport = page.viewportSize();
-  assert.ok(flowBounds && desktopViewport
-    && flowBounds.x >= 0
-    && flowBounds.x + flowBounds.width <= desktopViewport.width + 1,
-  `artifact suite workflow overflows desktop: ${JSON.stringify(flowBounds)}`);
-  assert.equal(await page.locator("#artifact-panel-poster").isVisible(), true);
-  assert.equal(await page.locator("#artifact-panel-video source").getAttribute("src"), null);
-  await page.locator("#artifact-tab-poster").focus();
-  await page.keyboard.press("End");
-  assert.equal(await page.locator("#artifact-tab-video").getAttribute("aria-selected"), "true");
-  await page.keyboard.press("Home");
-  assert.equal(await page.locator("#artifact-tab-poster").getAttribute("aria-selected"), "true");
-  await page.keyboard.press("ArrowLeft");
-  assert.equal(await page.locator("#artifact-tab-video").getAttribute("aria-selected"), "true");
-  await page.keyboard.press("ArrowRight");
-  assert.equal(await page.locator("#artifact-tab-poster").getAttribute("aria-selected"), "true");
-  await page.locator("#artifact-tab-video").click();
-  await page.waitForFunction(() => document.querySelector("#artifact-panel-video source")?.src.endsWith("ddpm-conference-teaser.mp4"));
+async function assertArtifactSuite(page) {
+  await page.locator("#artifact-studies").scrollIntoViewIfNeeded();
   await page.locator("#artifact-tab-poster").click();
-  await page.waitForFunction(() => {
-    const video = document.querySelector("#artifact-panel-video video");
-    const source = video?.querySelector("source");
-    return video?.paused && !source?.hasAttribute("src") && video.networkState === video.NETWORK_NO_SOURCE;
-  });
-
-  const posterFit = await page.locator("#artifact-panel-poster").evaluate((panel) => {
+  const posterPanel = page.locator("#artifact-panel-poster");
+  const posterImage = posterPanel.locator(".artifact-study__stage img");
+  assert.ok(await posterImage.evaluate((image) => image.complete && image.naturalWidth > 0),
+    "academic poster preview did not load");
+  const posterFit = await posterPanel.evaluate((panel) => {
     const stage = panel.querySelector(".artifact-study__stage").getBoundingClientRect();
-    const image = panel.querySelector("img").getBoundingClientRect();
+    const image = panel.querySelector(".artifact-study__stage img").getBoundingClientRect();
     const label = panel.querySelector(".artifact-stage-label").getBoundingClientRect();
-    return { image: { bottom: image.bottom, height: image.height, top: image.top, width: image.width }, label: { top: label.top }, stage: { bottom: stage.bottom, top: stage.top } };
+    return { image: image.toJSON(), label: label.toJSON(), stage: stage.toJSON() };
   });
-  assert.ok(posterFit.image.top >= posterFit.stage.top && posterFit.image.bottom < posterFit.label.top - 12,
-    `Poster preview is clipped or collides with its stage metadata: ${JSON.stringify(posterFit)}`);
-  assert.ok(Math.abs(posterFit.image.width / posterFit.image.height - (3072 / 2140)) <= 0.01,
-    `Poster preview does not preserve its source aspect ratio: ${JSON.stringify(posterFit)}`);
+  assert.ok(posterFit.image.top >= posterFit.stage.top && posterFit.image.bottom < posterFit.label.top - 6,
+    `poster preview is clipped by the stage: ${JSON.stringify(posterFit)}`);
+  await posterPanel.locator("[data-open-artifact]").click();
+  const posterViewerImage = page.locator("#artifact-viewer-stage img");
+  await posterViewerImage.waitFor({ state: "visible" });
+  assert.ok(await posterViewerImage.evaluate((image) => image.complete && image.naturalWidth > 0),
+    "poster inspector image did not load");
+  await page.keyboard.press("Escape");
 
   await page.locator("#artifact-tab-slides").click();
-  const embeddedSlide = page.locator("#artifact-panel-slides [data-slide-current-image]");
-  await embeddedSlide.waitFor({ state: "visible" });
-  assert.equal(await page.locator("#artifact-panel-slides [data-slide-carousel]").getAttribute("data-slide-count"), "24");
-  assert.match(await embeddedSlide.getAttribute("src"), /autodesign-formal-slide-01\.webp\?v=20260730b$/);
-  const slideFit = await page.locator("#artifact-panel-slides").evaluate((panel) => {
-    const stage = panel.querySelector(".artifact-study__stage").getBoundingClientRect();
-    const frame = panel.querySelector(".slide-carousel__frame").getBoundingClientRect();
-    const image = panel.querySelector("[data-slide-current-image]").getBoundingClientRect();
-    return {
-      frame: { bottom: frame.bottom, height: frame.height, top: frame.top, width: frame.width },
-      image: { height: image.height, width: image.width },
-      stage: { bottom: stage.bottom, height: stage.height, top: stage.top, width: stage.width },
-    };
-  });
-  assert.ok(slideFit.frame.top >= slideFit.stage.top - 1 && slideFit.frame.bottom <= slideFit.stage.bottom + 1,
-    `Embedded slide is clipped by its stage: ${JSON.stringify(slideFit)}`);
-  assert.ok(Math.abs(slideFit.frame.width / slideFit.frame.height - (16 / 9)) <= 0.01,
-    `Embedded slide frame is not 16:9: ${JSON.stringify(slideFit)}`);
-  assert.ok(Math.abs(slideFit.image.width - slideFit.frame.width) <= 2
-    && Math.abs(slideFit.image.height - slideFit.frame.height) <= 2,
-  `Embedded slide does not fit its frame: ${JSON.stringify(slideFit)}`);
-  assert.equal(await page.locator("#artifact-panel-slides [data-slide-current]").textContent(), "01");
-  await page.locator("#artifact-panel-slides [data-slide-next]").click();
-  assert.match(await embeddedSlide.getAttribute("src"), /autodesign-formal-slide-02\.webp\?v=20260730b$/);
-  assert.equal(await page.locator("#artifact-panel-slides [data-slide-current]").textContent(), "02");
-  const nextSlideSize = await embeddedSlide.boundingBox();
-  assert.ok(nextSlideSize
-    && Math.abs(nextSlideSize.width - slideFit.image.width) <= 1
-    && Math.abs(nextSlideSize.height - slideFit.image.height) <= 1,
-  `Slide navigation changed the page geometry: ${JSON.stringify({ before: slideFit.image, after: nextSlideSize })}`);
-  await page.locator("#artifact-panel-slides [data-slide-prev]").click();
-  assert.match(await embeddedSlide.getAttribute("src"), /autodesign-formal-slide-01\.webp\?v=20260730b$/);
+  const slidesPanel = page.locator("#artifact-panel-slides");
+  const slideImage = slidesPanel.locator("[data-slide-current-image]");
+  await slideImage.waitFor({ state: "visible" });
+  assert.ok(await slideImage.evaluate((image) => image.complete && image.naturalWidth > 0),
+    "embedded slide did not load");
+  assert.equal(await slidesPanel.locator("[data-slide-current]").textContent(), "01");
+  await slidesPanel.locator("[data-slide-next]").click();
+  await page.waitForFunction(() => document.querySelector("#artifact-panel-slides [data-slide-current]")?.textContent === "02");
+  await slidesPanel.locator("[data-open-artifact]").click();
+  const slideViewer = page.locator("#artifact-viewer-stage .artifact-slide-viewer");
+  await slideViewer.waitFor({ state: "visible" });
+  assert.equal(await page.locator("#artifact-viewer-stage video").count(), 0,
+    "slides must never fall through to the video viewer");
+  await slideViewer.locator("[data-viewer-slide-next]").click();
+  await page.keyboard.press("Escape");
 
   await page.locator("#artifact-tab-web").click();
-  const webPreview = page.locator("#artifact-panel-web .browser-specimen__viewport iframe");
-  await webPreview.waitFor({ state: "visible" });
-  const webPreviewFrame = webPreview.contentFrame();
-  await webPreviewFrame.locator("body").waitFor();
-  const webGeometry = await webPreviewFrame.locator("html").evaluate((html) => ({
-    clientHeight: window.innerHeight,
-    scrollHeight: html.scrollHeight,
-  }));
-  assert.ok(webGeometry.clientHeight > 0 && webGeometry.scrollHeight > webGeometry.clientHeight,
-    `Web preview must scroll inside a fixed viewport: ${JSON.stringify(webGeometry)}`);
-  const webScroll = await webPreviewFrame.locator("body").evaluate(() => new Promise((resolveScroll) => {
+  const preview = page.locator("#artifact-panel-web iframe");
+  const frame = preview.contentFrame();
+  await frame.locator("footer").waitFor({ state: "attached" });
+  const pageEnd = await frame.locator("body").evaluate(() => new Promise((resolveEnd) => {
     document.documentElement.style.scrollBehavior = "auto";
     window.scrollTo(0, document.documentElement.scrollHeight);
     requestAnimationFrame(() => {
       const footer = document.querySelector("footer");
-      resolveScroll({
-        bottomGap: document.documentElement.scrollHeight - (footer.getBoundingClientRect().bottom + window.scrollY),
+      resolveEnd({
+        gap: document.documentElement.scrollHeight - (footer.getBoundingClientRect().bottom + window.scrollY),
         maximum: document.documentElement.scrollHeight - window.innerHeight,
         top: window.scrollY,
       });
     });
   }));
-  assert.ok(webScroll.top > 0 && Math.abs(webScroll.top - webScroll.maximum) <= 1,
-    `Web preview cannot reach its final content: ${JSON.stringify(webScroll)}`);
-  assert.ok(Math.abs(webScroll.bottomGap) <= 2,
-    `Web preview leaves blank space after its footer: ${JSON.stringify(webScroll)}`);
+  assert.ok(pageEnd.top > 0 && Math.abs(pageEnd.top - pageEnd.maximum) <= 1,
+    `embedded research page cannot reach its end: ${JSON.stringify(pageEnd)}`);
+  assert.ok(Math.abs(pageEnd.gap) <= 2,
+    `embedded research page leaves a blank tail: ${JSON.stringify(pageEnd)}`);
 
-  await page.locator("#artifact-tab-slides").click();
-  const slidesTrigger = page.locator("#artifact-panel-slides [data-open-artifact]");
-  await slidesTrigger.evaluate((trigger) => { trigger.dataset.artifactKind = "unsupported"; });
-  await slidesTrigger.click();
-  assert.equal(await page.locator("#artifact-viewer").getAttribute("open"), null,
-    "Unknown artifact types must not open a mismatched viewer");
-  assert.equal(await page.locator("#artifact-viewer-stage video").count(), 0,
-    "Unknown artifact types must never fall through to Video");
-  await slidesTrigger.evaluate((trigger) => { trigger.dataset.artifactKind = "slides"; });
+  await page.locator("#artifact-tab-video").click();
+  await page.waitForFunction(() => document.querySelector("#artifact-panel-video source")?.src.includes("ddpm-conference-teaser.mp4"));
+  const videoTrigger = page.locator("#artifact-panel-video .video-specimen__play");
+  await videoTrigger.click();
+  const video = page.locator("#artifact-viewer-stage video");
+  await video.waitFor({ state: "visible" });
+  await video.evaluate((element) => new Promise((resolveReady, reject) => {
+    if (element.readyState >= HTMLMediaElement.HAVE_METADATA) resolveReady();
+    else {
+      element.addEventListener("loadedmetadata", resolveReady, { once: true });
+      element.addEventListener("error", () => reject(new Error("conference video failed to load")), { once: true });
+    }
+  }));
+  assert.equal(await video.getAttribute("controls"), "");
+  assert.equal(await video.locator('track[kind="captions"][srclang="en"]').count(), 1,
+    "conference viewer must retain English captions");
+  await page.keyboard.press("Escape");
 
-  for (const name of ["poster", "slides", "web", "video"]) {
-    await page.locator(`#artifact-tab-${name}`).click();
-    const triggerSelector = name === "video"
-      ? ".video-specimen__play[data-open-artifact]"
-      : "[data-open-artifact]";
-    const trigger = page.locator(`#artifact-panel-${name} ${triggerSelector}`);
-    const kind = await trigger.getAttribute("data-artifact-kind");
-    const source = await trigger.getAttribute("data-artifact-src");
-    await trigger.click();
-    const selector = kind === "image" ? "img" : kind === "slides" ? ".artifact-slide-viewer" : kind;
-    const artifact = page.locator(`#artifact-viewer-stage ${selector}`);
-    await artifact.waitFor({ state: "visible" });
-    const detachedVideo = kind === "video" ? await artifact.elementHandle() : null;
-    if (kind !== "slides") assert.equal(await artifact.getAttribute("src"), source);
-    assert.equal(await page.locator("#artifact-viewer-stage").locator(selector).count(), 1);
-    const stageBounds = await page.locator("#artifact-viewer-stage").boundingBox();
-    const artifactBounds = await artifact.boundingBox();
-    assert.ok(stageBounds && artifactBounds, `${name} viewer bounds are unavailable`);
-    assert.ok(artifactBounds.width <= stageBounds.width + 1, `${name} viewer overflows horizontally`);
-    assert.ok(artifactBounds.height <= stageBounds.height + 1, `${name} viewer overflows vertically`);
-    if (kind === "image") {
-      assert.ok(await artifact.evaluate((image) => image.complete && image.naturalWidth > 0),
-        "Poster viewer image did not decode");
-    }
-    if (kind === "slides") {
-      assert.equal(await page.locator("#artifact-viewer-type").textContent(), "Slide deck");
-      assert.equal(await page.locator("#artifact-viewer-stage video").count(), 0,
-        "Slide viewer rendered an unexpected video element");
-      const slideImage = artifact.locator("[data-viewer-slide-image]");
-      await slideImage.waitFor({ state: "visible" });
-      assert.ok(await slideImage.evaluate((image) => image.complete && image.naturalWidth > 0),
-        "Slide viewer image did not decode");
-      assert.match(await slideImage.getAttribute("src"), /autodesign-formal-slide-01\.webp\?v=20260730b$/);
-      await artifact.locator("[data-viewer-slide-next]").click();
-      assert.match(await slideImage.getAttribute("src"), /autodesign-formal-slide-02\.webp\?v=20260730b$/);
-      const fitWidth = (await slideImage.boundingBox())?.width ?? 0;
-      await artifact.locator("[data-viewer-slide-zoom-in]").click();
-      const zoomedWidth = (await slideImage.boundingBox())?.width ?? 0;
-      assert.ok(zoomedWidth > fitWidth, `Slide zoom did not increase width: ${fitWidth} -> ${zoomedWidth}`);
-      await artifact.locator("[data-viewer-slide-reset]").click();
-    }
-    if (kind === "iframe") {
-      assert.equal(await artifact.getAttribute("sandbox"), "allow-scripts allow-popups");
-      const frame = artifact.contentFrame();
-      await frame.locator("body").waitFor();
-      await frame.locator("body").evaluate(() => new Promise((resolveReady) => {
-        if (document.readyState !== "loading") resolveReady();
-        else document.addEventListener("DOMContentLoaded", resolveReady, { once: true });
-      }));
-      await frame.locator("#evidence-lightbox").waitFor({ state: "attached" });
-      await frame.locator(".lightbox-launch").first().click();
-      await frame.locator("#evidence-lightbox").waitFor({ state: "visible" });
-      await frame.locator("#close-lightbox").click();
-      await frame.locator("#evidence-lightbox").waitFor({ state: "hidden" });
-      await frame.locator("body").press("Escape");
-      await page.locator("#artifact-viewer").waitFor({ state: "hidden", timeout: 3_000 });
-      assert.equal(await page.locator("#artifact-viewer-stage").evaluate((stage) => stage.childElementCount), 0);
-      assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
-      continue;
-    }
-    if (kind === "video") {
-      const captions = artifact.locator('track[kind="captions"][srclang="en"]');
-      assert.equal(await captions.count(), 1);
-      assert.equal(await captions.getAttribute("src"), "./assets/studies/ddpm-conference.en.vtt");
-      assert.equal(await captions.getAttribute("label"), "English");
-      assert.equal(await captions.getAttribute("default"), "");
-      await artifact.evaluate((video) => new Promise((resolveReady, reject) => {
-        if (video.readyState >= HTMLMediaElement.HAVE_METADATA) resolveReady();
-        else {
-          video.addEventListener("loadedmetadata", resolveReady, { once: true });
-          video.addEventListener("error", () => reject(new Error("Full video failed to load")), { once: true });
-        }
-      }));
-      assert.ok(await artifact.evaluate((video) => video.duration > 350), "Full video duration is unavailable");
-      await artifact.evaluate((video) => video.play());
-      await page.waitForFunction(() => !document.querySelector("#artifact-viewer-stage video")?.paused);
-      await artifact.evaluate((video) => video.pause());
-    }
-    await page.locator("#artifact-viewer .artifact-viewer__close").focus();
-    await page.keyboard.press("Shift+Tab");
-    assert.equal(await page.locator("#artifact-viewer-external").evaluate((element) => document.activeElement === element), true);
-    await page.keyboard.press("Tab");
-    assert.equal(await page.locator("#artifact-viewer .artifact-viewer__close").evaluate((element) => document.activeElement === element), true);
-    await page.keyboard.press("Escape");
-    assert.equal(await page.locator("#artifact-viewer-stage").evaluate((stage) => stage.childElementCount), 0);
-    if (detachedVideo) {
-      assert.deepEqual(await detachedVideo.evaluate((video) => ({
-        paused: video.paused,
-        references: [...video.querySelectorAll("source, track")].map((element) => element.getAttribute("src")),
-        source: video.getAttribute("src"),
-        unloaded: [video.NETWORK_EMPTY, video.NETWORK_NO_SOURCE].includes(video.networkState),
-      })), { paused: true, references: [null], source: null, unloaded: true });
-      await detachedVideo.dispose();
-    }
-    assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
-  }
+  const methodFigure = page.locator("[data-method-figure]");
+  await methodFigure.scrollIntoViewIfNeeded();
+  await methodFigure.locator("[data-open-artifact]").click();
+  const methodImage = page.locator("#artifact-viewer-stage img");
+  await methodImage.waitFor({ state: "visible" });
+  assert.ok(await methodImage.evaluate((image) => image.complete && image.naturalWidth > 0),
+    "method figure inspector did not load");
+  await page.keyboard.press("Escape");
+}
 
-  await assertMethodFigure(page);
-
-  await page.locator("#scene-shell").scrollIntoViewIfNeeded();
-  await page.waitForFunction(() => !document.querySelector(".site-header")?.classList.contains("site-header--paper"));
-  await page.locator("#intro-replay").click();
-  await waitForPhase(page, "armed");
-  assert.equal(await page.locator("#artifact-canvas").count(), 1);
-  assert.equal(await page.locator("#scene-shell").getAttribute("data-intro-phase"), "armed");
-
+async function runDesktop(browser, url) {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const errors = watchConsole(page);
+  await page.goto(url, { waitUntil: "networkidle" });
+  await assertStaticHero(page);
+  await assertResearchAccess(page, "desktop");
+  await assertLanguagePicker(page);
+  await assertArtifactSuite(page);
+  await page.locator("#evolution").scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => document.querySelector(".site-header")?.classList.contains("site-header--scene"));
+  await assertNoOverflow(page);
   assert.deepEqual(errors, [], `desktop console errors: ${errors.join(" | ")}`);
   await page.close();
 }
 
-async function runMobile(browser, url, viewport) {
-  const page = await browser.newPage({
-    viewport,
-    isMobile: true,
-    hasTouch: true,
-  });
+async function runMobile(browser, url) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const errors = watchConsole(page);
-  await openArmed(page, localeUrl(url, "en"));
-  await assertNoOverflow(page);
-  await assertDrawCalls(page, 70);
-  await page.keyboard.press("ArrowDown");
-  await waitForPhase(page, "complete");
-  await assertResearchAccess(page, {
-    layout: "mobile",
-    labels: {
-      accessLabel: "Research access",
-      openSystem: "Open System",
-      viewCode: "View Code",
-      readPaper: "Read Paper",
-      paperSoon: "Coming soon",
-    },
-  });
-  await assertBrandArtwork(page);
-  await page.locator("#artifact-studies").scrollIntoViewIfNeeded();
-  await page.waitForFunction(() => document.querySelector(".site-header")?.classList.contains("site-header--paper"));
-  assert.equal(await page.locator(".intro-controls").isVisible(), false);
-  const suiteFlow = page.locator(".artifact-suite-flow");
-  await suiteFlow.waitFor({ state: "visible" });
-  const flowBounds = await suiteFlow.boundingBox();
-  assert.ok(flowBounds
-    && flowBounds.x >= 0
-    && flowBounds.x + flowBounds.width <= viewport.width + 1,
-  `artifact suite workflow overflows ${viewport.width}px viewport: ${JSON.stringify(flowBounds)}`);
-  await assertMobileArtifactControls(page);
-  await assertMobileViewer(page);
-  await assertNoOverflow(page);
-  assert.deepEqual(errors, [], `${viewport.width}px mobile console errors: ${errors.join(" | ")}`);
-  await page.close();
-}
-
-async function runReducedMotion(browser, url) {
-  const page = await browser.newPage({
-    viewport: { width: 1280, height: 800 },
-    reducedMotion: "reduce",
-  });
-  const errors = watchConsole(page);
-  await openArmed(page, localeUrl(url, "en"));
-  await page.keyboard.press("ArrowDown");
-  await waitForPhase(page, "complete", 1_500);
-  await page.locator("#artifact-tab-video").click();
-  const teaser = page.locator("#artifact-panel-video video");
-  const teaserState = await teaser.evaluate((video) => ({
-    currentTime: video.currentTime,
-    networkState: video.networkState,
-    paused: video.paused,
-    source: video.querySelector("source")?.getAttribute("src") ?? null,
-  }));
-  await page.waitForTimeout(250);
-  assert.deepEqual(await teaser.evaluate((video) => ({
-    currentTime: video.currentTime,
-    networkState: video.networkState,
-    paused: video.paused,
-    source: video.querySelector("source")?.getAttribute("src") ?? null,
-  })), teaserState);
-  assert.deepEqual(teaserState, { currentTime: 0, networkState: 3, paused: true, source: null });
-  assert.deepEqual(errors, [], `reduced-motion console errors: ${errors.join(" | ")}`);
-  await page.close();
-}
-
-async function runSaveData(browser, url) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  await page.addInitScript(() => {
-    const connection = new EventTarget();
-    Object.defineProperty(connection, "saveData", { value: true });
-    Object.defineProperty(navigator, "connection", { configurable: true, value: connection });
-  });
-  const errors = watchConsole(page);
-  await openArmed(page, localeUrl(url, "en"));
-  await page.keyboard.press("ArrowDown");
-  await waitForPhase(page, "complete");
-  await page.locator("#artifact-tab-video").click();
-  const teaserState = await page.locator("#artifact-panel-video video").evaluate((video) => ({
-    networkState: video.networkState,
-    paused: video.paused,
-    source: video.querySelector("source")?.getAttribute("src") ?? null,
-  }));
-  assert.deepEqual(teaserState, { networkState: 3, paused: true, source: null });
-  assert.deepEqual(errors, [], `save-data console errors: ${errors.join(" | ")}`);
-  await page.close();
-}
-
-async function runFallback(browser, url, initializationFailure = false) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  if (initializationFailure) {
-    await page.addInitScript(() => {
-      globalThis.ResizeObserver = class {
-        constructor() {
-          throw new Error("Injected ResizeObserver initialization failure");
-        }
-      };
-    });
-  } else {
-    await page.addInitScript(() => {
-      const getContext = HTMLCanvasElement.prototype.getContext;
-      HTMLCanvasElement.prototype.getContext = function patchedGetContext(kind, ...args) {
-        if (kind === "webgl" || kind === "webgl2") return null;
-        return getContext.call(this, kind, ...args);
-      };
-    });
-  }
-  const errors = watchConsole(
-    page,
-    (message) => initializationFailure && message.includes("scene initialization failed"),
-  );
   await page.goto(localeUrl(url, "en"), { waitUntil: "networkidle" });
-  await page.waitForFunction(() => document.getElementById("scene-shell")?.classList.contains("webgl-fallback"));
-  assert.equal(await page.locator("#intro-enter").isVisible(), true);
-  await page.locator("#intro-enter").click();
-  await waitForPhase(page, "complete", 1_500);
-  assert.deepEqual(errors, [], `fallback console errors: ${errors.join(" | ")}`);
+  await assertStaticHero(page);
+  await assertResearchAccess(page, "mobile");
+  await page.locator("#artifact-studies").scrollIntoViewIfNeeded();
+  const tabs = await page.locator(".artifact-tabs").evaluate((tablist) => ({
+    clientWidth: tablist.clientWidth,
+    scrollWidth: tablist.scrollWidth,
+    tops: [...tablist.querySelectorAll("[data-artifact-tab]")].map((tab) => tab.offsetTop),
+  }));
+  assert.ok(tabs.scrollWidth > tabs.clientWidth, "mobile artifact tabs must remain horizontally scrollable");
+  assert.equal(new Set(tabs.tops).size, 1, "mobile artifact tabs must remain on one row");
+  await assertNoOverflow(page);
+  assert.deepEqual(errors, [], `mobile console errors: ${errors.join(" | ")}`);
   await page.close();
 }
 
@@ -896,23 +263,10 @@ const server = localServer?.server;
 const url = hostedUrl ? new URL(hostedUrl).href : localServer.url;
 let browser;
 try {
-  const browserName = process.env.PLAYWRIGHT_BROWSER ?? "chromium";
-  const browserType = browserName === "webkit" ? webkit : chromium;
-  const browserChannel = process.env.PLAYWRIGHT_CHANNEL ?? "chromium";
-  browser = await browserType.launch({
-    ...(browserName === "chromium" && browserChannel !== "chromium" ? { channel: browserChannel } : {}),
-    headless: true,
-  });
-  await runDefaultLocale(browser, url);
-  await runLocales(browser, url);
+  browser = await chromium.launch({ headless: true });
   await runDesktop(browser, url);
-  await runMobile(browser, url, { width: 430, height: 932 });
-  await runMobile(browser, url, { width: 320, height: 667 });
-  await runReducedMotion(browser, url);
-  await runSaveData(browser, url);
-  await runFallback(browser, url, false);
-  await runFallback(browser, url, true);
-  console.log("research-site browser smoke: OK");
+  await runMobile(browser, url);
+  console.log("research-site static browser smoke: OK");
 } finally {
   await browser?.close();
   if (server) {

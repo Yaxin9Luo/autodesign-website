@@ -14,15 +14,15 @@
     <title>AutoDesign — The Artifact Engine</title>
     <link rel="canonical" href="https://autodesign.designanything.ai/">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23080b0e'/%3E%3Cpath d='M7 24 16 6l9 18h-4l-5-10-5 10Z' fill='%2300bfa5'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="./styles.css?v=20260730b">
+    <link rel="stylesheet" href="./styles.css?v=20260731b">
   </head>
   <body>
     <header class="site-header">
-      <a class="wordmark" href="#hero" data-scene-target="hero" aria-label="AutoDesign home" data-i18n-aria-label="nav.home">AutoDesign</a>
+      <a class="wordmark" href="#hero" aria-label="AutoDesign home" data-i18n-aria-label="nav.home">AutoDesign</a>
       <nav aria-label="Primary" data-i18n-aria-label="nav.primary">
         <a href="#evolution" data-i18n="nav.evolution">Evolution</a>
         <a href="#harness" data-i18n="nav.harness">Harness</a>
-        <a href="#posters" data-scene-target="artifacts" data-i18n="nav.posters">Posters</a>
+        <a href="#artifact-studies" data-i18n="nav.posters">Posters</a>
         <a href="#results" data-i18n="nav.results">Results</a>
       </nav>
       <div class="language-switcher" data-language-switcher data-language-menu-root>
@@ -47,70 +47,10 @@
     </header>
 
     <main>
-      <div id="scene-shell" data-phase="dormant" data-intro-phase="arriving">
+      <div id="scene-shell" class="static-hero">
         <div class="scene-stage" aria-hidden="true">
-          <canvas id="artifact-canvas"></canvas>
-          <div class="fallback-composition">
-            <div class="fallback-source">
-              <span>PAPER</span>
-              <span>FIGURE</span>
-              <span>TABLE</span>
-            </div>
-            <div class="fallback-engine" aria-label="Artifact Engine modules">
-              <strong>ARTIFACT ENGINE</strong>
-              <ol>
-                <li>Context</li>
-                <li>Designer</li>
-                <li>Render</li>
-                <li>Evaluate</li>
-                <li>Repair <b>Accepted</b></li>
-              </ol>
-            </div>
-            <div class="fallback-output">
-              <span>ACCEPTED OUTPUT / 02</span>
-              <img class="scene-fallback" data-src="./assets/posters/attention-1600.webp" width="1600" height="801" alt="">
-            </div>
-          </div>
-          <div id="engine-labels">
-            <span class="engine-label engine-label--instrument" data-phase-label="instrument">ARTIFACT ENGINE / DESIGNHARNESS</span>
-            <span class="engine-label engine-label--source" data-phase-label="source">SOURCE INGEST / PAPER · FIGURE · TABLE · EQUATION</span>
-            <span class="engine-label engine-label--context" data-phase-label="module">01 / CONTEXT</span>
-            <span class="engine-label engine-label--designer" data-phase-label="module">02 / DESIGNER</span>
-            <span class="engine-label engine-label--render" data-phase-label="module">03 / RENDER</span>
-            <span class="engine-label engine-label--evaluate" data-phase-label="module">04 / EVALUATE</span>
-            <span class="engine-label engine-label--repair" data-phase-label="module">05 / REPAIR</span>
-            <span class="engine-label engine-label--trace" data-phase-label="trace">DIAGNOSTIC RETURN / 01 ACCEPTED UPDATE</span>
-          </div>
+          <img class="static-hero-art" src="./assets/brand/autodesign-editorial-background.webp?v=20260731b" width="1672" height="941" alt="">
         </div>
-
-        <section class="intro-overlay" id="intro-overlay" aria-label="AutoDesign information genesis opening" data-i18n-aria-label="intro.label">
-          <div class="intro-title">
-            <p class="intro-index" data-i18n="intro.index">AutoDesign / Information Genesis</p>
-            <p class="intro-phase" id="intro-phase" aria-hidden="true">
-              <span data-intro-label="input">Multimodal IN</span>
-              <span data-intro-label="singularity">Design Singularity</span>
-              <span data-intro-label="output">Multimodal OUT</span>
-            </p>
-            <span class="visually-hidden" id="intro-announcement" aria-live="polite" data-i18n="intro.input">Multimodal IN</span>
-          </div>
-          <div class="intro-instrument">
-            <div class="intro-charge" id="intro-charge" role="progressbar" aria-label="Singularity charge" data-i18n-aria-label="intro.charge" aria-valuemin="0" aria-valuemax="220" aria-valuenow="0">
-              <span></span>
-            </div>
-            <p class="intro-prompt" id="intro-prompt" data-charge-label="0 / 220" data-i18n="intro.scroll">Scroll to ignite</p>
-          </div>
-          <div class="intro-output-key" aria-hidden="true">
-            <span><b>01</b> <span data-i18n="intro.posterPrimary">Poster / Primary</span></span>
-            <span><b>02</b> <span data-i18n="intro.slides">Slides</span></span>
-            <span><b>03</b> <span data-i18n="intro.web">Web</span></span>
-            <span><b>04</b> <span data-i18n="intro.video">Video</span></span>
-          </div>
-          <div class="intro-controls">
-            <button type="button" id="intro-sound" aria-pressed="false" data-i18n="intro.soundOff">Sound / Off</button>
-            <button type="button" id="intro-replay" hidden data-i18n="intro.replay">Replay intro</button>
-            <button type="button" id="intro-enter" hidden data-i18n="intro.enter">Enter AutoDesign</button>
-          </div>
-        </section>
 
         <div class="scene-story">
           <section class="scene-beat hero" id="hero" aria-labelledby="hero-title">
@@ -119,7 +59,7 @@
               <h1 id="hero-title"><span class="hero-title__word">AutoDesign</span><img class="hero-title__agent" src="./assets/brand/design-agent-mark.webp?v=20260730b" width="220" height="372" alt="" aria-hidden="true"></h1>
               <p class="hero-dek" data-i18n="hero.dek">A research system for improving the harness that turns source material into faithful, editable artifacts.</p>
               <p class="hero-suite" data-i18n="hero.suite">From one paper to a complete research communication suite: an editable poster, presentation slides, a research webpage, and a narrated conference video with synchronized subtitles.</p>
-              <a class="text-link text-link--light" href="#optimization" data-scene-target="system"><span data-i18n="hero.enter">Enter the engine</span> <span aria-hidden="true">↓</span></a>
+              <a class="text-link text-link--light" href="#optimization"><span data-i18n="hero.enter">Enter the engine</span> <span aria-hidden="true">↓</span></a>
               <nav class="hero-access" aria-label="Research access" data-i18n-aria-label="hero.accessLabel">
                 <span class="visually-hidden" data-i18n="hero.accessLabel">Research access</span>
                 <a class="hero-access__control" data-hero-access="system" href="https://designanything.ai" target="_blank" rel="noreferrer">
@@ -149,14 +89,6 @@
             <p class="optimization-note"><span data-i18n="optimization.accepted">Accepted transition</span> <span data-i18n="optimization.note">Evaluate the output. Repair one module. Retain the next system state.</span></p>
           </section>
 
-          <section class="scene-beat poster-universe" id="posters" aria-labelledby="posters-title" inert>
-            <div class="poster-controls">
-              <p class="eyebrow" data-i18n="posters.eyebrow">Poster universe / PosterBench</p>
-              <h2 id="posters-title" data-i18n="posters.title">One harness. Many research worlds.</h2>
-              <div id="poster-caption" aria-live="polite"></div>
-              <div id="poster-index" aria-label="Select a research poster" data-i18n-aria-label="posters.select"></div>
-            </div>
-          </section>
         </div>
       </div>
 
@@ -362,7 +294,7 @@
         <div class="resource-list">
           <span class="resource-link resource-link--pending"><b>P</b><span><strong data-i18n="resources.paper">Paper</strong><small data-i18n="resources.soon">Coming soon</small></span></span>
           <span class="resource-link resource-link--pending"><b>C</b><span><strong data-i18n="resources.code">Research code</strong><small data-i18n="resources.soon">Coming soon</small></span></span>
-          <a class="resource-link" href="#posters" data-scene-target="artifacts"><b>G</b><span><strong data-i18n="resources.gallery">Poster gallery</strong><small data-i18n="resources.galleryDetail">Inspect generated artifacts</small></span></a>
+          <a class="resource-link" href="#artifact-studies"><b>G</b><span><strong data-i18n="resources.gallery">Poster gallery</strong><small data-i18n="resources.galleryDetail">Inspect generated artifacts</small></span></a>
           <a class="resource-link" href="https://designanything.ai"><b>E</b><span><strong data-i18n="resources.editor">Live editor</strong><small data-i18n="resources.editorDetail">Open DesignAnything.ai ↗</small></span></a>
         </div>
       </section>
@@ -375,20 +307,6 @@
         <a href="https://designanything.ai"><span data-i18n="nav.open">Open DesignAnything</span> ↗</a>
       </div>
     </footer>
-
-    <dialog class="poster-dialog" id="poster-dialog" aria-labelledby="dialog-title">
-      <button class="dialog-close" type="button" aria-label="Close poster inspector" data-i18n-aria-label="dialog.closePoster">×</button>
-      <div class="dialog-layout">
-        <img id="dialog-image" width="1600" height="801" alt="">
-        <div class="dialog-copy">
-          <p class="eyebrow" id="dialog-discipline"></p>
-          <h2 id="dialog-title"></h2>
-          <dl id="dialog-metadata"></dl>
-          <p data-i18n="dialog.editable">Editable HTML authored from the paper, its figures, tables, equations, and visual evidence.</p>
-          <a class="text-link" href="#posters"><span data-i18n="dialog.return">Return to artifact index</span> <span aria-hidden="true">↑</span></a>
-        </div>
-      </div>
-    </dialog>
 
     <dialog id="artifact-viewer" aria-labelledby="artifact-viewer-title">
       <button type="button" class="artifact-viewer__close" aria-label="Close artifact viewer" data-i18n-aria-label="viewer.close">×</button>
@@ -409,6 +327,6 @@
     </script>
     <script type="module" src="./i18n.js?v=20260730b"></script>
     <script type="module" src="./language-menu.js?v=20260730b"></script>
-    <script type="module" src="./app.js?v=20260730b"></script>
+    <script type="module" src="./app.js?v=20260731b"></script>
   </body>
 </html>

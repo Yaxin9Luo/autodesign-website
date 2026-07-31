@@ -1,37 +1,21 @@
-import { createArtifactScene } from "./three-scene.js?v=20260730b";
 import { bindArtifactShowcase } from "./artifact-showcase.js?v=20260730b";
 import { t } from "./i18n.js?v=20260730b";
 import { bindPageLifecycle } from "./page-lifecycle.js";
-import { bindSceneFocus } from "./scene-focus.js";
 
 const {
   evolution,
   metrics,
-  posters,
   researchRecord,
   transferResults,
 } = window.AutoDesignSiteData;
 const byId = (id) => document.getElementById(id);
-const dialog = byId("poster-dialog");
-const posterButtons = [];
 
-let controller = null;
-let activePosterIndex = 0;
-let opener = null;
-let previousPosterButton = null;
-let nextPosterButton = null;
-let posterCaptionMeta = null;
-let posterCaptionTitle = null;
 let activeEvolutionIndex = 0;
 
 function dataMessage(group, id, field, fallback) {
   const key = `${group}.${id}.${field}`;
   const value = t(key);
   return value === key ? fallback : value;
-}
-
-function posterImage(slug, width) {
-  return `./assets/posters/${slug}-${width}.webp`;
 }
 
 function renderResearchRecord() {
@@ -150,234 +134,23 @@ function renderTransferResults() {
   });
 }
 
-function updatePosterCaption(index) {
-  activePosterIndex = Math.max(0, Math.min(posters.length - 1, index));
-  const poster = posters[activePosterIndex];
-  const discipline = dataMessage("posterData", poster.slug, "discipline", poster.discipline);
-  posterCaptionMeta.textContent = `${String(activePosterIndex + 1).padStart(2, "0")} / ${String(posters.length).padStart(2, "0")} · ${discipline} · ${poster.year}`;
-  posterCaptionTitle.textContent = poster.title;
-
-  posterButtons.forEach((button, buttonIndex) => {
-    if (buttonIndex === activePosterIndex) {
-      button.setAttribute("aria-current", "true");
-    } else {
-      button.removeAttribute("aria-current");
-    }
-  });
-  previousPosterButton.disabled = activePosterIndex === 0;
-  nextPosterButton.disabled = activePosterIndex === posters.length - 1;
-}
-
-function localizePosterControls() {
-  previousPosterButton.textContent = t("posters.previous");
-  previousPosterButton.setAttribute("aria-label", t("posters.previousAria"));
-  nextPosterButton.textContent = t("posters.next");
-  nextPosterButton.setAttribute("aria-label", t("posters.nextAria"));
-  posterButtons.forEach((button, index) => {
-    button.setAttribute("aria-label", t("posters.show", { title: posters[index].title }));
-  });
-  document.querySelector(".poster-caption__inspect").textContent = t("posters.inspect");
-  updatePosterCaption(activePosterIndex);
-}
-
-function selectPoster(index) {
-  const selected = Math.max(0, Math.min(posters.length - 1, index));
-  updatePosterCaption(selected);
-  controller?.goToState("poster", selected);
-}
-
-function renderPosterControls() {
-  const root = byId("poster-index");
-  const steps = document.createElement("div");
-  steps.className = "poster-index__steps";
-
-  previousPosterButton = document.createElement("button");
-  previousPosterButton.type = "button";
-  previousPosterButton.className = "poster-index__nav poster-index__previous";
-  previousPosterButton.textContent = t("posters.previous");
-  previousPosterButton.setAttribute("aria-label", t("posters.previousAria"));
-  previousPosterButton.addEventListener("click", () => selectPoster(activePosterIndex - 1));
-
-  nextPosterButton = document.createElement("button");
-  nextPosterButton.type = "button";
-  nextPosterButton.className = "poster-index__nav poster-index__next";
-  nextPosterButton.textContent = t("posters.next");
-  nextPosterButton.setAttribute("aria-label", t("posters.nextAria"));
-  nextPosterButton.addEventListener("click", () => selectPoster(activePosterIndex + 1));
-
-  posters.forEach((poster, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "poster-index__button";
-    button.textContent = String(index + 1).padStart(2, "0");
-    button.setAttribute("aria-label", t("posters.show", { title: poster.title }));
-    button.title = poster.title;
-    button.addEventListener("click", () => selectPoster(index));
-    posterButtons.push(button);
-    steps.append(button);
-  });
-
-  root.append(previousPosterButton, steps, nextPosterButton);
-
-  const captionRoot = byId("poster-caption");
-  posterCaptionMeta = document.createElement("p");
-  posterCaptionMeta.className = "poster-caption__meta";
-
-  const row = document.createElement("div");
-  row.className = "poster-caption__row";
-
-  posterCaptionTitle = document.createElement("p");
-  posterCaptionTitle.className = "poster-caption__title";
-
-  const inspect = document.createElement("button");
-  inspect.type = "button";
-  inspect.className = "text-link text-link--light poster-caption__inspect";
-  inspect.textContent = t("posters.inspect");
-  inspect.addEventListener("click", () => openPoster(posters[activePosterIndex], inspect));
-
-  row.append(posterCaptionTitle, inspect);
-  captionRoot.append(posterCaptionMeta, row);
-  updatePosterCaption(0);
-}
-
-function renderPosterDialog(poster) {
-  byId("dialog-image").src = posterImage(poster.slug, 1600);
-  byId("dialog-image").alt = dataMessage("posterData", poster.slug, "alt", poster.alt);
-  byId("dialog-title").textContent = poster.title;
-  byId("dialog-discipline").textContent = `${dataMessage("posterData", poster.slug, "discipline", poster.discipline)} / ${poster.year}`;
-
-  const metadata = byId("dialog-metadata");
-  metadata.replaceChildren();
-  for (const [term, detail] of [
-    [t("suite.flowInput"), dataMessage("posterData", poster.slug, "source", poster.source)],
-    [t("suite.artifact"), dataMessage("posterData", poster.slug, "format", poster.format)],
-  ]) {
-    const title = document.createElement("dt");
-    const value = document.createElement("dd");
-    title.textContent = term;
-    value.textContent = detail;
-    metadata.append(title, value);
-  }
-}
-
-export function openPoster(poster, trigger) {
-  opener = trigger;
-  renderPosterDialog(poster);
-  if (typeof dialog.showModal !== "function") return;
-  dialog.showModal();
-  document.documentElement.classList.add("dialog-open");
-  dialog.querySelector(".dialog-close").focus();
-}
-
-function closePoster() {
-  if (dialog.open) dialog.close();
-}
-
-function trapDialogFocus(event) {
-  if (event.key !== "Tab") return;
-  const focusable = [...dialog.querySelectorAll("button:not([disabled]), a[href]")];
-  const first = focusable[0];
-  const last = focusable.at(-1);
-  if (!first || !last) return;
-
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault();
-    last.focus();
-  } else if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault();
-    first.focus();
-  }
-}
-
-function bindDialog() {
-  dialog.querySelector(".dialog-close").addEventListener("click", closePoster);
-  dialog.querySelector(".text-link").addEventListener("click", (event) => {
-    event.preventDefault();
-    closePoster();
-    history.replaceState(null, "", "#posters");
-    controller?.goToState("poster", activePosterIndex);
-  });
-  dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) closePoster();
-  });
-  dialog.addEventListener("cancel", (event) => {
-    event.preventDefault();
-    closePoster();
-  });
-  dialog.addEventListener("keydown", trapDialogFocus);
-  dialog.addEventListener("close", () => {
-    document.documentElement.classList.remove("dialog-open");
-    opener?.focus();
-    opener = null;
-  });
-}
-
-function initArtifactEngine() {
-  controller = createArtifactScene({
-    canvas: byId("artifact-canvas"),
-    shell: byId("scene-shell"),
-    posters,
-    onPosterChange: updatePosterCaption,
-    onPosterActivate: (index) => openPoster(posters[index], posterButtons[index]),
-  });
-}
-
-function bindIntroControls() {
-  const sound = byId("intro-sound");
-  const replay = byId("intro-replay");
-  const enter = byId("intro-enter");
-
-  const syncSound = () => {
-    const enabled = controller?.getIntroSound?.() === true;
-    sound.setAttribute("aria-pressed", String(enabled));
-    sound.textContent = t(enabled ? "intro.soundOn" : "intro.soundOff");
-  };
-  const toggleSound = () => {
-    controller?.setIntroSound?.(controller?.getIntroSound?.() !== true);
-    syncSound();
-  };
-  const replayIntro = () => controller?.replayIntro?.();
-  const enterSite = () => controller?.completeIntro?.();
-
-  sound.addEventListener("click", toggleSound);
-  replay.addEventListener("click", replayIntro);
-  enter.addEventListener("click", enterSite);
-  syncSound();
-  window.addEventListener("autodesign:localechange", syncSound);
-
-  return () => {
-    sound.removeEventListener("click", toggleSound);
-    replay.removeEventListener("click", replayIntro);
-    enter.removeEventListener("click", enterSite);
-    window.removeEventListener("autodesign:localechange", syncSound);
-  };
-}
-
 function initPersistentHeader() {
   const header = document.querySelector(".site-header");
   const sceneShell = byId("scene-shell");
-  const artifactStudies = byId("artifact-studies");
   const evolutionSection = byId("evolution");
-  const harnessSection = byId("harness");
-  const evidence = byId("evidence");
-  const resources = byId("resources");
+  const footer = byId("site-footer");
   let frame = 0;
 
   const update = () => {
     frame = 0;
-    const sceneBounds = sceneShell.getBoundingClientRect();
     const sampleLine = header.offsetHeight + 24;
     const isOver = (element) => {
       const bounds = element.getBoundingClientRect();
       return bounds.top <= sampleLine && bounds.bottom > header.offsetHeight;
     };
-    const overPaper = isOver(artifactStudies) || isOver(harnessSection) || isOver(evidence) || isOver(resources);
-    const overScene = !overPaper && (
-      (sceneBounds.top < -8 && sceneBounds.bottom > header.offsetHeight)
-      || isOver(evolutionSection)
-    );
+    const overScene = isOver(sceneShell) || isOver(evolutionSection) || isOver(footer);
     header.classList.toggle("site-header--scene", overScene);
-    header.classList.toggle("site-header--paper", overPaper);
+    header.classList.toggle("site-header--paper", !overScene);
   };
   const schedule = () => {
     if (!frame) frame = requestAnimationFrame(update);
@@ -397,82 +170,23 @@ function initPersistentHeader() {
   };
 }
 
-function bindSemanticNavigation(focusController) {
-  const targetByHash = new Map([
-    ["#hero", "hero"],
-    ["#optimization", "system"],
-    ["#posters", "artifacts"],
-    ["#evidence", "evidence"],
-    ["#results", "results"],
-    ["#resources", "resources"],
-  ]);
-
-  const navigate = (target) => {
-    if (target === "hero") controller?.goToState("hero");
-    if (target === "system") controller?.goToState("system");
-    if (target === "artifacts") controller?.goToState("artifacts");
-    if (target === "evidence") byId("evidence").scrollIntoView({ behavior: "instant" });
-    if (target === "results") byId("results").scrollIntoView({ behavior: "instant" });
-    if (target === "resources") byId("resources").scrollIntoView({ behavior: "instant" });
-    focusController.refresh();
-  };
-
-  const handleLink = (event) => {
-    const link = event.currentTarget;
-    const target = link.dataset.sceneTarget;
-    if (!target) return;
-    event.preventDefault();
-    history.pushState(null, "", link.hash);
-    navigate(target);
-  };
-  const handleHashChange = () => navigate(targetByHash.get(location.hash));
-  const links = [...document.querySelectorAll("[data-scene-target]")];
-  links.forEach((link) => link.addEventListener("click", handleLink));
-  window.addEventListener("hashchange", handleHashChange);
-  if (targetByHash.has(location.hash)) requestAnimationFrame(handleHashChange);
-
-  return () => {
-    links.forEach((link) => link.removeEventListener("click", handleLink));
-    window.removeEventListener("hashchange", handleHashChange);
-  };
-}
-
 renderResearchRecord();
 renderMetrics();
 renderEvolution();
 renderTransferResults();
 const unbindArtifactShowcase = bindArtifactShowcase();
-renderPosterControls();
-bindDialog();
 window.addEventListener("autodesign:localechange", () => {
   renderResearchRecord();
   renderMetrics();
   renderEvolution();
-  localizePosterControls();
-  if (dialog.open) renderPosterDialog(posters[activePosterIndex]);
 });
-initArtifactEngine();
-const unbindIntroControls = bindIntroControls();
 const headerController = initPersistentHeader();
-const sceneFocusController = bindSceneFocus({
-  page: window,
-  shell: byId("scene-shell"),
-  header: document.querySelector(".site-header"),
-  hero: byId("hero"),
-  posterSection: byId("posters"),
-  posterControls: document.querySelector(".poster-controls"),
-});
-const unbindSemanticNavigation = bindSemanticNavigation(sceneFocusController);
 bindPageLifecycle({
   page: window,
-  controller,
   headerController,
-  focusController: sceneFocusController,
 });
 window.addEventListener("pagehide", (event) => {
   if (!event.persisted) {
-    unbindSemanticNavigation();
-    unbindIntroControls();
     unbindArtifactShowcase();
   }
 });
