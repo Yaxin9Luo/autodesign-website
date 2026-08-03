@@ -14,9 +14,13 @@ try {
   page.setDefaultNavigationTimeout(30_000);
   page.setDefaultTimeout(10_000);
   const errors = [];
-  page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
-  });
+  const recordConsoleError = (message) => {
+    if (message.type() !== "error") return;
+    const source = message.location()?.url ?? "";
+    if (message.text().includes("/cdn-cgi/rum") || source.includes("/cdn-cgi/rum")) return;
+    errors.push(message.text());
+  };
+  page.on("console", recordConsoleError);
   page.on("pageerror", (error) => errors.push(error.message));
 
   await page.goto(url, { waitUntil: "commit" });
@@ -150,9 +154,7 @@ try {
   assert.match(formalDeckResponse.contentType ?? "", /application\/pdf/, "formal academic deck must retain its PDF content type");
 
   const posterPage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  posterPage.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
-  });
+  posterPage.on("console", recordConsoleError);
   posterPage.on("pageerror", (error) => errors.push(error.message));
   await posterPage.goto(new URL("artifacts/posters/autodesign/", url).href, { waitUntil: "commit" });
   await posterPage.locator(".poster-authors").waitFor({ state: "attached" });
@@ -175,9 +177,7 @@ try {
   await posterPage.close();
 
   const landingPage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  landingPage.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
-  });
+  landingPage.on("console", recordConsoleError);
   landingPage.on("pageerror", (error) => errors.push(error.message));
   await landingPage.goto(new URL("artifacts/web/autodesign/", url).href, { waitUntil: "commit" });
   await landingPage.locator("body").waitFor({ state: "attached" });
