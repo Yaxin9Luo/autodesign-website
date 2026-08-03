@@ -19,7 +19,9 @@ try {
   });
   page.on("pageerror", (error) => errors.push(error.message));
 
-  await page.goto(url, { waitUntil: "networkidle" });
+  await page.goto(url, { waitUntil: "commit" });
+  await page.locator("body").waitFor({ state: "attached" });
+  await page.locator("#intro-overlay").waitFor({ state: "hidden" });
   assert.equal(await page.locator("#intro-canvas").count(), 1, "hosted page must retain the opening interaction canvas");
   assert.equal(await page.locator("#intro-canvas").isVisible(), false,
     "reduced-motion hosted visits must skip the opening animation");
@@ -152,7 +154,8 @@ try {
     if (message.type() === "error") errors.push(message.text());
   });
   posterPage.on("pageerror", (error) => errors.push(error.message));
-  await posterPage.goto(new URL("artifacts/posters/autodesign/", url).href, { waitUntil: "networkidle" });
+  await posterPage.goto(new URL("artifacts/posters/autodesign/", url).href, { waitUntil: "commit" });
+  await posterPage.locator(".poster-authors").waitFor({ state: "attached" });
   const authors = await posterPage.locator(".poster-authors").textContent();
   assert.match(authors ?? "", /Zhiqian Shen/, "AutoDesign poster must include Zhiqian Shen in the author line");
   assert.match(authors ?? "", /Xiaotong Li/, "AutoDesign poster must include Xiaotong Li in the author line");
@@ -176,7 +179,8 @@ try {
     if (message.type() === "error") errors.push(message.text());
   });
   landingPage.on("pageerror", (error) => errors.push(error.message));
-  await landingPage.goto(new URL("artifacts/web/autodesign/", url).href, { waitUntil: "networkidle" });
+  await landingPage.goto(new URL("artifacts/web/autodesign/", url).href, { waitUntil: "commit" });
+  await landingPage.locator("body").waitFor({ state: "attached" });
   await landingPage.evaluate(async () => {
     const pause = (milliseconds) => new Promise((resolvePause) => setTimeout(resolvePause, milliseconds));
     for (let top = 0; top < document.documentElement.scrollHeight; top += Math.max(1, Math.floor(window.innerHeight * 0.7))) {

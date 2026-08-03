@@ -42,6 +42,7 @@ const html = read("index.html");
 const styles = read("styles.css");
 const app = read("app.js");
 const data = read("site-data.js");
+const posterArtifact = read("artifacts/posters/autodesign/index.html");
 
 for (const id of [
   "scene-shell",
@@ -114,6 +115,10 @@ for (const token of [
   expect(html.includes(token), `artifact showcase missing ${token}`);
 }
 expect(!html.includes("ddpm-conference"), "artifact showcase must not retain the previous DDPM video");
+expect(
+  /<p class="poster-authors"[^>]*>Yaxin Luo, Haobin Jiang, Jialv Zou, Xu Huang, Wenhao Yan, Haodong Li, Zhengrong Yue, Jing Li, Xiaofu Chen, Xiaohan Zhao, Jiacheng Liu, Jiacheng Cui, Zhiqian Shen, Xiaotong Li<\/p>/.test(posterArtifact),
+  "AutoDesign poster must carry the complete author roster in static HTML",
+);
 
 for (const [sourceName, source] of [["index.html", html], ["site-data.js", data]]) {
   for (const term of ["DesignHarness", "PosterBench"]) {
