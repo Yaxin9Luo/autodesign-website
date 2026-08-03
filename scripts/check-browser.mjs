@@ -78,6 +78,26 @@ async function assertOpeningIntro(page) {
   });
   assert.equal(await canvas.count(), 1, "opening interaction must have one dedicated canvas");
   assert.equal(await canvas.isVisible(), true, "opening particle canvas must be visible before ignition");
+  const canvasBounds = await canvas.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      bitmapHeight: element.height,
+      bitmapWidth: element.width,
+      height: rect.height,
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      viewportHeight: window.innerHeight,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  assert.ok(Math.abs(canvasBounds.left) <= 1 && Math.abs(canvasBounds.top) <= 1,
+    `opening canvas must start at the viewport origin: ${JSON.stringify(canvasBounds)}`);
+  assert.ok(Math.abs(canvasBounds.width - canvasBounds.viewportWidth) <= 1
+    && Math.abs(canvasBounds.height - canvasBounds.viewportHeight) <= 1,
+  `opening canvas must fill the viewport: ${JSON.stringify(canvasBounds)}`);
+  assert.ok(canvasBounds.bitmapWidth >= canvasBounds.width && canvasBounds.bitmapHeight >= canvasBounds.height,
+    `opening canvas bitmap must cover its CSS bounds: ${JSON.stringify(canvasBounds)}`);
   assert.equal(await page.locator("#artifact-canvas").count(), 0, "retired 3D artifact canvas must remain absent");
 }
 

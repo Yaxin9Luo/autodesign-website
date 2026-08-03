@@ -769,6 +769,12 @@ export function createIntroScene(options = {}) {
     const viewportWidth = Math.max(1, Number(frame.width) || 1440);
     const viewportHeight = Math.max(1, Number(frame.height) || 900);
     const viewportAspect = viewportWidth / viewportHeight;
+    const wideScreen = constrained ? 0 : clamp((viewportAspect - 1.15) / 0.85);
+    root.position.set(
+      1.8 * wideScreen,
+      1.3 * wideScreen,
+      0,
+    );
     const introFov = (constrained ? 45 : 37) * (Math.PI / 180);
     const visibleWorldHeight = 2 * Math.tan(introFov / 2) * 14.2;
     const visibleWorldWidth = visibleWorldHeight * viewportAspect;
@@ -778,7 +784,7 @@ export function createIntroScene(options = {}) {
     ) * 1.08 / viewportScale;
 
     particleUniforms.uTime.value = time;
-    particleUniforms.uGather.value = clamp(arrival * (0.62 + charge * 0.38));
+    particleUniforms.uGather.value = clamp(arrival * (0.84 + charge * 0.16));
     particleUniforms.uContraction.value = charge * (1 - expansion);
     particleUniforms.uExpansion.value = expansion;
     particleUniforms.uPortal.value = portalProgress;
@@ -786,8 +792,11 @@ export function createIntroScene(options = {}) {
     particleUniforms.uOpacity.value = sourceFade;
     particleUniforms.uMotion.value = reducedMotion ? 0 : 1;
     particleUniforms.uPointScale.value = (constrained ? 0.78 : 1) * viewportScale;
+    const pointerInfluence = reducedMotion
+      ? 0
+      : pointerStrength * (1 - arrival * 0.9) * (1 - charge * 0.4);
     particleUniforms.uPointer.value.copy(reducedMotion ? zeroPointer : pointer);
-    particleUniforms.uPointerStrength.value = pointerStrength;
+    particleUniforms.uPointerStrength.value = pointerInfluence;
 
     imageSheets.visible = isVisible && sourceFade > 0.02;
     sheetUniforms.uTime.value = time;
@@ -803,7 +812,7 @@ export function createIntroScene(options = {}) {
         sheetPosition.addScaledVector(trajectory.burst, expansion * (0.44 + index / sheetCount));
         radialOffset.set(sheetPosition.x - pointerWorld.x, sheetPosition.y - pointerWorld.y);
         const distance = Math.max(0.22, radialOffset.length());
-        radialOffset.multiplyScalar((0.11 * pointerStrength * (1 - charge)) / (distance * distance));
+        radialOffset.multiplyScalar((0.11 * pointerInfluence * (1 - charge)) / (distance * distance));
         sheetPosition.x += radialOffset.x;
         sheetPosition.y += radialOffset.y;
       }
@@ -850,8 +859,8 @@ export function createIntroScene(options = {}) {
     ringMaterial.opacity = singularityFade * (0.18 + charge * 0.5);
     orbitalRings.forEach((ring, index) => {
       const direction = index === 0 ? 1 : -1;
-      const responseX = reducedMotion ? 0 : pointer.x * pointerStrength * direction * (0.2 + charge * 0.08);
-      const responseY = reducedMotion ? 0 : pointer.y * pointerStrength * (0.16 + index * 0.05);
+      const responseX = reducedMotion ? 0 : pointer.x * pointerInfluence * direction * (0.2 + charge * 0.08);
+      const responseY = reducedMotion ? 0 : pointer.y * pointerInfluence * (0.16 + index * 0.05);
       const base = ring.userData.baseRotation;
       ring.rotation.x = base.x + responseY;
       ring.rotation.y = base.y + responseX;
@@ -879,7 +888,7 @@ export function createIntroScene(options = {}) {
     outputGroup.position.z = portalProgress * 1.2;
     outputGroup.visible = isVisible && assembly > 0.001;
     root.userData.engineOverlap = assembly > 0.99 && portalProgress >= 0.68;
-    root.userData.pointerStrength = pointerStrength;
+    root.userData.pointerStrength = pointerInfluence;
 
     portalGroup.visible = isVisible && portalProgress > 0.001;
     portal.rotation.z = reducedMotion ? 0 : time * 0.08;

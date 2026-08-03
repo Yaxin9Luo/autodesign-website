@@ -149,12 +149,12 @@ try {
 
 for (const [file, specifier] of [
   ["index.html", "styles.css?v=20260731b"],
-  ["index.html", "app.js?v=20260803b"],
+  ["index.html", "app.js?v=20260803c"],
   ["index.html", "site-data.js?v=20260730b"],
   ["app.js", "artifact-showcase.js?v=20260731c"],
   ["app.js", "i18n.js?v=20260803b"],
-  ["app.js", "opening-intro.js?v=20260803a"],
-  ["opening-intro.js", "intro-scene.js?v=20260803a"],
+  ["app.js", "opening-intro.js?v=20260803b"],
+  ["opening-intro.js", "intro-scene.js?v=20260803b"],
   ["opening-intro.js", "intro-state.js?v=20260803a"],
   ["artifact-showcase.js", "i18n.js?v=20260803b"],
   ["opening-intro.js", "i18n.js?v=20260803b"],
