@@ -43,7 +43,7 @@
           <button type="button" role="menuitemradio" data-locale="it" aria-checked="false" lang="it"><span>Italiano</span><small>IT</small></button>
         </div>
       </div>
-      <a class="header-cta" href="https://designanything.ai" aria-label="Open DesignAnything" data-i18n-aria-label="nav.open"><span data-i18n="nav.open">Open DesignAnything</span> <span aria-hidden="true">↗</span></a>
+      <a class="header-cta" href="https://designanything.ai" aria-label="Open Research Demo" data-i18n-aria-label="nav.openResearchDemo"><span data-i18n="nav.openResearchDemo">Open Research Demo</span> <span aria-hidden="true">↗</span></a>
     </header>
 
     <main>
@@ -51,6 +51,36 @@
         <div class="scene-stage" aria-hidden="true">
           <img class="static-hero-art" src="./assets/brand/autodesign-editorial-background.webp?v=20260731b" width="1672" height="941" alt="">
         </div>
+
+        <section class="intro-overlay" id="intro-overlay" aria-label="AutoDesign information genesis opening" data-i18n-aria-label="intro.label">
+          <canvas id="intro-canvas" aria-hidden="true"></canvas>
+          <div class="intro-title">
+            <p class="intro-index" data-i18n="intro.index">AutoDesign / Information Genesis</p>
+            <p class="intro-phase" id="intro-phase" aria-hidden="true">
+              <span data-intro-label="input">Multimodal IN</span>
+              <span data-intro-label="singularity">Design Singularity</span>
+              <span data-intro-label="output">Multimodal OUT</span>
+            </p>
+            <span class="visually-hidden" id="intro-announcement" aria-live="polite" data-i18n="intro.input">Multimodal IN</span>
+          </div>
+          <div class="intro-instrument">
+            <div class="intro-charge" id="intro-charge" role="progressbar" aria-label="Singularity charge" data-i18n-aria-label="intro.charge" aria-valuemin="0" aria-valuemax="220" aria-valuenow="0">
+              <span></span>
+            </div>
+            <p class="intro-prompt" id="intro-prompt" data-charge-label="0 / 220" data-i18n="intro.scroll">Scroll to ignite</p>
+          </div>
+          <div class="intro-output-key" aria-hidden="true">
+            <span><b>01</b> <span data-i18n="intro.posterPrimary">Poster / Primary</span></span>
+            <span><b>02</b> <span data-i18n="intro.slides">Slides</span></span>
+            <span><b>03</b> <span data-i18n="intro.web">Web</span></span>
+            <span><b>04</b> <span data-i18n="intro.video">Video</span></span>
+          </div>
+          <div class="intro-controls">
+            <button type="button" id="intro-sound" aria-pressed="false" data-i18n="intro.soundOff">Sound / Off</button>
+            <button type="button" id="intro-replay" hidden data-i18n="intro.replay">Replay intro</button>
+            <button type="button" id="intro-enter" hidden data-i18n="intro.enter">Enter AutoDesign</button>
+          </div>
+        </section>
 
         <div class="scene-story">
           <section class="scene-beat hero" id="hero" aria-labelledby="hero-title">
@@ -165,18 +195,18 @@
         <div class="artifact-study" id="artifact-panel-video" role="tabpanel" aria-labelledby="artifact-tab-video" data-artifact-panel="video" hidden>
           <div class="artifact-study__stage artifact-study__stage--video">
             <div class="video-specimen">
-              <video muted loop playsinline preload="metadata" poster="./assets/studies/ddpm-conference-poster.webp" aria-label="Generated DDPM conference video teaser">
-                <source data-preview-src="./assets/studies/ddpm-conference-teaser.mp4" type="video/mp4">
+              <video muted loop playsinline preload="metadata" poster="./assets/studies/autodesign-conference-poster.webp?v=20260731c" aria-label="Generated AutoDesign conference video teaser">
+                <source data-preview-src="./assets/studies/autodesign-conference-teaser.mp4?v=20260731d" type="video/mp4">
               </video>
-              <button type="button" class="video-specimen__play" data-open-artifact data-artifact-kind="video" data-artifact-src="./assets/studies/ddpm-conference-video-6min.mp4?v=98e94d39" data-artifact-title="Denoising Diffusion Probabilistic Models conference video" data-artifact-title-key="suite.videoTitle" data-artifact-new-tab="./assets/studies/ddpm-conference-video-6min.mp4?v=98e94d39" aria-label="Watch conference video" data-i18n-aria-label="suite.watchVideo" title="Watch conference video" data-i18n-title="suite.watchVideo"><span aria-hidden="true">▶</span></button>
+              <button type="button" class="video-specimen__play" data-open-artifact data-artifact-kind="video" data-artifact-src="./assets/studies/autodesign-conference-video-6min.mp4?v=20260731c" data-artifact-title="AutoDesign conference video" data-artifact-title-key="suite.videoTitle" data-artifact-new-tab="./assets/studies/autodesign-conference-video-6min.mp4?v=20260731c" aria-label="Watch conference video" data-i18n-aria-label="suite.watchVideo" title="Watch conference video" data-i18n-title="suite.watchVideo"><span aria-hidden="true">▶</span></button>
             </div>
             <p class="artifact-stage-label"><span data-i18n="suite.videoDuration">6 minutes</span><span data-i18n="suite.conferenceVideo">Conference video</span></p>
           </div>
           <div class="artifact-study__copy">
             <p class="artifact-study__index" data-i18n="suite.videoIndex">04 / Paper to video</p>
             <h3 data-i18n="suite.videoTitle">A conference talk that moves from method to evidence.</h3>
-            <p data-i18n="suite.videoBody">The DDPM conference video combines generated narration, synchronized subtitles, paper figures, and evaluation results in a timed visual sequence.</p>
-            <button type="button" data-open-artifact data-artifact-kind="video" data-artifact-src="./assets/studies/ddpm-conference-video-6min.mp4?v=98e94d39" data-artifact-title="Denoising Diffusion Probabilistic Models conference video" data-artifact-title-key="suite.videoTitle" data-artifact-new-tab="./assets/studies/ddpm-conference-video-6min.mp4?v=98e94d39" data-i18n="suite.watchVideo">Watch conference video</button>
+            <p data-i18n="suite.videoBody">The AutoDesign conference video combines generated narration, synchronized subtitles, paper figures, and evaluation results in a timed visual sequence.</p>
+            <button type="button" data-open-artifact data-artifact-kind="video" data-artifact-src="./assets/studies/autodesign-conference-video-6min.mp4?v=20260731c" data-artifact-title="AutoDesign conference video" data-artifact-title-key="suite.videoTitle" data-artifact-new-tab="./assets/studies/autodesign-conference-video-6min.mp4?v=20260731c" data-i18n="suite.watchVideo">Watch conference video</button>
             <dl><div><dt data-i18n="suite.use">Use</dt><dd data-i18n="suite.narratedPresentation">Narrated conference presentation</dd></div><div><dt data-i18n="suite.artifact">Artifact</dt><dd>1920 × 1080 H.264 video</dd></div><div><dt data-i18n="suite.status">Status</dt><dd data-i18n="suite.exploratory">Exploratory Meta-Harness generalization</dd></div></dl>
           </div>
         </div>
@@ -325,8 +355,8 @@
         }
       }
     </script>
-    <script type="module" src="./i18n.js?v=20260730b"></script>
-    <script type="module" src="./language-menu.js?v=20260730b"></script>
-    <script type="module" src="./app.js?v=20260731b"></script>
+    <script type="module" src="./i18n.js?v=20260803b"></script>
+    <script type="module" src="./language-menu.js?v=20260803b"></script>
+    <script type="module" src="./app.js?v=20260803b"></script>
   </body>
 </html>

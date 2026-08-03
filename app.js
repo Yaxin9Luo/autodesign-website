@@ -1,5 +1,6 @@
-import { bindArtifactShowcase } from "./artifact-showcase.js?v=20260730b";
-import { t } from "./i18n.js?v=20260730b";
+import { bindArtifactShowcase } from "./artifact-showcase.js?v=20260731c";
+import { t } from "./i18n.js?v=20260803b";
+import { createOpeningIntro } from "./opening-intro.js?v=20260803a";
 import { bindPageLifecycle } from "./page-lifecycle.js";
 
 const {
@@ -181,8 +182,10 @@ window.addEventListener("autodesign:localechange", () => {
   renderEvolution();
 });
 const headerController = initPersistentHeader();
+const openingIntro = createOpeningIntro();
 bindPageLifecycle({
   page: window,
+  controller: openingIntro,
   headerController,
 });
 window.addEventListener("pagehide", (event) => {

@@ -15,6 +15,7 @@ const runtimeFiles = [
   "intro-state.js",
   "language-menu.js",
   "locales.js",
+  "opening-intro.js",
   "page-lifecycle.js",
   "robots.txt",
   "scene-focus.js",

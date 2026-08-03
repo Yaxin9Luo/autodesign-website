@@ -18,6 +18,9 @@ const requiredFiles = [
   "locales.js",
   "app.js",
   "artifact-showcase.js",
+  "opening-intro.js",
+  "intro-scene.js",
+  "intro-state.js",
   "language-menu.js",
   "page-lifecycle.js",
   "assets/brand/autodesign-editorial-background.webp",
@@ -26,7 +29,9 @@ const requiredFiles = [
   "assets/paper/method-detail.webp",
   "assets/studies/autodesign-poster.webp",
   "assets/studies/autodesign-formal-slide-01.webp",
-  "assets/studies/ddpm-conference-video-6min.mp4",
+  "assets/studies/autodesign-conference-poster.webp",
+  "assets/studies/autodesign-conference-teaser.mp4",
+  "assets/studies/autodesign-conference-video-6min.mp4",
 ];
 
 for (const file of requiredFiles) {
@@ -59,13 +64,15 @@ for (const id of [
 expect(html.includes('id="scene-shell" class="static-hero"'), "page must use the static editorial hero");
 expect(html.includes('class="static-hero-art"'), "static editorial hero image is missing");
 expect(html.includes("autodesign-editorial-background.webp?v=20260731b"), "static hero image must bypass stale deployment caches");
-expect(!html.includes("artifact-canvas"), "public page must not retain the WebGL canvas");
-expect(!html.includes("intro-overlay"), "public page must not retain the interactive opening overlay");
+expect(!html.includes("artifact-canvas"), "public page must not retain the retired 3D artifact canvas");
+expect(html.includes('id="intro-overlay"'), "public page must retain the interactive opening overlay");
+expect(html.includes('id="intro-canvas"'), "opening overlay must have a dedicated particle canvas");
 expect(!html.includes("engine-labels"), "public page must not retain the 3D engine annotations");
 expect(!html.includes("poster-universe"), "public page must not retain the 3D poster universe");
-expect(!app.includes("three-scene.js"), "public app must not import the WebGL scene");
-expect(!app.includes("createArtifactScene"), "public app must not initialize the WebGL scene");
+expect(!app.includes("three-scene.js"), "public app must not import the retired artifact scene");
+expect(!app.includes("createArtifactScene"), "public app must not initialize the retired artifact scene");
 expect(!app.includes("bindSceneFocus"), "public app must not use scene-phase focus handling");
+expect(app.includes("createOpeningIntro"), "public app must initialize the opening interaction");
 expect(styles.includes("#scene-shell.static-hero"), "static hero styling is missing");
 expect(styles.includes(".static-hero-art"), "static hero image styling is missing");
 expect(styles.includes("/* Static editorial hero"), "static hero replacement should be documented in CSS");
@@ -75,6 +82,9 @@ expect(statSync(resolve(root, "assets/brand/autodesign-editorial-background.webp
 expect(html.includes('href="#artifact-studies"'), "poster navigation must lead to the accessible artifact showcase");
 expect(!html.includes('href="#posters"'), "stale 3D poster anchor remains in the public page");
 expect(html.includes("https://designanything.ai"), "missing platform CTA");
+const headerCta = html.match(/<a class="header-cta"[\s\S]*?<\/a>/)?.[0] ?? "";
+expect(headerCta.includes("Open Research Demo"), "header CTA must use the approved Open Research Demo label");
+expect(headerCta.includes("data-i18n=\"nav.openResearchDemo\""), "header CTA must have a dedicated localization key");
 expect(html.includes('id="language-menu-trigger"'), "language selector trigger is missing");
 expect(html.includes('id="language-menu"'), "language selector menu is missing");
 
@@ -98,11 +108,12 @@ for (const token of [
   "data-method-figure",
   "autodesign-poster.webp?v=20260729a",
   "autodesign-formal-slide-{index}.webp?v=20260730b",
-  "ddpm-conference-video-6min.mp4?v=98e94d39",
+  "autodesign-conference-video-6min.mp4?v=20260731c",
   "assets/paper/method-detail.webp?v=20260730b",
 ]) {
   expect(html.includes(token), `artifact showcase missing ${token}`);
 }
+expect(!html.includes("ddpm-conference"), "artifact showcase must not retain the previous DDPM video");
 
 for (const [sourceName, source] of [["index.html", html], ["site-data.js", data]]) {
   for (const term of ["DesignHarness", "PosterBench"]) {
@@ -133,16 +144,23 @@ try {
 
 for (const [file, specifier] of [
   ["index.html", "styles.css?v=20260731b"],
-  ["index.html", "app.js?v=20260731b"],
+  ["index.html", "app.js?v=20260803b"],
   ["index.html", "site-data.js?v=20260730b"],
-  ["app.js", "artifact-showcase.js?v=20260730b"],
-  ["app.js", "i18n.js?v=20260730b"],
-  ["artifact-showcase.js", "i18n.js?v=20260730b"],
+  ["app.js", "artifact-showcase.js?v=20260731c"],
+  ["app.js", "i18n.js?v=20260803b"],
+  ["app.js", "opening-intro.js?v=20260803a"],
+  ["opening-intro.js", "intro-scene.js?v=20260803a"],
+  ["opening-intro.js", "intro-state.js?v=20260803a"],
+  ["artifact-showcase.js", "i18n.js?v=20260803b"],
+  ["opening-intro.js", "i18n.js?v=20260803b"],
+  ["language-menu.js", "i18n.js?v=20260803b"],
+  ["language-menu.js", "locales.js?v=20260803b"],
+  ["i18n.js", "locales.js?v=20260803b"],
 ]) {
   expect(read(file).includes(specifier), `${file} must load ${specifier}`);
 }
 
-for (const file of ["app.js", "artifact-showcase.js", "i18n.js", "language-menu.js", "page-lifecycle.js"]) {
+for (const file of ["app.js", "artifact-showcase.js", "i18n.js", "language-menu.js", "opening-intro.js", "page-lifecycle.js"]) {
   try {
     execFileSync(process.execPath, ["--check", resolve(root, file)], { stdio: "pipe" });
   } catch (error) {

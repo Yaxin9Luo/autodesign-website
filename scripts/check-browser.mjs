@@ -68,15 +68,47 @@ async function assertNoOverflow(page) {
   assert.ok(overflow <= 1, `horizontal overflow: ${overflow}px`);
 }
 
+async function assertOpeningIntro(page) {
+  const overlay = page.locator("#intro-overlay");
+  const canvas = page.locator("#intro-canvas");
+  await overlay.waitFor({ state: "visible" });
+  await page.waitForFunction(() => document.documentElement.classList.contains("intro-active"));
+  await page.waitForFunction(() => document.querySelector("#scene-shell")?.dataset.introPhase === "armed", null, {
+    timeout: 6_000,
+  });
+  assert.equal(await canvas.count(), 1, "opening interaction must have one dedicated canvas");
+  assert.equal(await canvas.isVisible(), true, "opening particle canvas must be visible before ignition");
+  assert.equal(await page.locator("#artifact-canvas").count(), 0, "retired 3D artifact canvas must remain absent");
+}
+
+async function completeOpeningIntro(page, input = "wheel") {
+  if (input === "wheel") {
+    for (let index = 0; index < 4; index += 1) {
+      await page.mouse.wheel(0, 720);
+      await page.waitForTimeout(40);
+    }
+  } else {
+    for (let index = 0; index < 4; index += 1) await page.keyboard.press("ArrowDown");
+  }
+  await page.waitForFunction(() => !document.documentElement.classList.contains("intro-active"), null, {
+    timeout: 9_000,
+  });
+}
+
 async function assertStaticHero(page) {
   const image = page.locator(".static-hero-art");
   await image.waitFor({ state: "visible" });
-  assert.equal(await page.locator("canvas").count(), 0, "static homepage must not instantiate a canvas");
+  assert.equal(await page.locator("#intro-canvas").count(), 1, "opening canvas must remain available for replay");
+  assert.equal(await page.locator("#intro-canvas").isVisible(), false, "opening canvas must retire after the intro");
+  assert.equal(await page.locator("#artifact-canvas").count(), 0, "static homepage must not instantiate the retired artifact canvas");
   assert.ok(await image.evaluate((element) => element.complete && element.naturalWidth >= 1600),
     "static editorial image did not load at high resolution");
-  const hasThree = await page.evaluate(() => performance.getEntriesByType("resource")
+  const hasRetiredScene = await page.evaluate(() => performance.getEntriesByType("resource")
     .some((entry) => entry.name.includes("three-scene.js")));
-  assert.equal(hasThree, false, "static homepage must not download the retired WebGL scene");
+  assert.equal(hasRetiredScene, false, "static homepage must not download the retired artifact scene");
+  const hasOpeningScene = await page.evaluate(() => performance.getEntriesByType("resource")
+    .some((entry) => entry.name.includes("opening-intro.js")));
+  assert.equal(hasOpeningScene, true, "static homepage must load the independent opening interaction");
   assert.equal(await page.locator(".site-header").evaluate((header) => header.classList.contains("site-header--scene")), true,
     "dark editorial hero must keep the header readable");
 
@@ -196,7 +228,7 @@ async function assertArtifactSuite(page) {
     `embedded research page leaves a blank tail: ${JSON.stringify(pageEnd)}`);
 
   await page.locator("#artifact-tab-video").click();
-  await page.waitForFunction(() => document.querySelector("#artifact-panel-video source")?.src.includes("ddpm-conference-teaser.mp4"));
+  await page.waitForFunction(() => document.querySelector("#artifact-panel-video source")?.src.includes("autodesign-conference-teaser.mp4"));
   const videoTrigger = page.locator("#artifact-panel-video .video-specimen__play");
   await videoTrigger.click();
   const video = page.locator("#artifact-viewer-stage video");
@@ -209,8 +241,9 @@ async function assertArtifactSuite(page) {
     }
   }));
   assert.equal(await video.getAttribute("controls"), "");
-  assert.equal(await video.locator('track[kind="captions"][srclang="en"]').count(), 1,
-    "conference viewer must retain English captions");
+  assert.match(await video.getAttribute("src"), /autodesign-conference-video-6min\.mp4\?v=20260731c/);
+  assert.equal(await video.locator('track[src*="ddpm-conference"]').count(), 0,
+    "AutoDesign video must not inherit unrelated DDPM captions");
   await page.keyboard.press("Escape");
 
   const methodFigure = page.locator("[data-method-figure]");
@@ -227,6 +260,8 @@ async function runDesktop(browser, url) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = watchConsole(page);
   await page.goto(url, { waitUntil: "networkidle" });
+  await assertOpeningIntro(page);
+  await completeOpeningIntro(page, "wheel");
   await assertStaticHero(page);
   await assertResearchAccess(page, "desktop");
   await assertLanguagePicker(page);
@@ -242,6 +277,8 @@ async function runMobile(browser, url) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const errors = watchConsole(page);
   await page.goto(localeUrl(url, "en"), { waitUntil: "networkidle" });
+  await assertOpeningIntro(page);
+  await completeOpeningIntro(page, "keyboard");
   await assertStaticHero(page);
   await assertResearchAccess(page, "mobile");
   await page.locator("#artifact-studies").scrollIntoViewIfNeeded();

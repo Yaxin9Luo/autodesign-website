@@ -20,7 +20,10 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
 
   await page.goto(url, { waitUntil: "networkidle" });
-  assert.equal(await page.locator("canvas").count(), 0, "hosted page must not retain the retired WebGL canvas");
+  assert.equal(await page.locator("#intro-canvas").count(), 1, "hosted page must retain the opening interaction canvas");
+  assert.equal(await page.locator("#intro-canvas").isVisible(), false,
+    "reduced-motion hosted visits must skip the opening animation");
+  assert.equal(await page.locator("#artifact-canvas").count(), 0, "hosted page must not retain the retired artifact canvas");
   assert.ok(await page.locator(".static-hero-art").evaluate((image) => image.complete && image.naturalWidth >= 1600),
     "hosted static editorial hero did not load");
 
@@ -68,7 +71,9 @@ try {
     }
   }));
   assert.equal(await fullVideo.getAttribute("controls"), "");
-  assert.equal(await fullVideo.locator('track[kind="captions"][srclang="en"]').count(), 1);
+  assert.match(await fullVideo.getAttribute("src"), /autodesign-conference-video-6min\.mp4\?v=20260731c/);
+  assert.equal(await fullVideo.locator('track[src*="ddpm-conference"]').count(), 0,
+    "hosted AutoDesign video must not attach unrelated DDPM captions");
   await fullVideo.evaluate((video) => video.play());
   await page.waitForFunction(() => !document.querySelector("#artifact-viewer-stage video")?.paused);
   await fullVideo.evaluate((video) => video.pause());

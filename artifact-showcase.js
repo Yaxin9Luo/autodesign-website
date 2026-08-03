@@ -1,6 +1,4 @@
-import { t } from "./i18n.js?v=20260730b";
-
-const VIDEO_CAPTIONS_SRC = "./assets/studies/ddpm-conference.en.vtt";
+import { t } from "./i18n.js?v=20260803b";
 const ARTIFACT_ESCAPE_MESSAGE = "autodesign:artifact-viewer:escape";
 
 const viewerTypes = {
@@ -293,14 +291,7 @@ export function bindArtifactShowcase({
       video.controls = true;
       video.playsInline = true;
       video.preload = "metadata";
-      video.poster = "./assets/studies/ddpm-conference-poster.webp";
-      const captions = documentObject.createElement("track");
-      captions.kind = "captions";
-      captions.label = "English";
-      captions.srclang = "en";
-      captions.src = VIDEO_CAPTIONS_SRC;
-      captions.default = true;
-      video.append(captions);
+      video.poster = "./assets/studies/autodesign-conference-poster.webp?v=20260731c";
       stage.classList.add("artifact-viewer__stage--video");
       return video;
     }
