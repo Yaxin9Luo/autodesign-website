@@ -148,19 +148,21 @@ try {
 }
 
 for (const [file, specifier] of [
-  ["index.html", "styles.css?v=20260731b"],
-  ["index.html", "app.js?v=20260803d"],
+  ["index.html", "styles.css?v=20260805a"],
+  ["index.html", "app.js?v=20260805a"],
   ["index.html", "site-data.js?v=20260730b"],
-  ["app.js", "artifact-showcase.js?v=20260731c"],
-  ["app.js", "i18n.js?v=20260803b"],
-  ["app.js", "opening-intro.js?v=20260803b"],
+  ["index.html", "i18n.js?v=20260805a"],
+  ["index.html", "language-menu.js?v=20260805a"],
+  ["app.js", "artifact-showcase.js?v=20260805a"],
+  ["app.js", "i18n.js?v=20260805a"],
+  ["app.js", "opening-intro.js?v=20260805a"],
   ["opening-intro.js", "intro-scene.js?v=20260803b"],
   ["opening-intro.js", "intro-state.js?v=20260803a"],
-  ["artifact-showcase.js", "i18n.js?v=20260803b"],
-  ["opening-intro.js", "i18n.js?v=20260803b"],
-  ["language-menu.js", "i18n.js?v=20260803b"],
-  ["language-menu.js", "locales.js?v=20260803b"],
-  ["i18n.js", "locales.js?v=20260803b"],
+  ["artifact-showcase.js", "i18n.js?v=20260805a"],
+  ["opening-intro.js", "i18n.js?v=20260805a"],
+  ["language-menu.js", "i18n.js?v=20260805a"],
+  ["language-menu.js", "locales.js?v=20260805a"],
+  ["i18n.js", "locales.js?v=20260805a"],
 ]) {
   expect(read(file).includes(specifier), `${file} must load ${specifier}`);
 }

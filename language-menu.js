@@ -1,5 +1,5 @@
-import { getLocale, setLocale } from "./i18n.js?v=20260803b";
-import { LOCALES } from "./locales.js?v=20260803b";
+import { getLocale, setLocale } from "./i18n.js?v=20260805a";
+import { LOCALES } from "./locales.js?v=20260805a";
 
 export function bindLanguageMenu({ documentObject = document, page = window } = {}) {
   const root = documentObject.querySelector("[data-language-menu-root]");

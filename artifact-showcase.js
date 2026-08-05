@@ -1,4 +1,4 @@
-import { t } from "./i18n.js?v=20260803b";
+import { t } from "./i18n.js?v=20260805a";
 const ARTIFACT_ESCAPE_MESSAGE = "autodesign:artifact-viewer:escape";
 
 const viewerTypes = {
