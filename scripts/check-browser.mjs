@@ -158,15 +158,18 @@ async function assertResearchAccess(page, layout) {
   assert.equal(await access.locator('[data-hero-access="paper"]').isDisabled(), true);
 
   const geometry = await controls.evaluateAll((items) => items.map((item) => item.getBoundingClientRect().toJSON()));
-  if (layout === "desktop") {
-    assert.equal(new Set(geometry.map((bounds) => Math.round(bounds.top))).size, 1,
-      `desktop access controls must share one row: ${JSON.stringify(geometry)}`);
-  } else {
-    assert.equal(Math.round(geometry[0].top), Math.round(geometry[1].top),
-      `mobile primary controls must share one row: ${JSON.stringify(geometry)}`);
-    assert.ok(geometry[2].top > geometry[0].top,
-      `mobile paper action must occupy a second row: ${JSON.stringify(geometry)}`);
-  }
+  assert.ok(geometry[0].top < geometry[1].top && geometry[0].top < geometry[2].top,
+    `the live research demo must lead the resource controls: ${JSON.stringify(geometry)}`);
+  assert.ok(geometry[1].top < geometry[2].top,
+    `research resources must stack below the live research demo: ${JSON.stringify(geometry)}`);
+  assert.equal(Math.round(geometry[0].width), Math.round(geometry[1].width),
+    `research access controls must have equal width: ${JSON.stringify(geometry)}`);
+  assert.equal(Math.round(geometry[1].width), Math.round(geometry[2].width),
+    `research access controls must have equal width: ${JSON.stringify(geometry)}`);
+  assert.equal(Math.round(geometry[0].height), Math.round(geometry[1].height),
+    `research access controls must have equal height: ${JSON.stringify(geometry)}`);
+  assert.equal(Math.round(geometry[1].height), Math.round(geometry[2].height),
+    `research access controls must have equal height: ${JSON.stringify(geometry)}`);
 }
 
 async function assertLanguagePicker(page) {

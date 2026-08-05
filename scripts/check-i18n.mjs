@@ -68,9 +68,9 @@ for (const locale of SUPPORTED_LOCALES) {
 }
 
 for (const [locale, expected] of [
-  ["en", ["Research access", "Open System", "View Code", "Code release planned", "Read Paper", "Coming soon"]],
-  ["zh-CN", ["研究入口", "进入系统", "进入代码库", "代码即将发布", "阅读论文", "即将推出"]],
-  ["ar", ["الوصول البحثي", "فتح النظام", "عرض الشفرة", "إصدار الشفرة قريبًا", "قراءة الورقة", "قريبًا"]],
+  ["en", ["Research access", "Open Research Demo", "View Code", "Code release planned", "Read Paper", "Coming soon"]],
+  ["zh-CN", ["研究入口", "打开研究演示", "进入代码库", "代码即将发布", "阅读论文", "即将推出"]],
+  ["ar", ["الوصول البحثي", "فتح العرض التوضيحي البحثي", "عرض الشفرة", "إصدار الشفرة قريبًا", "قراءة الورقة", "قريبًا"]],
 ]) {
   expect(
     JSON.stringify(heroAccessKeys.map((key) => MESSAGES[locale]?.[key])) === JSON.stringify(expected),
