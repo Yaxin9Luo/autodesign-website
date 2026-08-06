@@ -152,24 +152,48 @@ async function assertResearchAccess(page, layout) {
   const access = page.locator(".hero-access");
   await access.waitFor({ state: "visible" });
   const controls = access.locator(":scope > [data-hero-access]");
-  assert.equal(await controls.count(), 3, "research access must have three controls");
+  assert.equal(await controls.count(), 4, "research access must have four controls");
   assert.equal(await access.locator('[data-hero-access="system"]').evaluate((element) => element.tagName), "A");
+  assert.equal(await access.locator('[data-hero-access="tutorial"]').evaluate((element) => element.tagName), "BUTTON");
   assert.equal(await access.locator('[data-hero-access="code"]').isDisabled(), true);
   assert.equal(await access.locator('[data-hero-access="paper"]').isDisabled(), true);
 
   const geometry = await controls.evaluateAll((items) => items.map((item) => item.getBoundingClientRect().toJSON()));
-  assert.ok(geometry[0].top < geometry[1].top && geometry[0].top < geometry[2].top,
+  assert.ok(geometry[0].top < geometry[1].top && geometry[0].top < geometry[2].top && geometry[0].top < geometry[3].top,
     `the live research demo must lead the resource controls: ${JSON.stringify(geometry)}`);
-  assert.ok(geometry[1].top < geometry[2].top,
+  assert.ok(geometry[1].top < geometry[2].top && geometry[2].top < geometry[3].top,
     `research resources must stack below the live research demo: ${JSON.stringify(geometry)}`);
   assert.equal(Math.round(geometry[0].width), Math.round(geometry[1].width),
     `research access controls must have equal width: ${JSON.stringify(geometry)}`);
   assert.equal(Math.round(geometry[1].width), Math.round(geometry[2].width),
     `research access controls must have equal width: ${JSON.stringify(geometry)}`);
+  assert.equal(Math.round(geometry[2].width), Math.round(geometry[3].width),
+    `research access controls must have equal width: ${JSON.stringify(geometry)}`);
   assert.equal(Math.round(geometry[0].height), Math.round(geometry[1].height),
     `research access controls must have equal height: ${JSON.stringify(geometry)}`);
   assert.equal(Math.round(geometry[1].height), Math.round(geometry[2].height),
     `research access controls must have equal height: ${JSON.stringify(geometry)}`);
+  assert.equal(Math.round(geometry[2].height), Math.round(geometry[3].height),
+    `research access controls must have equal height: ${JSON.stringify(geometry)}`);
+
+  if (layout === "desktop") {
+    const tutorial = access.locator('[data-hero-access="tutorial"]');
+    await tutorial.click();
+    const video = page.locator("#artifact-viewer-stage video");
+    await video.waitFor({ state: "visible" });
+    await video.evaluate((element) => new Promise((resolveReady, reject) => {
+      if (element.readyState >= HTMLMediaElement.HAVE_METADATA) resolveReady();
+      else {
+        element.addEventListener("loadedmetadata", resolveReady, { once: true });
+        element.addEventListener("error", () => reject(new Error("tutorial video failed to load")), { once: true });
+      }
+    }));
+    assert.match(await video.getAttribute("src"), /autodesign-workbench-tutorial\.mp4$/);
+    assert.match(await video.getAttribute("poster"), /autodesign-workbench-tutorial-poster\.jpg$/);
+    await page.keyboard.press("Escape");
+    assert.equal(await tutorial.evaluate((element) => document.activeElement === element), true,
+      "tutorial viewer did not restore focus to its trigger");
+  }
 }
 
 async function assertLanguagePicker(page) {

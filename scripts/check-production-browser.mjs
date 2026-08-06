@@ -33,6 +33,21 @@ try {
   assert.ok(await page.locator(".static-hero-art").evaluate((image) => image.complete && image.naturalWidth >= 1600),
     "hosted static editorial hero did not load");
 
+  const tutorialTrigger = page.locator('[data-hero-access="tutorial"]');
+  await tutorialTrigger.click();
+  const tutorialVideo = page.locator("#artifact-viewer-stage video");
+  await tutorialVideo.waitFor({ state: "visible" });
+  await tutorialVideo.evaluate((video) => new Promise((resolveReady, reject) => {
+    if (video.readyState >= HTMLMediaElement.HAVE_METADATA) resolveReady();
+    else {
+      video.addEventListener("loadedmetadata", resolveReady, { once: true });
+      video.addEventListener("error", () => reject(new Error("Hosted tutorial video failed to load")), { once: true });
+    }
+  }));
+  assert.match(await tutorialVideo.getAttribute("src"), /autodesign-workbench-tutorial\.mp4$/);
+  assert.match(await tutorialVideo.getAttribute("poster"), /autodesign-workbench-tutorial-poster\.jpg$/);
+  await page.keyboard.press("Escape");
+
   await page.locator("#artifact-tab-poster").click();
   const hostedPosterFit = await page.locator("#artifact-panel-poster").evaluate((panel) => {
     const stage = panel.querySelector(".artifact-study__stage").getBoundingClientRect();

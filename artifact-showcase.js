@@ -1,4 +1,4 @@
-import { t } from "./i18n.js?v=20260805a";
+import { t } from "./i18n.js?v=20260806a";
 const ARTIFACT_ESCAPE_MESSAGE = "autodesign:artifact-viewer:escape";
 
 const viewerTypes = {
@@ -291,7 +291,11 @@ export function bindArtifactShowcase({
       video.controls = true;
       video.playsInline = true;
       video.preload = "metadata";
-      video.poster = "./assets/studies/autodesign-conference-poster.webp?v=20260731c";
+      video.poster = options.poster ?? "./assets/studies/autodesign-conference-poster.webp?v=20260731c";
+      if (options.autoplay) {
+        video.autoplay = true;
+        video.addEventListener("canplay", () => video.play().catch(() => {}), { once: true });
+      }
       stage.classList.add("artifact-viewer__stage--video");
       return video;
     }
@@ -307,15 +311,20 @@ export function bindArtifactShowcase({
       artifactCount,
       artifactTitle,
       artifactNewTab,
+      artifactPoster,
+      artifactAutoplay,
+      artifactType,
     } = trigger.dataset;
     clearStage();
     opener = trigger;
     title.textContent = artifactTitle;
-    type.textContent = t(viewerTypes[artifactKind] ?? "viewer.artifact");
+    type.textContent = t(artifactType ?? viewerTypes[artifactKind] ?? "viewer.artifact");
     external.href = artifactNewTab;
     const artifact = createViewerArtifact(artifactKind, artifactSrc, artifactTitle, {
       count: Number(artifactCount),
       sourceTemplate: artifactSrcTemplate,
+      poster: artifactPoster,
+      autoplay: artifactAutoplay === "true",
     });
     if (!artifact) return;
     stage.append(artifact);
@@ -337,7 +346,7 @@ export function bindArtifactShowcase({
   listen(page, "autodesign:localechange", () => {
     carouselRenderers.forEach((render) => render());
     if (viewer.open && opener) {
-      type.textContent = t(viewerTypes[opener.dataset.artifactKind] ?? "viewer.artifact");
+      type.textContent = t(opener.dataset.artifactType ?? viewerTypes[opener.dataset.artifactKind] ?? "viewer.artifact");
     }
   });
   listen(page, "message", (event) => {

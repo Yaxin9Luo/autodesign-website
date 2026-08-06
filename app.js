@@ -1,6 +1,6 @@
-import { bindArtifactShowcase } from "./artifact-showcase.js?v=20260805a";
-import { t } from "./i18n.js?v=20260805a";
-import { createOpeningIntro } from "./opening-intro.js?v=20260805a";
+import { bindArtifactShowcase } from "./artifact-showcase.js?v=20260806a";
+import { t } from "./i18n.js?v=20260806a";
+import { createOpeningIntro } from "./opening-intro.js?v=20260806a";
 import { bindPageLifecycle } from "./page-lifecycle.js";
 
 const {

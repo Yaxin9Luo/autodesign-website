@@ -32,6 +32,8 @@ const requiredFiles = [
   "assets/studies/autodesign-conference-poster.webp",
   "assets/studies/autodesign-conference-teaser.mp4",
   "assets/studies/autodesign-conference-video-6min.mp4",
+  "assets/tutorials/autodesign-workbench-tutorial.mp4",
+  "assets/tutorials/autodesign-workbench-tutorial-poster.jpg",
 ];
 
 for (const file of requiredFiles) {
@@ -91,8 +93,10 @@ expect(html.includes('id="language-menu"'), "language selector menu is missing")
 
 const heroAccess = html.match(/<nav class="hero-access"[\s\S]*?<\/nav>/)?.[0] ?? "";
 const heroControls = [...heroAccess.matchAll(/<(a|button)\b([^>]*)>/g)];
-expect(heroControls.length === 3, "hero research access must expose exactly three controls");
+expect(heroControls.length === 4, "hero research access must expose exactly four controls");
 expect(/data-hero-access="system"/.test(heroAccess), "hero system link is missing");
+expect(/data-hero-access="tutorial"[^>]*data-artifact-kind="video"/.test(heroAccess), "hero tutorial video action is missing");
+expect(/autodesign-workbench-tutorial\.mp4/.test(heroAccess), "hero tutorial must use the workbench video");
 expect(/data-hero-access="code"[^>]*disabled/.test(heroAccess), "unreleased code action must stay disabled");
 expect(/data-hero-access="paper"[^>]*disabled/.test(heroAccess), "unreleased paper action must stay disabled");
 
@@ -148,21 +152,21 @@ try {
 }
 
 for (const [file, specifier] of [
-  ["index.html", "styles.css?v=20260805a"],
-  ["index.html", "app.js?v=20260805a"],
+  ["index.html", "styles.css?v=20260806a"],
+  ["index.html", "app.js?v=20260806a"],
   ["index.html", "site-data.js?v=20260730b"],
-  ["index.html", "i18n.js?v=20260805a"],
-  ["index.html", "language-menu.js?v=20260805a"],
-  ["app.js", "artifact-showcase.js?v=20260805a"],
-  ["app.js", "i18n.js?v=20260805a"],
-  ["app.js", "opening-intro.js?v=20260805a"],
+  ["index.html", "i18n.js?v=20260806a"],
+  ["index.html", "language-menu.js?v=20260806a"],
+  ["app.js", "artifact-showcase.js?v=20260806a"],
+  ["app.js", "i18n.js?v=20260806a"],
+  ["app.js", "opening-intro.js?v=20260806a"],
   ["opening-intro.js", "intro-scene.js?v=20260803b"],
   ["opening-intro.js", "intro-state.js?v=20260803a"],
-  ["artifact-showcase.js", "i18n.js?v=20260805a"],
-  ["opening-intro.js", "i18n.js?v=20260805a"],
-  ["language-menu.js", "i18n.js?v=20260805a"],
-  ["language-menu.js", "locales.js?v=20260805a"],
-  ["i18n.js", "locales.js?v=20260805a"],
+  ["artifact-showcase.js", "i18n.js?v=20260806a"],
+  ["opening-intro.js", "i18n.js?v=20260806a"],
+  ["language-menu.js", "i18n.js?v=20260806a"],
+  ["language-menu.js", "locales.js?v=20260806a"],
+  ["i18n.js", "locales.js?v=20260806a"],
 ]) {
   expect(read(file).includes(specifier), `${file} must load ${specifier}`);
 }

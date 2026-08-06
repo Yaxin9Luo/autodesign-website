@@ -28,6 +28,8 @@ const required = [
   "assets/studies/autodesign-conference-poster.webp",
   "assets/studies/autodesign-conference-teaser.mp4",
   "assets/studies/autodesign-conference-video-6min.mp4",
+  "assets/tutorials/autodesign-workbench-tutorial.mp4",
+  "assets/tutorials/autodesign-workbench-tutorial-poster.jpg",
   "assets/studies/slide-03.webp",
   "assets/studies/video-poster.webp",
   "assets/studies/webpage.webp",

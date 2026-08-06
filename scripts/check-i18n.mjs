@@ -57,7 +57,7 @@ expect(
 
 const englishKeys = Object.keys(MESSAGES.en).sort();
 expect(MESSAGES.en["nav.openResearchDemo"] === "Open Research Demo", "header CTA must use the approved Open Research Demo label");
-const heroAccessKeys = ["hero.accessLabel", "hero.openSystem", "hero.viewCode", "hero.codeSoon", "hero.readPaper", "hero.paperSoon"];
+const heroAccessKeys = ["hero.accessLabel", "hero.openSystem", "hero.watchTutorial", "hero.tutorialDetail", "hero.viewCode", "hero.codeSoon", "hero.readPaper", "hero.paperSoon"];
 for (const locale of SUPPORTED_LOCALES) {
   const keys = Object.keys(MESSAGES[locale] ?? {}).sort();
   expect(JSON.stringify(keys) === JSON.stringify(englishKeys), `${locale} catalog must match English keys`);
@@ -68,9 +68,9 @@ for (const locale of SUPPORTED_LOCALES) {
 }
 
 for (const [locale, expected] of [
-  ["en", ["Research access", "Open Research Demo", "View Code", "Code release planned", "Read Paper", "Coming soon"]],
-  ["zh-CN", ["研究入口", "打开研究演示", "进入代码库", "代码即将发布", "阅读论文", "即将推出"]],
-  ["ar", ["الوصول البحثي", "فتح العرض التوضيحي البحثي", "عرض الشفرة", "إصدار الشفرة قريبًا", "قراءة الورقة", "قريبًا"]],
+  ["en", ["Research access", "Open Research Demo", "Watch tutorial", "Guided workbench walkthrough", "View Code", "Code release planned", "Read Paper", "Coming soon"]],
+  ["zh-CN", ["研究入口", "打开研究演示", "观看教程", "工作台操作导览", "进入代码库", "代码即将发布", "阅读论文", "即将推出"]],
+  ["ar", ["الوصول البحثي", "فتح العرض التوضيحي البحثي", "شاهد الدليل", "جولة إرشادية في مساحة العمل", "عرض الشفرة", "إصدار الشفرة قريبًا", "قراءة الورقة", "قريبًا"]],
 ]) {
   expect(
     JSON.stringify(heroAccessKeys.map((key) => MESSAGES[locale]?.[key])) === JSON.stringify(expected),
@@ -127,10 +127,10 @@ expect(index.includes("data-language-switcher"), "page must include a language s
 for (const locale of SUPPORTED_LOCALES) {
   expect(index.includes(`data-locale=\"${locale}\"`), `language switcher must include ${locale}`);
 }
-expect(index.includes("./i18n.js?v=20260805a"), "page must load the current versioned i18n runtime");
-expect(readFileSync(resolve(root, "i18n.js"), "utf8").includes("./locales.js?v=20260805a"), "i18n runtime must version its locale catalog import");
-expect(readFileSync(resolve(root, "language-menu.js"), "utf8").includes("./i18n.js?v=20260805a"), "language menu must version its i18n runtime import");
-expect(readFileSync(resolve(root, "language-menu.js"), "utf8").includes("./locales.js?v=20260805a"), "language menu must version its locale metadata import");
+expect(index.includes("./i18n.js?v=20260806a"), "page must load the current versioned i18n runtime");
+expect(readFileSync(resolve(root, "i18n.js"), "utf8").includes("./locales.js?v=20260806a"), "i18n runtime must version its locale catalog import");
+expect(readFileSync(resolve(root, "language-menu.js"), "utf8").includes("./i18n.js?v=20260806a"), "language menu must version its i18n runtime import");
+expect(readFileSync(resolve(root, "language-menu.js"), "utf8").includes("./locales.js?v=20260806a"), "language menu must version its locale metadata import");
 expect(!readFileSync(resolve(root, "i18n.js"), "utf8").includes("navigator.languages"), "i18n must not infer the default language from the browser");
 expect(readFileSync(resolve(root, "i18n.js"), "utf8").includes('const STORAGE_KEY = "autodesign.locale.v2"'), "i18n must isolate new manual language preferences from legacy auto-detected values");
 

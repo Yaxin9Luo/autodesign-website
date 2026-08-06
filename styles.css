@@ -993,6 +993,10 @@ html:not(.intro-active) .intro-controls {
   font-size: 1.12rem;
 }
 
+.hero-access__control--tutorial {
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+}
+
 .hero-access__index {
   flex: 0 0 auto;
   color: #6de0bd;
