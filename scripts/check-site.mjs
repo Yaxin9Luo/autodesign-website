@@ -43,6 +43,8 @@ for (const file of requiredFiles) {
 const html = read("index.html");
 const styles = read("styles.css");
 const app = read("app.js");
+const openingIntro = read("opening-intro.js");
+const introScene = read("intro-scene.js");
 const data = read("site-data.js");
 const posterArtifact = read("artifacts/posters/autodesign/index.html");
 
@@ -70,12 +72,26 @@ expect(html.includes("autodesign-editorial-background.webp?v=20260731b"), "stati
 expect(!html.includes("artifact-canvas"), "public page must not retain the retired 3D artifact canvas");
 expect(html.includes('id="intro-overlay"'), "public page must retain the interactive opening overlay");
 expect(html.includes('id="intro-canvas"'), "opening overlay must have a dedicated particle canvas");
+expect(!html.includes("intro-output-key"), "opening interaction must not enumerate artifact cards after the explosion");
 expect(!html.includes("engine-labels"), "public page must not retain the 3D engine annotations");
 expect(!html.includes("poster-universe"), "public page must not retain the 3D poster universe");
 expect(!app.includes("three-scene.js"), "public app must not import the retired artifact scene");
 expect(!app.includes("createArtifactScene"), "public app must not initialize the retired artifact scene");
 expect(!app.includes("bindSceneFocus"), "public app must not use scene-phase focus handling");
 expect(app.includes("createOpeningIntro"), "public app must initialize the opening interaction");
+expect(!openingIntro.includes("INTRO_ASSETS"), "opening interaction must not load post-explosion artifact textures");
+expect(!openingIntro.includes("assets/studies/"), "opening interaction must not fetch showcase assets");
+for (const token of [
+  "createArtifact",
+  "Poster dominant artifact",
+  "Slides satellite group",
+  "Web satellite group",
+  "Video satellite group",
+  "outputGroup",
+]) {
+  expect(!introScene.includes(token), `opening interaction must not retain ${token}`);
+}
+expect(introScene.includes("structureFade"), "opening interaction must retain a particle-only post-explosion finish");
 expect(styles.includes("#scene-shell.static-hero"), "static hero styling is missing");
 expect(styles.includes(".static-hero-art"), "static hero image styling is missing");
 expect(styles.includes("/* Static editorial hero"), "static hero replacement should be documented in CSS");
@@ -153,14 +169,14 @@ try {
 
 for (const [file, specifier] of [
   ["index.html", "styles.css?v=20260806a"],
-  ["index.html", "app.js?v=20260806a"],
+  ["index.html", "app.js?v=20260812a"],
   ["index.html", "site-data.js?v=20260730b"],
   ["index.html", "i18n.js?v=20260806a"],
   ["index.html", "language-menu.js?v=20260806a"],
   ["app.js", "artifact-showcase.js?v=20260806a"],
   ["app.js", "i18n.js?v=20260806a"],
-  ["app.js", "opening-intro.js?v=20260806a"],
-  ["opening-intro.js", "intro-scene.js?v=20260803b"],
+  ["app.js", "opening-intro.js?v=20260812a"],
+  ["opening-intro.js", "intro-scene.js?v=20260812a"],
   ["opening-intro.js", "intro-state.js?v=20260803a"],
   ["artifact-showcase.js", "i18n.js?v=20260806a"],
   ["opening-intro.js", "i18n.js?v=20260806a"],

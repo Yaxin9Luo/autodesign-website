@@ -101,7 +101,9 @@ async function assertOpeningIntro(page) {
   assert.equal(await page.locator("#artifact-canvas").count(), 0, "retired 3D artifact canvas must remain absent");
 }
 
-async function completeOpeningIntro(page, input = "wheel") {
+async function assertArtifactFreeFinale(page, input = "wheel") {
+  const initialResources = new Set(await page.evaluate(() => performance.getEntriesByType("resource")
+    .map((entry) => entry.name)));
   if (input === "wheel") {
     for (let index = 0; index < 4; index += 1) {
       await page.mouse.wheel(0, 720);
@@ -110,8 +112,22 @@ async function completeOpeningIntro(page, input = "wheel") {
   } else {
     for (let index = 0; index < 4; index += 1) await page.keyboard.press("ArrowDown");
   }
+  await page.waitForFunction(() => document.querySelector("#scene-shell")?.dataset.introPhase === "portal", null, {
+    timeout: 6_000,
+  });
+  assert.equal(await page.locator("#intro-canvas").isVisible(), true,
+    "opening particle canvas must remain visible during the post-explosion finale");
+  const artifactResources = await page.evaluate(() => performance.getEntriesByType("resource")
+    .map((entry) => entry.name)
+    .filter((name) => /autodesign-poster|formal-slide|conference-poster|webpage\\.webp/.test(name)));
+  const newArtifactResources = artifactResources.filter((resource) => !initialResources.has(resource));
+  assert.deepEqual(newArtifactResources, [], "post-explosion finale must not load new artifact-card textures");
+  if (process.env.OPENING_REVIEW_SCREENSHOT && (page.viewportSize()?.width ?? 0) > 760) {
+    await page.waitForTimeout(550);
+    await page.screenshot({ path: process.env.OPENING_REVIEW_SCREENSHOT });
+  }
   await page.waitForFunction(() => !document.documentElement.classList.contains("intro-active"), null, {
-    timeout: 9_000,
+    timeout: 5_000,
   });
 }
 
@@ -308,7 +324,7 @@ async function runDesktop(browser, url) {
   const errors = watchConsole(page);
   await page.goto(url, { waitUntil: "networkidle" });
   await assertOpeningIntro(page);
-  await completeOpeningIntro(page, "wheel");
+  await assertArtifactFreeFinale(page, "wheel");
   await assertStaticHero(page);
   await assertResearchAccess(page, "desktop");
   await assertLanguagePicker(page);
@@ -325,7 +341,7 @@ async function runMobile(browser, url) {
   const errors = watchConsole(page);
   await page.goto(localeUrl(url, "en"), { waitUntil: "networkidle" });
   await assertOpeningIntro(page);
-  await completeOpeningIntro(page, "keyboard");
+  await assertArtifactFreeFinale(page, "keyboard");
   await assertStaticHero(page);
   await assertResearchAccess(page, "mobile");
   await page.locator("#artifact-studies").scrollIntoViewIfNeeded();

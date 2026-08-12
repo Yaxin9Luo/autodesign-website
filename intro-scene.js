@@ -28,20 +28,10 @@ export function createIntroScene(options = {}) {
   const {
     THREE,
     scene,
-    registerTexture,
-    textures = {},
     compact = false,
     saveData = false,
   } = options;
   if (!THREE || !scene?.add) throw new TypeError("createIntroScene requires THREE and a parent scene");
-
-  const sharedTextures = {
-    poster: options.posterTexture ?? textures.poster ?? null,
-    slides: options.slideTexture ?? textures.slides ?? textures.slide ?? null,
-    web: options.webTexture ?? textures.web ?? null,
-    video: options.videoTexture ?? textures.video ?? null,
-  };
-  Object.values(sharedTextures).filter(Boolean).forEach((texture) => registerTexture?.(texture));
 
   const constrained = Boolean(compact || saveData);
   const counts = constrained ? CONSTRAINED_COUNTS : DESKTOP_COUNTS;
@@ -70,11 +60,7 @@ export function createIntroScene(options = {}) {
   sourceGroup.name = "Multimodal IN";
   const singularityGroup = new THREE.Group();
   singularityGroup.name = "Design Singularity";
-  const outputGroup = new THREE.Group();
-  outputGroup.name = "Multimodal OUT artifact constellation";
-  const portalGroup = new THREE.Group();
-  portalGroup.name = "Artifact Engine portal";
-  root.add(sourceGroup, singularityGroup, outputGroup, portalGroup);
+  root.add(sourceGroup, singularityGroup);
   scene.add(root);
 
   const particleUniforms = {
@@ -472,274 +458,14 @@ export function createIntroScene(options = {}) {
   shockwave.position.z = 0.16;
   root.add(shockwave);
 
-  function createPosterFaceMaterial(texture) {
-    const material = ownMaterial(new THREE.ShaderMaterial({
-      uniforms: {
-        uTexture: { value: texture },
-        uHasTexture: { value: texture ? 1 : 0 },
-        uOpacity: { value: 0 },
-        uDissolve: { value: 0 },
-        uTime: { value: 0 },
-      },
-      transparent: true,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D uTexture;
-        uniform float uHasTexture;
-        uniform float uOpacity;
-        uniform float uDissolve;
-        uniform float uTime;
-        varying vec2 vUv;
-        float hash(vec2 point) {
-          return fract(sin(dot(point, vec2(127.1, 311.7))) * 43758.5453);
-        }
-        void main() {
-          vec4 sampled = texture2D(uTexture, vUv);
-          vec3 fallback = mix(vec3(0.84, 0.87, 0.84), vec3(0.18, 0.23, 0.25), vUv.y);
-          vec3 color = mix(fallback, sampled.rgb * 0.82, uHasTexture);
-          float noise = hash(floor(vUv * vec2(240.0, 128.0)) + floor(uTime * 0.5));
-          float threshold = uDissolve * 1.18 - 0.09;
-          float coordinate = vUv.y + (noise - 0.5) * 0.06;
-          float remain = smoothstep(threshold - 0.055, threshold + 0.055, coordinate);
-          float edge = 1.0 - smoothstep(0.0, 0.045, abs(coordinate - threshold));
-          color += vec3(0.22, 0.74, 0.66) * edge * 0.34;
-          gl_FragColor = vec4(color, remain * uOpacity);
-        }
-      `,
-    }));
-    material.userData.portalDissolve = true;
-    return material;
-  }
-
-  function createArtifact({
-    name,
-    width,
-    height,
-    texture,
-    start,
-    target,
-    arc,
-    shape,
-    sourceAspect = width / height,
-    pageCount = 1,
-    dissolve = false,
-    rotation = 0,
-  }) {
-    const group = new THREE.Group();
-    group.name = name;
-    group.userData.start = new THREE.Vector3(...start);
-    group.userData.target = new THREE.Vector3(...target);
-    group.userData.arc = new THREE.Vector3(...arc);
-    group.userData.rotation = rotation;
-    group.userData.shape = shape;
-    group.userData.width = width;
-    group.userData.height = height;
-    group.userData.aspect = width / height;
-    group.userData.sourceAspect = sourceAspect;
-    group.userData.pageCount = pageCount;
-    group.userData.visualArea = width * height;
-
-    const backingMaterial = ownMaterial(new THREE.MeshStandardMaterial({
-      color: 0x151b1d,
-      metalness: 0.58,
-      roughness: 0.32,
-      transparent: true,
-      opacity: 0,
-    }));
-    const faceMaterial = dissolve ? createPosterFaceMaterial(texture) : ownMaterial(new THREE.MeshBasicMaterial({
-      color: texture ? 0xd2d9d6 : 0xd9ddd8,
-      map: texture,
-      transparent: true,
-      opacity: 0,
-      side: THREE.DoubleSide,
-    }));
-    const backing = new THREE.Mesh(ownGeometry(new THREE.PlaneGeometry(width + 0.14, height + 0.14)), backingMaterial);
-    backing.name = `${name} backing`;
-    backing.position.z = -0.055;
-    const face = new THREE.Mesh(ownGeometry(new THREE.PlaneGeometry(width, height)), faceMaterial);
-    face.name = pageCount > 1 ? "Slides stack page 1" : `${name} face`;
-    group.add(backing, face);
-    group.userData.materials = [backingMaterial, faceMaterial];
-    group.userData.backingMaterial = backingMaterial;
-    group.userData.faceMaterial = faceMaterial;
-
-    for (let page = 2; page <= pageCount; page += 1) {
-      const pageMaterial = ownMaterial(new THREE.MeshBasicMaterial({
-        color: page % 2 === 0 ? 0xe8d7b0 : 0xb9d9d3,
-        transparent: true,
-        opacity: 0,
-        side: THREE.DoubleSide,
-      }));
-      const pageMesh = new THREE.Mesh(ownGeometry(new THREE.PlaneGeometry(width, height)), pageMaterial);
-      pageMesh.name = `Slides stack page ${page}`;
-      pageMesh.position.set(-(page - 1) * 0.075, (page - 1) * 0.055, -(page - 1) * 0.085);
-      group.add(pageMesh);
-      group.userData.materials.push(pageMaterial);
-    }
-    outputGroup.add(group);
-    return group;
-  }
-
-  const poster = createArtifact({
-    name: "Poster dominant artifact",
-    width: 5.4,
-    height: 2.7,
-    texture: sharedTextures.poster,
-    start: [0.2, -0.2, -1.8],
-    target: [0, 0.15, 0.25],
-    arc: [-1.3, 1.2, 1.1],
-    shape: "poster",
-    sourceAspect: 2,
-    dissolve: true,
-    rotation: -0.012,
-  });
-  const slides = createArtifact({
-    name: "Slides satellite group",
-    width: 2.25,
-    height: 1.27,
-    texture: sharedTextures.slides,
-    start: [-0.5, 0.1, -2.6],
-    target: [-4.2, -2.25, -0.7],
-    arc: [-0.9, -0.85, 1.4],
-    shape: "page-stack",
-    sourceAspect: 16 / 9,
-    pageCount: 3,
-    rotation: -0.12,
-  });
-  const web = createArtifact({
-    name: "Web satellite group",
-    width: 0.82,
-    height: 0.82 * (4257 / 900),
-    texture: sharedTextures.web,
-    start: [0.4, 0.15, -2.2],
-    target: [4.45, 0.25, -0.8],
-    arc: [0.8, 1.1, 1.2],
-    shape: "long-page",
-    sourceAspect: 900 / 4257,
-    rotation: 0.06,
-  });
-  const video = createArtifact({
-    name: "Video satellite group",
-    width: 2.2,
-    height: 2.2 * (9 / 16),
-    texture: sharedTextures.video,
-    start: [0, -0.4, -2.8],
-    target: [3.55, -2.5, -0.65],
-    arc: [1.0, -0.85, 1.3],
-    shape: "temporal-frame",
-    sourceAspect: 16 / 9,
-    rotation: 0.08,
-  });
-  const satellites = [slides, web, video];
-  satellites.forEach((satellite) => {
-    if (poster.userData.visualArea < satellite.userData.visualArea * 1.8) {
-      throw new RangeError("poster must dominate the artifact constellation");
-    }
-  });
-
-  const videoTrailMaterial = ownMaterial(new THREE.LineBasicMaterial({
-    color: 0x7894ff,
-    transparent: true,
-    opacity: 0,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  }));
-  const videoTrail = new THREE.Line(
-    ownGeometry(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-1.08, -0.77, 0.025),
-      new THREE.Vector3(-0.56, -0.66, 0.025),
-      new THREE.Vector3(0.02, -0.78, 0.025),
-      new THREE.Vector3(0.58, -0.64, 0.025),
-      new THREE.Vector3(1.08, -0.74, 0.025),
-    ])),
-    videoTrailMaterial,
-  );
-  videoTrail.name = "Video temporal trail";
-  const videoPlayheadMaterial = ownMaterial(new THREE.MeshBasicMaterial({
-    color: 0xf2c14e,
-    transparent: true,
-    opacity: 0,
-    depthWrite: false,
-  }));
-  const videoPlayhead = new THREE.Mesh(
-    ownGeometry(new THREE.PlaneGeometry(0.035, 0.82)),
-    videoPlayheadMaterial,
-  );
-  videoPlayhead.name = "Video playhead";
-  videoPlayhead.position.z = 0.035;
-  video.add(videoTrail, videoPlayhead);
-  video.userData.materials.push(videoTrailMaterial, videoPlayheadMaterial);
-  video.userData.playhead = videoPlayhead;
-
-  const portalMaterial = ownMaterial(new THREE.MeshBasicMaterial({
-    color: 0x65e3ce,
-    transparent: true,
-    opacity: 0,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  }));
-  const portal = new THREE.Mesh(
-    ownGeometry(new THREE.RingGeometry(2.95, 3.08, constrained ? 64 : 120)),
-    portalMaterial,
-  );
-  portal.name = "Poster-led Artifact Engine portal";
-  portal.scale.set(1.55, 0.82, 1);
-  portal.position.z = -0.45;
-  portalGroup.add(portal);
-
   const pointer = new THREE.Vector2();
   const zeroPointer = new THREE.Vector2();
   const pointerWorld = new THREE.Vector2();
   const radialOffset = new THREE.Vector2();
-  const artifactPosition = new THREE.Vector3();
   let isVisible = true;
   let disposed = false;
   let pointerStrength = 0;
   let previousFrameTime = null;
-
-  function updateArtifact(group, assembly, portalProgress, reducedMotion, isPoster, viewportFillScale, time) {
-    const progress = smooth(assembly);
-    artifactPosition.lerpVectors(group.userData.start, group.userData.target, progress);
-    if (!reducedMotion) artifactPosition.addScaledVector(group.userData.arc, Math.sin(progress * Math.PI));
-    group.position.copy(artifactPosition);
-    const portalEase = smooth(portalProgress);
-    group.rotation.z = mix(group.userData.rotation * 2.4, group.userData.rotation, progress);
-    if (isPoster) group.rotation.z = mix(group.rotation.z, 0, portalEase);
-    const portalFade = isPoster ? 1 : 1 - portalEase;
-    const opacity = progress * portalFade;
-    group.userData.materials.forEach((material) => {
-      if (material.userData.portalDissolve) {
-        material.uniforms.uOpacity.value = opacity;
-        material.uniforms.uTime.value = time;
-      } else {
-        material.opacity = opacity;
-      }
-    });
-    const dissolve = isPoster ? smooth(clamp((portalProgress - 0.42) / 0.58)) : 0;
-    if (isPoster) {
-      group.userData.faceMaterial.uniforms.uDissolve.value = dissolve;
-      group.userData.backingMaterial.opacity = opacity * (1 - dissolve);
-    }
-    const portalScale = isPoster ? mix(1, viewportFillScale, portalEase) : 1 - portalEase * 0.16;
-    group.scale.setScalar(Math.max(0.001, progress * portalScale));
-    group.visible = isVisible && (isPoster ? progress > 0.008 : opacity > 0.008);
-    if (isPoster) {
-      group.userData.portalState = {
-        dissolve,
-        fillScale: viewportFillScale,
-        overlap: portalProgress >= 0.68,
-      };
-    }
-  }
 
   function update(view, frame) {
     if (disposed) return;
@@ -759,7 +485,9 @@ export function createIntroScene(options = {}) {
     const expansion = reducedMotion ? 0 : smooth(view.expansion ?? 0);
     const assembly = smooth(view.assembly ?? 0);
     const portalProgress = smooth(view.portal ?? 0);
-    const sourceFade = clamp(1 - assembly * 0.82 - portalProgress * 0.35);
+    const afterglowProgress = smooth(clamp(assembly * 0.72 + portalProgress * 0.48));
+    const sourceFade = mix(1, 0.68, afterglowProgress);
+    const structureFade = sourceFade * (1 - afterglowProgress);
 
     root.visible = isVisible;
     const viewportScale = frame.width && frame.height
@@ -775,14 +503,6 @@ export function createIntroScene(options = {}) {
       1.3 * wideScreen,
       0,
     );
-    const introFov = (constrained ? 45 : 37) * (Math.PI / 180);
-    const visibleWorldHeight = 2 * Math.tan(introFov / 2) * 14.2;
-    const visibleWorldWidth = visibleWorldHeight * viewportAspect;
-    const viewportFillScale = Math.max(
-      visibleWorldWidth / poster.userData.width,
-      visibleWorldHeight / poster.userData.height,
-    ) * 1.08 / viewportScale;
-
     particleUniforms.uTime.value = time;
     particleUniforms.uGather.value = clamp(arrival * (0.84 + charge * 0.16));
     particleUniforms.uContraction.value = charge * (1 - expansion);
@@ -798,9 +518,9 @@ export function createIntroScene(options = {}) {
     particleUniforms.uPointer.value.copy(reducedMotion ? zeroPointer : pointer);
     particleUniforms.uPointerStrength.value = pointerInfluence;
 
-    imageSheets.visible = isVisible && sourceFade > 0.02;
+    imageSheets.visible = isVisible && structureFade > 0.02;
     sheetUniforms.uTime.value = time;
-    sheetUniforms.uOpacity.value = sourceFade * (0.42 + arrival * 0.28);
+    sheetUniforms.uOpacity.value = structureFade * (0.42 + arrival * 0.28);
     sheetUniforms.uEnergy.value = charge;
     const gather = particleUniforms.uGather.value;
     pointerWorld.set(pointer.x * 4.8, pointer.y * 3);
@@ -831,8 +551,8 @@ export function createIntroScene(options = {}) {
     latticeEdges.position.y += expansion * 0.7;
     latticeEdges.position.z += expansion * 0.5;
     latticeEdges.rotation.z = reducedMotion ? 0 : expansion * 0.2;
-    latticeEdges.visible = isVisible && sourceFade > 0.02;
-    latticeMaterial.opacity = sourceFade * (0.2 + charge * 0.34);
+    latticeEdges.visible = isVisible && structureFade > 0.02;
+    latticeMaterial.opacity = structureFade * (0.2 + charge * 0.34);
 
     temporalRibbonGroup.scale.setScalar(Math.max(0.02, structuredScale));
     temporalRibbonGroup.position.copy(temporalCenter).multiplyScalar(-structuredScale * gather);
@@ -840,13 +560,13 @@ export function createIntroScene(options = {}) {
     temporalRibbonGroup.position.y -= expansion * 1.2;
     temporalRibbonGroup.position.z += expansion * 0.7;
     temporalRibbonGroup.rotation.z = reducedMotion ? 0 : Math.sin(time * 0.22) * 0.025 * (1 - charge);
-    temporalRibbonGroup.visible = isVisible && sourceFade > 0.02;
-    temporalRibbonMaterial.opacity = sourceFade * (0.28 + arrival * 0.34);
+    temporalRibbonGroup.visible = isVisible && structureFade > 0.02;
+    temporalRibbonMaterial.opacity = structureFade * (0.28 + arrival * 0.34);
     frameTrails.scale.copy(temporalRibbonGroup.scale);
     frameTrails.position.copy(temporalRibbonGroup.position);
     frameTrails.rotation.copy(temporalRibbonGroup.rotation);
     frameTrails.visible = temporalRibbonGroup.visible;
-    frameTrailMaterial.opacity = sourceFade * (0.18 + charge * 0.28);
+    frameTrailMaterial.opacity = structureFade * (0.18 + charge * 0.28);
 
     const singularityFade = clamp(1 - assembly * 1.08 - portalProgress * 0.5);
     singularityGroup.visible = isVisible && singularityFade > 0.01;
@@ -880,26 +600,9 @@ export function createIntroScene(options = {}) {
     );
     shockwaveMaterial.opacity = shockFade * Math.sin(shockwaveProgress * Math.PI) * 0.82;
 
-    updateArtifact(poster, assembly, portalProgress, reducedMotion, true, viewportFillScale, time);
-    satellites.forEach((satellite) => {
-      updateArtifact(satellite, assembly, portalProgress, reducedMotion, false, 1, time);
-    });
-    videoPlayhead.position.x = mix(-1.02, 1.02, reducedMotion ? 0.5 : (time * 0.22) % 1);
-    outputGroup.position.z = portalProgress * 1.2;
-    outputGroup.visible = isVisible && assembly > 0.001;
-    root.userData.engineOverlap = assembly > 0.99 && portalProgress >= 0.68;
+    root.userData.engineOverlap = false;
     root.userData.pointerStrength = pointerInfluence;
 
-    portalGroup.visible = isVisible && portalProgress > 0.001;
-    portal.rotation.z = reducedMotion ? 0 : time * 0.08;
-    portal.scale.set(
-      1.55 * (0.18 + portalProgress * 1.32),
-      0.82 * (0.18 + portalProgress * 1.32),
-      1,
-    );
-    portalMaterial.opacity = reducedMotion
-      ? portalProgress * 0.28
-      : Math.sin(portalProgress * Math.PI) * 0.45;
   }
 
   function setPointer(x, y) {

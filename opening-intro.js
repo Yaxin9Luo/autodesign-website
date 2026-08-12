@@ -4,7 +4,7 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { createIntroAudio } from "./intro-audio.js?v=20260803a";
-import { createIntroScene } from "./intro-scene.js?v=20260803b";
+import { createIntroScene } from "./intro-scene.js?v=20260812a";
 import { t } from "./i18n.js?v=20260806a";
 import {
   INTRO_ARRIVAL_SECONDS,
@@ -16,13 +16,6 @@ import {
   resetIntroState,
 } from "./intro-state.js?v=20260803a";
 
-const INTRO_ASSETS = Object.freeze({
-  poster: "./assets/studies/autodesign-poster.webp?v=20260729a",
-  slides: "./assets/studies/autodesign-formal-slide-01.webp?v=20260730b",
-  web: "./assets/studies/webpage.webp",
-  video: "./assets/studies/autodesign-conference-poster.webp?v=20260731c",
-});
-
 const clamp = (value, minimum, maximum) => Math.min(Math.max(value, minimum), maximum);
 
 function setDocumentIntroState(active, story) {
@@ -33,15 +26,6 @@ function setDocumentIntroState(active, story) {
   document.querySelectorAll("main > :not(#scene-shell), #site-footer").forEach((element) => {
     element.toggleAttribute("inert", active);
   });
-}
-
-function loadTexture(loader, renderer, textures, source) {
-  let texture;
-  texture = loader.load(source, undefined, undefined, () => textures.delete(texture));
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-  textures.add(texture);
-  return texture;
 }
 
 function canUseWebGL(canvas) {
@@ -87,7 +71,6 @@ export function createOpeningIntro() {
   let destroyed = false;
   let announcedPhase = null;
   let state = createIntroState();
-  const textures = new Set();
   const audio = createIntroAudio();
 
   const scene = new THREE.Scene();
@@ -115,17 +98,9 @@ export function createOpeningIntro() {
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
 
-    const loader = new THREE.TextureLoader();
     introScene = createIntroScene({
       THREE,
       scene,
-      registerTexture: (texture) => {
-        textures.add(texture);
-        return texture;
-      },
-      textures: Object.fromEntries(Object.entries(INTRO_ASSETS).map(([key, source]) => (
-        [key, loadTexture(loader, renderer, textures, source)]
-      ))),
       compact: compact.matches,
       saveData: navigator.connection?.saveData === true,
     });
@@ -359,7 +334,6 @@ export function createOpeningIntro() {
       enterButton.removeEventListener("click", resolveIntro);
       setDocumentIntroState(false, story);
       introScene.dispose();
-      textures.forEach((texture) => texture.dispose());
       composer.dispose();
       renderer.dispose();
       renderer.forceContextLoss?.();
