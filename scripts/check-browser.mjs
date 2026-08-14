@@ -171,8 +171,12 @@ async function assertResearchAccess(page, layout) {
   assert.equal(await controls.count(), 4, "research access must have four controls");
   assert.equal(await access.locator('[data-hero-access="system"]').evaluate((element) => element.tagName), "A");
   assert.equal(await access.locator('[data-hero-access="tutorial"]').evaluate((element) => element.tagName), "BUTTON");
-  assert.equal(await access.locator('[data-hero-access="code"]').isDisabled(), true);
-  assert.equal(await access.locator('[data-hero-access="paper"]').isDisabled(), true);
+  const code = access.locator('[data-hero-access="code"]');
+  const paper = access.locator('[data-hero-access="paper"]');
+  assert.equal(await code.evaluate((element) => element.tagName), "A");
+  assert.equal(await paper.evaluate((element) => element.tagName), "A");
+  assert.equal(await code.getAttribute("href"), "https://github.com/Yaxin9Luo/AutoDesign");
+  assert.equal(await paper.getAttribute("href"), "https://arxiv.org/abs/2608.13560");
 
   const geometry = await controls.evaluateAll((items) => items.map((item) => item.getBoundingClientRect().toJSON()));
   assert.ok(geometry[0].top < geometry[1].top && geometry[0].top < geometry[2].top && geometry[0].top < geometry[3].top,

@@ -964,7 +964,8 @@ html:not(.intro-active) .intro-controls {
   font-size: 1.12rem;
 }
 
-.hero-access__control--tutorial {
+.hero-access__control--tutorial,
+.hero-access__control--link {
   grid-template-columns: 1.5rem minmax(0, 1fr) auto;
 }
 
@@ -1023,13 +1024,6 @@ html:not(.intro-active) .intro-controls {
 .hero-access__control:focus-visible {
   position: relative;
   z-index: 1;
-}
-
-.hero-access__control--unavailable {
-  background: rgba(18, 24, 28, 0.92);
-  color: rgba(237, 247, 244, 0.62);
-  cursor: not-allowed;
-  opacity: 1;
 }
 
 .text-link {
@@ -2266,11 +2260,6 @@ body {
 #scene-shell.static-hero .hero-access__control--primary {
   background: rgba(245, 250, 248, 0.96);
   color: #13362f;
-}
-
-#scene-shell.static-hero .hero-access__control--unavailable {
-  background: rgba(33, 42, 42, 0.86);
-  color: rgba(243, 248, 246, 0.44);
 }
 
 #scene-shell.static-hero .hero-access__control--primary:not(:disabled):hover,
@@ -4277,10 +4266,6 @@ a.resource-link:hover {
 .resource-link small {
   color: rgba(255, 255, 255, 0.44);
   font-size: 0.68rem;
-}
-
-.resource-link--pending {
-  color: rgba(255, 255, 255, 0.46);
 }
 
 @media (max-width: 1050px) {

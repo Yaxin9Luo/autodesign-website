@@ -113,8 +113,13 @@ expect(heroControls.length === 4, "hero research access must expose exactly four
 expect(/data-hero-access="system"/.test(heroAccess), "hero system link is missing");
 expect(/data-hero-access="tutorial"[^>]*data-artifact-kind="video"/.test(heroAccess), "hero tutorial video action is missing");
 expect(/autodesign-workbench-tutorial\.mp4/.test(heroAccess), "hero tutorial must use the workbench video");
-expect(/data-hero-access="code"[^>]*disabled/.test(heroAccess), "unreleased code action must stay disabled");
-expect(/data-hero-access="paper"[^>]*disabled/.test(heroAccess), "unreleased paper action must stay disabled");
+expect(/<a[^>]*data-hero-access="code"[^>]*href="https:\/\/github\.com\/Yaxin9Luo\/AutoDesign"/.test(heroAccess), "hero code link must target the public GitHub repository");
+expect(/<a[^>]*data-hero-access="paper"[^>]*href="https:\/\/arxiv\.org\/abs\/2608\.13560"/.test(heroAccess), "hero paper link must target the public arXiv paper");
+expect(!heroAccess.includes("Code release planned"), "hero must not retain the unreleased-code placeholder");
+expect(!heroAccess.includes("Coming soon"), "hero must not retain the unpublished-paper placeholder");
+expect(html.includes('href="https://github.com/Yaxin9Luo/AutoDesign"'), "research code link is missing");
+expect(html.includes('href="https://arxiv.org/abs/2608.13560"'), "paper link is missing");
+expect(!html.includes("resource-link--pending"), "public resources must not render as pending");
 
 const posterPanel = html.match(/<div class="artifact-study" id="artifact-panel-poster"[\s\S]*?<\/div>\n\s*<div class="artifact-study" id="artifact-panel-slides"/)?.[0] ?? "";
 expect(Boolean(posterPanel), "poster artifact panel is missing");

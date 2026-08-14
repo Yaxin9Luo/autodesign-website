@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { extname, relative, resolve } from "node:path";
+import { extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("../dist", import.meta.url)));
@@ -73,21 +73,11 @@ for (const file of files) {
   assert.ok(statSync(file).size < 25 * 1024 * 1024, `production file exceeds 25 MiB: ${file}`);
 }
 
-const privateReferences = ["https://github.com/Yaxin9Luo/AutoDesign"];
-const textExtensions = new Set([".css", ".html", ".js", ".json", ".svg", ".txt", ".vtt", ".xml"]);
-for (const file of files.filter((path) => textExtensions.has(extname(path)))) {
-  const source = readFileSync(file, "utf8");
-  for (const reference of privateReferences) {
-    assert.equal(
-      source.includes(reference),
-      false,
-      `production package exposes private reference ${reference} in ${relative(root, file)}`,
-    );
-  }
-}
-
 const html = readFileSync(resolve(root, "index.html"), "utf8");
 assert.match(html, /https:\/\/autodesign\.designanything\.ai\//, "production canonical URL is missing");
+for (const reference of ["https://github.com/Yaxin9Luo/AutoDesign", "https://arxiv.org/abs/2608.13560"]) {
+  assert.ok(html.includes(reference), `production landing page is missing the public research link ${reference}`);
+}
 const importMap = html.match(/<script type="importmap">([\s\S]*?)<\/script>/)?.[1];
 assert.ok(importMap, "production import map is missing");
 const importMapHash = `sha256-${createHash("sha256").update(importMap).digest("base64")}`;
