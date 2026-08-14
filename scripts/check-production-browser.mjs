@@ -95,8 +95,10 @@ try {
   assert.match(await fullVideo.getAttribute("src"), /autodesign-conference-video-6min\.mp4\?v=20260731c/);
   assert.equal(await fullVideo.locator('track[src*="ddpm-conference"]').count(), 0,
     "hosted AutoDesign video must not attach unrelated DDPM captions");
-  await fullVideo.evaluate((video) => video.play());
-  await page.waitForFunction(() => !document.querySelector("#artifact-viewer-stage video")?.paused);
+  await page.waitForFunction(() => {
+    const player = document.querySelector("#artifact-viewer-stage video");
+    return player && !player.paused && !player.muted && player.volume === 1;
+  }, null, { timeout: 10_000 });
   await fullVideo.evaluate((video) => video.pause());
   await page.keyboard.press("Escape");
   assert.equal(await previewPlay.evaluate((element) => document.activeElement === element), true,

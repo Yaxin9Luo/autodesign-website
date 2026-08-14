@@ -292,10 +292,6 @@ export function bindArtifactShowcase({
       video.playsInline = true;
       video.preload = "metadata";
       video.poster = options.poster ?? "./assets/studies/autodesign-conference-poster.webp?v=20260731c";
-      if (options.autoplay) {
-        video.autoplay = true;
-        video.addEventListener("canplay", () => video.play().catch(() => {}), { once: true });
-      }
       stage.classList.add("artifact-viewer__stage--video");
       return video;
     }
@@ -313,6 +309,7 @@ export function bindArtifactShowcase({
       artifactNewTab,
       artifactPoster,
       artifactAutoplay,
+      artifactAudible,
       artifactType,
     } = trigger.dataset;
     clearStage();
@@ -329,6 +326,14 @@ export function bindArtifactShowcase({
     if (!artifact) return;
     stage.append(artifact);
     viewer.showModal();
+    if (artifactKind === "video" && artifactAutoplay === "true") {
+      if (artifactAudible === "true") {
+        artifact.defaultMuted = false;
+        artifact.muted = false;
+        artifact.volume = 1;
+      }
+      artifact.play().catch(() => {});
+    }
     documentElement?.classList.add("dialog-open");
     closeButton.focus();
   };

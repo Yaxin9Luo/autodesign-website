@@ -311,6 +311,10 @@ async function assertArtifactSuite(page) {
   assert.match(await video.getAttribute("src"), /autodesign-conference-video-6min\.mp4\?v=20260731c/);
   assert.equal(await video.locator('track[src*="ddpm-conference"]').count(), 0,
     "AutoDesign video must not inherit unrelated DDPM captions");
+  await page.waitForFunction(() => {
+    const player = document.querySelector("#artifact-viewer-stage video");
+    return player && !player.paused && !player.muted && player.volume === 1;
+  }, null, { timeout: 10_000 });
   await page.keyboard.press("Escape");
 
   const methodFigure = page.locator("[data-method-figure]");

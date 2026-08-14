@@ -120,6 +120,8 @@ expect(!heroAccess.includes("Coming soon"), "hero must not retain the unpublishe
 expect(html.includes('href="https://github.com/Yaxin9Luo/AutoDesign"'), "research code link is missing");
 expect(html.includes('href="https://arxiv.org/abs/2608.13560"'), "paper link is missing");
 expect(!html.includes("resource-link--pending"), "public resources must not render as pending");
+const audibleConferenceVideoTriggers = html.match(/data-artifact-autoplay="true" data-artifact-audible="true" data-artifact-src="\.\/assets\/studies\/autodesign-conference-video-6min\.mp4\?v=20260731c"/g) ?? [];
+expect(audibleConferenceVideoTriggers.length === 2, "both conference-video triggers must start the full audio player");
 
 const posterPanel = html.match(/<div class="artifact-study" id="artifact-panel-poster"[\s\S]*?<\/div>\n\s*<div class="artifact-study" id="artifact-panel-slides"/)?.[0] ?? "";
 expect(Boolean(posterPanel), "poster artifact panel is missing");
@@ -174,11 +176,11 @@ try {
 
 for (const [file, specifier] of [
   ["index.html", "styles.css?v=20260806a"],
-  ["index.html", "app.js?v=20260812a"],
+  ["index.html", "app.js?v=20260814a"],
   ["index.html", "site-data.js?v=20260730b"],
   ["index.html", "i18n.js?v=20260806a"],
   ["index.html", "language-menu.js?v=20260806a"],
-  ["app.js", "artifact-showcase.js?v=20260806a"],
+  ["app.js", "artifact-showcase.js?v=20260814a"],
   ["app.js", "i18n.js?v=20260806a"],
   ["app.js", "opening-intro.js?v=20260812a"],
   ["opening-intro.js", "intro-scene.js?v=20260812a"],
