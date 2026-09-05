@@ -16,6 +16,8 @@ assert.match(html, /Run AutoDesign locally for the complete experience/);
 assert.match(html, /The public online demo has been retired/);
 assert.match(html, /Online generation is no longer available here/);
 assert.match(html, /data-language-toggle/);
+assert.match(html, /styles\.css\?v=20260905-en/);
+assert.match(html, /app\.js\?v=20260905-en/);
 assert.match(html, /data-copy-command/g);
 assert.match(html, /README\.md#quickstart/);
 assert.match(html, /autodesign\.designanything\.ai/);
