@@ -1,0 +1,417 @@
+:root {
+  color: #1b1715;
+  background: #fbfaf7;
+  font-family: "Inter Tight", "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-synthesis: none;
+  --paper: #fff9f4;
+  --ink: #1b1715;
+  --muted: #6d6560;
+  --line: #e9e2dc;
+  --accent: #e76f3f;
+  --accent-soft: #f4c4b1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #fbfaf7;
+  background-image:
+    linear-gradient(rgba(104, 89, 80, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(104, 89, 80, 0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+.local-banner {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--accent-soft);
+  background: rgba(255, 249, 244, 0.96);
+}
+
+.local-banner__inner {
+  width: min(1360px, calc(100% - 64px));
+  min-height: 154px;
+  margin: 0 auto;
+  padding: 30px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+}
+
+.local-banner__message {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  min-width: 0;
+}
+
+.local-banner__icon {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--accent-soft);
+  border-radius: 12px;
+  background: #fffdfb;
+}
+
+.local-banner__icon img {
+  width: 27px;
+  height: 27px;
+}
+
+.eyebrow,
+.notice-detail__kicker {
+  margin: 0 0 7px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-family: "Iowan Old Style", "Songti SC", "STSong", serif;
+  font-size: clamp(25px, 2.2vw, 35px);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.summary {
+  margin: 8px 0 0;
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.local-banner__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.button {
+  min-height: 52px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ddd5cf;
+  border-radius: 10px;
+  background: #fffdfb;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+  border-color: #bfb4ac;
+}
+
+.button:focus-visible,
+.command-card button:focus-visible,
+.resource-links a:focus-visible {
+  outline: 3px solid rgba(231, 111, 63, 0.32);
+  outline-offset: 3px;
+}
+
+.button--primary {
+  min-width: 194px;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fffaf6;
+}
+
+.button--primary:hover {
+  border-color: #362e2a;
+  background: #362e2a;
+}
+
+.notice-detail {
+  width: min(980px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: clamp(84px, 12vh, 142px) 0 72px;
+  text-align: center;
+}
+
+.notice-detail__status {
+  margin-bottom: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #5d5651;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.notice-detail__status span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 5px rgba(231, 111, 63, 0.1);
+}
+
+.notice-detail__kicker {
+  margin-bottom: 14px;
+}
+
+h2 {
+  margin: 0;
+  font-family: "Iowan Old Style", "Songti SC", "STSong", serif;
+  font-size: clamp(38px, 5vw, 64px);
+  font-weight: 600;
+  line-height: 1.03;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.notice-detail__body {
+  max-width: 650px;
+  margin: 24px auto 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+.command-card {
+  margin: 38px auto 0;
+  padding: 8px 8px 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #dfd6d0;
+  border-radius: 12px;
+  background: rgba(255, 253, 251, 0.94);
+  box-shadow: 0 20px 60px rgba(47, 37, 31, 0.07);
+  text-align: left;
+}
+
+.command-card code {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  color: #3d3530;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 14px;
+  white-space: nowrap;
+  scrollbar-width: thin;
+}
+
+.command-card button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #eee8e3;
+  color: var(--ink);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.resource-links {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+}
+
+.resource-links a {
+  color: #4c443f;
+  font-size: 14px;
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+
+.english-note {
+  margin: 52px auto 0;
+  color: #8a817b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 10;
+  padding: 12px 16px;
+  border-radius: 9px;
+  background: var(--ink);
+  color: #fffaf6;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 12px 30px rgba(28, 21, 18, 0.2);
+}
+
+@media (min-width: 701px) and (max-width: 920px) {
+  .local-banner__inner {
+    width: calc(100% - 32px);
+    gap: 22px;
+  }
+
+  .local-banner__message {
+    gap: 14px;
+  }
+
+  .local-banner__icon {
+    flex-basis: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .eyebrow {
+    font-size: 10px;
+  }
+
+  h1 {
+    font-size: 21px;
+  }
+
+  .summary {
+    max-width: 330px;
+    font-size: 12px;
+  }
+
+  .local-banner__actions {
+    gap: 7px;
+  }
+
+  .button {
+    min-height: 44px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+
+  .button--primary {
+    min-width: 142px;
+  }
+}
+
+@media (max-width: 700px) {
+  .local-banner__inner {
+    width: min(100% - 40px, 760px);
+    align-items: stretch;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .local-banner__actions {
+    justify-content: flex-start;
+    padding-left: 86px;
+  }
+}
+
+@media (max-width: 560px) {
+  .local-banner__inner {
+    width: calc(100% - 32px);
+    padding: 24px 0;
+  }
+
+  .local-banner__message {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .local-banner__icon {
+    flex-basis: 48px;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+  }
+
+  .local-banner__icon img {
+    width: 22px;
+    height: 22px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+  }
+
+  h1 {
+    font-size: 25px;
+  }
+
+  .summary {
+    font-size: 15px;
+  }
+
+  .local-banner__actions {
+    padding-left: 0;
+  }
+
+  .button {
+    flex: 1;
+    padding: 0 16px;
+  }
+
+  .button--primary {
+    min-width: 0;
+  }
+
+  .notice-detail {
+    width: calc(100% - 32px);
+    padding-top: 70px;
+  }
+
+  .notice-detail__body {
+    font-size: 16px;
+  }
+
+  .command-card {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .command-card code {
+    width: 100%;
+    padding-bottom: 6px;
+    font-size: 12px;
+  }
+
+  .command-card button {
+    width: 100%;
+  }
+
+  .resource-links {
+    align-items: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

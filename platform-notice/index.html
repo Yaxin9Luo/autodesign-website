@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#fffaf6">
+    <meta name="description" content="AutoDesign public platform demo has ended. Install and run AutoDesign locally for the complete experience.">
+    <meta property="og:title" content="AutoDesign — Local installation only">
+    <meta property="og:description" content="The public platform demo has ended. AutoDesign is available for local installation and use.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://designanything.ai/">
+    <title>AutoDesign — 请在本地安装运行</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main>
+      <section class="local-banner" aria-labelledby="local-title">
+        <div class="local-banner__inner">
+          <div class="local-banner__message">
+            <div class="local-banner__icon" aria-hidden="true">
+              <img src="./assets/terminal.svg" width="24" height="24" alt="">
+            </div>
+            <div>
+              <p class="eyebrow">服务调整 / SERVICE UPDATE</p>
+              <h1 id="local-title">在本地运行 AutoDesign，获得完整体验</h1>
+              <p class="summary">公开在线 Demo 已停止服务；AutoDesign 现仅支持本地安装运行。生成、编辑与导出均在你自己的电脑上完成。</p>
+            </div>
+          </div>
+
+          <div class="local-banner__actions" aria-label="本地安装入口">
+            <a class="button button--secondary" href="https://autodesign.designanything.ai/assets/tutorials/autodesign-workbench-tutorial.mp4" target="_blank" rel="noreferrer">观看教程</a>
+            <a class="button button--secondary" href="https://github.com/Yaxin9Luo/AutoDesign/blob/main/README.zh-CN.md#quickstart" target="_blank" rel="noreferrer">安装说明</a>
+            <button class="button button--primary" type="button" data-copy-command>复制安装命令</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="notice-detail" aria-labelledby="notice-title">
+        <div class="notice-detail__status" aria-hidden="true"><span></span> LOCAL ONLY</div>
+        <p class="notice-detail__kicker">AutoDesign Workbench</p>
+        <h2 id="notice-title">这里不再接受在线生成任务。</h2>
+        <p class="notice-detail__body">项目继续维护，代码、文档和本地安装包仍然开放。你的论文、API Key 和生成结果都留在自己的本地环境中。</p>
+
+        <div class="command-card" aria-label="AutoDesign 安装命令">
+          <code>curl -fsSL https://designanything.ai/install.sh | bash</code>
+          <button type="button" data-copy-command>复制</button>
+        </div>
+
+        <nav class="resource-links" aria-label="AutoDesign 相关链接">
+          <a href="https://github.com/Yaxin9Luo/AutoDesign" target="_blank" rel="noreferrer">GitHub 源码</a>
+          <a href="https://autodesign.designanything.ai/" target="_blank" rel="noreferrer">研究项目主页</a>
+        </nav>
+
+        <p class="english-note" lang="en">The public platform demo is no longer available. AutoDesign now runs locally on your own machine.</p>
+      </section>
+    </main>
+
+    <div class="toast" role="status" aria-live="polite" data-toast hidden>安装命令已复制</div>
+    <script src="./app.js" defer></script>
+  </body>
+</html>

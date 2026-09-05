@@ -1,6 +1,6 @@
 # AutoDesign Research Site
 
-This repository contains the standalone static site for `autodesign.designanything.ai`. It does not use the DesignAnything Workbench API or Python runtime.
+This repository contains the standalone static site for `autodesign.designanything.ai`. It does not use the DesignAnything Workbench API or Python runtime. It also contains the lightweight retirement notice served at `designanything.ai`, which directs users to the local AutoDesign installer without restoring the hosted platform.
 
 The opening experience is the Artifact Engine: a scroll-driven Three.js scene that ingests source records, exposes the DesignHarness modules, assembles a real poster artifact, returns diagnostic evidence, and retains one accepted system update. The poster index and inspector remain semantic HTML, so the artifact path is usable when motion is reduced or WebGL is unavailable.
 
@@ -59,7 +59,7 @@ npm run test:production
 git diff --check
 ```
 
-Pull requests run the deterministic and browser release checks without touching production. A successful push to `main` deploys the verified `dist/` package to the existing `autodesign` Cloudflare Pages project through GitHub Actions. The workflow reads `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` from repository Actions secrets.
+Pull requests run the deterministic and browser release checks without touching production. A successful push to `main` deploys the verified `dist/` package to the existing `autodesign` Cloudflare Pages project and deploys `platform-notice/` to the `designanything-local` Pages project through GitHub Actions. The workflow reads `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` from repository Actions secrets.
 
 For an emergency deployment from an authenticated local machine:
 
@@ -68,3 +68,5 @@ npm run deploy
 ```
 
 Production is served at [https://autodesign.designanything.ai/](https://autodesign.designanything.ai/), with [https://autodesign.pages.dev/](https://autodesign.pages.dev/) retained as the Pages hostname. `_headers` carries the CSP, response hardening, and cache policy. Custom-domain and DNS configuration remain account-level Cloudflare state rather than repository files.
+
+The retired platform notice is served from [https://designanything-local.pages.dev/](https://designanything-local.pages.dev/) and is attached to `https://designanything.ai/`. Its `install.sh` downloads the checksum-gated `local-runtime-2026.09.05` GitHub release, so local installation does not depend on a continuously running VM.

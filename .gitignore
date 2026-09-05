@@ -3,3 +3,7 @@ dist/
 .wrangler/
 .DS_Store
 .playwright-cli/
+.design-qa/
+design-qa.md
+platform-notice/implementation-*.jpg
+platform-notice/design-qa-comparison.png
