@@ -110,6 +110,23 @@ h1 {
   flex: 0 0 auto;
 }
 
+.language-toggle {
+  padding: 8px 2px;
+  border: 0;
+  background: transparent;
+  color: #8f4d33;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: rgba(143, 77, 51, 0.35);
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.language-toggle:hover {
+  color: var(--accent);
+}
+
 .button {
   min-height: 52px;
   padding: 0 24px;
@@ -133,6 +150,7 @@ h1 {
 }
 
 .button:focus-visible,
+.language-toggle:focus-visible,
 .command-card button:focus-visible,
 .resource-links a:focus-visible {
   outline: 3px solid rgba(231, 111, 63, 0.32);
@@ -269,7 +287,7 @@ h2 {
   box-shadow: 0 12px 30px rgba(28, 21, 18, 0.2);
 }
 
-@media (min-width: 701px) and (max-width: 920px) {
+@media (min-width: 701px) and (max-width: 1180px) {
   .local-banner__inner {
     width: calc(100% - 32px);
     gap: 22px;
@@ -324,6 +342,7 @@ h2 {
   .local-banner__actions {
     justify-content: flex-start;
     padding-left: 86px;
+    flex-wrap: wrap;
   }
 }
 
@@ -366,12 +385,18 @@ h2 {
     padding-left: 0;
   }
 
+  .language-toggle {
+    flex: 1 0 100%;
+    text-align: left;
+  }
+
   .button {
-    flex: 1;
+    flex: 1 1 calc(50% - 6px);
     padding: 0 16px;
   }
 
   .button--primary {
+    flex-basis: 100%;
     min-width: 0;
   }
 

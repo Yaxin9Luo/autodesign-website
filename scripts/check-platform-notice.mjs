@@ -11,15 +11,19 @@ const app = await readFile(resolve(noticeRoot, "app.js"), "utf8");
 const headers = await readFile(resolve(noticeRoot, "_headers"), "utf8");
 const installer = resolve(noticeRoot, "install.sh");
 
-assert.match(html, /在本地运行 AutoDesign，获得完整体验/);
-assert.match(html, /公开在线 Demo 已停止服务/);
-assert.match(html, /这里不再接受在线生成任务/);
+assert.match(html, /<html lang="en">/);
+assert.match(html, /Run AutoDesign locally for the complete experience/);
+assert.match(html, /The public online demo has been retired/);
+assert.match(html, /Online generation is no longer available here/);
+assert.match(html, /data-language-toggle/);
 assert.match(html, /data-copy-command/g);
-assert.match(html, /README\.zh-CN\.md#quickstart/);
+assert.match(html, /README\.md#quickstart/);
 assert.match(html, /autodesign\.designanything\.ai/);
 assert.match(css, /@media \(max-width: 560px\)/);
 assert.match(css, /prefers-reduced-motion/);
 assert.match(app, /navigator\.clipboard\.writeText/);
+assert.match(app, /README\.zh-CN\.md#quickstart/);
+assert.match(app, /setLanguage\(currentLanguage === "en" \? "zh" : "en"\)/);
 assert.match(headers, /Content-Security-Policy/);
 assert.doesNotMatch(headers, /unsafe-inline/);
 
